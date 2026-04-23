@@ -1,0 +1,26 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "hermes-rubric"
+version = "0.1.0"
+description = "Evidence-first structured scoring. Synthesizes a rubric, collects citations, then scores."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Rolando Bosch", email = "rbosch@lpci.ai" }]
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+hermes-rubric = "hermes_rubric.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/hermes-labs-ai/hermes-rubric"
+Repository = "https://github.com/hermes-labs-ai/hermes-rubric"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hermes_rubric"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,36 @@
+# hermes-rubric
+
+Evidence-first structured scoring for LLMs and agents.
+
+## What it does
+
+Three-stage pipeline to prevent confabulated scores:
+1. Synthesize rubric from (intent, context, target-type) — not a generic template
+2. Collect per-dimension evidence with citation required before scoring
+3. Score against rubric and evidence only — hedge dims clamped to [3,7]
+
+## Key constraint
+
+No API key required. Auto-detects claude-cli or ollama-local backend.
+
+## When to use
+
+Use hermes-rubric when producing a score that will drive a ship/publish/send decision. Do not use for binary checks (file exists? tests pass?).
+
+## Key files
+
+- `INTENT.md` — machine-readable spec (accepts/does-not)
+- `calibration/META-RUBRIC.md` — 7-dimension spec for rubric-generator quality
+- `calibration/failure-mode-taxonomy.md` — 24 LLM failure modes that motivated the dimensions
+- `calibration/dataset.jsonl` — 15 reference cases with human labels
+- `applied/papers-20260423.md` — 4-paper scoring example
+
+## CLI
+
+```
+hermes-rubric --intent "<str>" --context <path> --target <path> --out result.json
+```
+
+## Output schema
+
+{rubric, evidence_citations, per_dim_scores, aggregate, hedge_dims, hedge_note, receipt}
