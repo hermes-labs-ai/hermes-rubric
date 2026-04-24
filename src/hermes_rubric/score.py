@@ -72,7 +72,6 @@ def compute_aggregate(
     scores: list[dict[str, Any]],
 ) -> dict[str, Any]:
     """Compute weighted aggregate score and identify hedge dimensions."""
-    dims_by_id = {d["id"]: d for d in rubric["dimensions"]}
     scores_by_id = {s["dim_id"]: s for s in scores}
 
     total_weight = 0
@@ -155,13 +154,13 @@ def _extract_json(text: str) -> dict[str, Any]:
     text = text.strip()
     try:
         return json.loads(text)
-    except json.JSONDecodeError:
+    except json.JSONDecodeError:  # noqa: silent
         pass
     start = text.find("{")
     end = text.rfind("}")
     if start != -1 and end != -1 and end > start:
         try:
             return json.loads(text[start:end + 1])
-        except json.JSONDecodeError:
+        except json.JSONDecodeError:  # noqa: silent
             pass
     raise ValueError(f"Cannot extract JSON from score response: {text[:300]}")

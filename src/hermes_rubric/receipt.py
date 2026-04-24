@@ -1,7 +1,6 @@
 """Reproducibility receipt — prompts used, data hashes, backend, timestamp."""
 
 import hashlib
-import json
 import platform
 import sys
 from datetime import datetime, timezone

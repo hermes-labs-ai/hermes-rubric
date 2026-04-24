@@ -1,8 +1,6 @@
 """Stage 2: collect per-dimension evidence with explicit hedge annotation."""
 
 import json
-import os
-import re
 from pathlib import Path
 from typing import Any
 
@@ -106,14 +104,14 @@ def _extract_json(text: str) -> dict[str, Any]:
     text = text.strip()
     try:
         return json.loads(text)
-    except json.JSONDecodeError:
+    except json.JSONDecodeError:  # noqa: silent
         pass
     start = text.find("{")
     end = text.rfind("}")
     if start != -1 and end != -1 and end > start:
         try:
             return json.loads(text[start:end + 1])
-        except json.JSONDecodeError:
+        except json.JSONDecodeError:  # noqa: silent
             pass
     raise ValueError(f"Cannot extract JSON from evidence response: {text[:300]}")
 

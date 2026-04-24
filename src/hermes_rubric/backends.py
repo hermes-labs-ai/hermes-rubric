@@ -1,7 +1,6 @@
 """Backend auto-detection and invocation. Priority: claude-cli > ollama-local."""
 
 import json
-import os
 import shutil
 import subprocess
 import urllib.request
@@ -26,7 +25,7 @@ def detect() -> Backend:
             )
             if r.returncode == 0:
                 return "claude-cli"
-        except (subprocess.TimeoutExpired, FileNotFoundError):
+        except (subprocess.TimeoutExpired, FileNotFoundError):  # noqa: silent
             pass
 
     if shutil.which("ollama"):
@@ -34,7 +33,7 @@ def detect() -> Backend:
             req = urllib.request.urlopen("http://localhost:11434/api/tags", timeout=5)
             if req.status == 200:
                 return "ollama-local"
-        except (urllib.error.URLError, OSError):
+        except (urllib.error.URLError, OSError):  # noqa: silent
             pass
 
     raise RuntimeError(

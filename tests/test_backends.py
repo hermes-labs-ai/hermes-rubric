@@ -2,7 +2,6 @@
 
 import pytest
 from unittest.mock import patch, MagicMock
-import json
 
 
 def test_detect_prefers_claude_cli():
@@ -19,7 +18,6 @@ def test_detect_prefers_claude_cli():
 def test_detect_falls_back_to_ollama():
     """Falls back to ollama when claude-cli fails."""
     from hermes_rubric import backends
-    import urllib.request
 
     def which_side(x):
         return "/usr/bin/ollama" if x == "ollama" else None
@@ -37,7 +35,6 @@ def test_detect_falls_back_to_ollama():
 def test_detect_raises_when_nothing_available():
     """RuntimeError raised when no backend is found."""
     from hermes_rubric import backends
-    import urllib.error
 
     with patch("shutil.which", return_value=None):
         with pytest.raises(RuntimeError, match="No backend available"):

@@ -24,3 +24,4 @@ packages = ["src/hermes_rubric"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["src"]

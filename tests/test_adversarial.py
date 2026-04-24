@@ -9,8 +9,7 @@ adding evidence — the exact failure mode hermes-rubric exists to prevent.
 """
 
 import json
-import pytest
-from unittest.mock import patch, call as mock_call
+from unittest.mock import patch
 
 
 # === Test fixtures: same substance, very different writing quality ===

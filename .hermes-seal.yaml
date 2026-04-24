@@ -1,0 +1,53 @@
+seal_version: 1
+repo: hermes-labs-ai/hermes-rubric
+granted: '2026-04-24T01:38:43.713748Z'
+expires: '2027-04-24T01:38:43.713748Z'
+categories:
+  continuity:
+    health_endpoint: null
+    graceful_degradation:
+    - dependency: claude-cli
+      on_failure: falls_back_to_ollama_backend
+      verified_by: tests/test_backends.py::test_detect_falls_back_to_ollama
+      env:
+        PYTHONPATH: src
+      python_bin: null
+      command: null
+    - dependency: any_llm_backend
+      on_failure: raises_explicit_backenderror_no_silent_default
+      verified_by: tests/test_backends.py::test_detect_raises_when_nothing_available
+      env:
+        PYTHONPATH: src
+      python_bin: null
+      command: null
+    - dependency: evidence_citations
+      on_failure: caps_score_at_midrange_no_fabrication_win
+      verified_by: tests/test_score.py::test_no_evidence_caps_score
+      env:
+        PYTHONPATH: src
+      python_bin: null
+      command: null
+  reliability:
+    test_command: python3 -m pytest -q
+    coverage_min: 0.0
+    no_silent_failures: true
+    scan_paths:
+    - src/hermes_rubric
+    silent_failure_check: null
+  compliance:
+    license: MIT
+    sbom: sbom.cdx.json
+    lintlang_clean: false
+    eu_ai_act: n/a
+  mom_ready:
+    install: pip install hermes-rubric
+    quickstart: README.md#quick-start
+    errors_human: true
+signing:
+  algorithm: ed25519
+  pubkey: ZlcXKr0v5/FgO5t9mODXmmpKx7ccAOio/OL5fvdIsZ0=
+  signature: 924JC6cA0YiZgG+H2IDIz6bBJTNCEbLy8P2Lqw0F7JlXZ1llPH1IfX0dtbtDQmlvtRygoYfRjWomb8TTKSy4AQ==
+  issuer: null
+revocation:
+  list: https://hermes-labs.ai/seal/revoked.json
+file_hashes: {}

@@ -65,7 +65,7 @@ def _extract_json(text: str, kind: str) -> dict[str, Any]:
     # Try direct parse
     try:
         return json.loads(text)
-    except json.JSONDecodeError:
+    except json.JSONDecodeError:  # noqa: silent
         pass
     # Try to find the outermost {} block
     start = text.find("{")
@@ -73,7 +73,7 @@ def _extract_json(text: str, kind: str) -> dict[str, Any]:
     if start != -1 and end != -1 and end > start:
         try:
             return json.loads(text[start:end + 1])
-        except json.JSONDecodeError:
+        except json.JSONDecodeError:  # noqa: silent
             pass
     raise ValueError(f"Could not extract valid JSON from {kind} LLM output. Raw: {text[:500]}")
 

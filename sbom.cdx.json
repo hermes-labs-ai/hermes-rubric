@@ -1,0 +1,58 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "serialNumber": "urn:uuid:7a2d9c1e-4f8b-4c3a-9d6e-1b5f2a7c8d4e",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-04-23T00:00:00Z",
+    "tools": [
+      {
+        "vendor": "Hermes Labs",
+        "name": "hand-crafted",
+        "version": "1.0"
+      }
+    ],
+    "component": {
+      "type": "library",
+      "bom-ref": "pkg:pypi/hermes-rubric@0.1.0",
+      "name": "hermes-rubric",
+      "version": "0.1.0",
+      "description": "Evidence-first structured scoring. Synthesizes a rubric, collects citations, then scores.",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:pypi/hermes-rubric@0.1.0",
+      "externalReferences": [
+        {
+          "type": "website",
+          "url": "https://hermes-labs.ai"
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/hermes-labs-ai/hermes-rubric"
+        },
+        {
+          "type": "issue-tracker",
+          "url": "https://github.com/hermes-labs-ai/hermes-rubric/issues"
+        }
+      ],
+      "authors": [
+        {
+          "name": "Rolando Bosch",
+          "email": "rbosch@lpci.ai"
+        }
+      ]
+    }
+  },
+  "components": [],
+  "dependencies": [
+    {
+      "ref": "pkg:pypi/hermes-rubric@0.1.0",
+      "dependsOn": []
+    }
+  ]
+}
