@@ -10,7 +10,9 @@ from typing import Literal
 Backend = Literal["claude-cli", "ollama-local"]
 
 _OLLAMA_DEFAULT_MODEL = "qwen3.5:14b"
-_OLLAMA_FALLBACK_MODELS = ["qwen3.5:9b", "qwen3.5:4b", "qwen3.5:2b"]
+# Prefer non-reasoning models for structured JSON output. qwen3.5 reasoning
+# models emit into `thinking` and often wrap the requested JSON in prose.
+_OLLAMA_FALLBACK_MODELS = ["gemma3:12b", "gemma3:4b", "mistral:7b", "qwen3.5:9b", "qwen3.5:4b"]
 
 
 def detect() -> Backend:
@@ -96,8 +98,11 @@ def _call_ollama(prompt: str, max_tokens: int) -> str:
         method="POST",
     )
     try:
-        with urllib.request.urlopen(req, timeout=120) as resp:
+        with urllib.request.urlopen(req, timeout=300) as resp:
             data = json.loads(resp.read())
-            return data.get("response", "").strip()
+            # Reasoning models (qwen3.5) emit into `thinking` and leave `response` empty.
+            # Prefer response; fall back to thinking so the pipeline works with either.
+            out = data.get("response", "") or data.get("thinking", "")
+            return out.strip()
     except urllib.error.URLError as e:
         raise RuntimeError(f"Ollama call failed: {e}") from e

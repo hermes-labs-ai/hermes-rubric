@@ -1,0 +1,444 @@
+{
+  "rubric": {
+    "rubric_intent": "Determine whether hermes-rubric enforces evidence-first, hedge-disciplined, non-fluency-biased scoring in practice, not just in its README.",
+    "target_type": "scoring-tool-digest",
+    "dimensions": [
+      {
+        "id": "dim_1",
+        "name": "Evidence-gate enforcement in code",
+        "description": "Measures whether the scoring pipeline actually blocks/penalizes scores that lack cited evidence (file:line or quoted passage), rather than just requesting it in the prompt.",
+        "evidence_instructions": "Open src/ and locate the scoring stage. Look for explicit checks that reject or hedge dimensions with empty/unverifiable evidence fields (e.g. regex for file:line, quote-in-source checks, or a branch that flips hedge=true when evidence is missing). Quote the exact function and lines. If the only 'enforcement' is a prompt string telling the LLM to cite, that is weak evidence.",
+        "weight": 3,
+        "hedge": false
+      },
+      {
+        "id": "dim_2",
+        "name": "Adversarial dimension synthesis",
+        "description": "Measures whether the rubric-synthesis stage produces dimensions capable of sinking the target, not just flattering ones \u2014 including an explicit mechanism to require or reward adversarial cuts.",
+        "evidence_instructions": "Inspect the synthesis prompt(s) and any synthesis tests in tests/ or calibration/. Quote the lines that instruct the model to include dimensions that could *fail* the target. Check calibration/ for stored rubrics on prior targets and count how many dimensions were plausibly target-sinking versus friendly restatements. Report ratio.",
+        "weight": 3,
+        "hedge": false
+      },
+      {
+        "id": "dim_3",
+        "name": "Hedging discipline (explicit hedge flag, not score shading)",
+        "description": "Measures whether thin-evidence cases are surfaced via an explicit hedge=true flag rather than silently compressed toward the mean.",
+        "evidence_instructions": "Grep src/ and tests/ for 'hedge'. Confirm the output schema carries a per-dimension hedge boolean and that the scoring logic sets it when evidence quality is low (not when score is low). Check applied/ outputs for real runs: do low-evidence dims actually ship with hedge=true, or are scores just nudged? Quote at least one run.",
+        "weight": 3,
+        "hedge": false
+      },
+      {
+        "id": "dim_4",
+        "name": "Fluency-bias resistance (adversarial test presence)",
+        "description": "Measures whether the repo contains a test that compares a terse-substantive target against a polished-hollow one and asserts the substantive one wins.",
+        "evidence_instructions": "Search tests/ for fixtures pairing 'hollow' / 'marketing' / 'polished' vs 'terse' / 'substantive' / 'sparse'. Quote the assertion. If no such adversarial pair exists, the claim is unverified \u2014 score low and do not hedge upward on absence.",
+        "weight": 3,
+        "hedge": false
+      },
+      {
+        "id": "dim_5",
+        "name": "Receipt / reproducibility manifest",
+        "description": "Measures whether each score run emits a hash or manifest (inputs, model, prompt version, rubric) that lets a third party re-run and diff.",
+        "evidence_instructions": "Inspect the output schema and any --out artifacts in applied/. Confirm presence of: input hash, rubric hash, backend/model identifier, prompt/version string. Absence of any one of these lowers the score. Quote the manifest fields from a real output file.",
+        "weight": 2,
+        "hedge": false
+      },
+      {
+        "id": "dim_6",
+        "name": "Self-scoring non-rubber-stamp",
+        "description": "Measures whether, when pointed at itself, hermes-rubric has produced (or is structurally capable of producing) dimensions that score itself below ceiling on at least one non-trivial axis.",
+        "evidence_instructions": "Check applied/ for any self-run artifacts. If present, list dimensions scored below max and confirm the evidence is drawn from code, not README paraphrase. If no self-run exists, hedge=true and note the absence rather than assuming pass or fail.",
+        "weight": 2,
+        "hedge": true
+      },
+      {
+        "id": "dim_7",
+        "name": "Bounded LLM surface (LLM does not author the claims being judged)",
+        "description": "Measures whether the pipeline uses the LLM only for synthesis / evidence extraction / scoring, and never lets the LLM invent target content that then gets scored.",
+        "evidence_instructions": "Trace the data flow in src/: the 'target' input must be read verbatim from disk and passed as context, not summarized or rewritten by the LLM before scoring. Quote the function that loads the target and confirm no LLM call sits between load and evidence collection.",
+        "weight": 2,
+        "hedge": false
+      },
+      {
+        "id": "dim_8",
+        "name": "Evidence-source discrimination (code vs README-marketing)",
+        "description": "Measures whether collected evidence is preferentially drawn from source/tests rather than the target's own README/marketing copy when both are available.",
+        "evidence_instructions": "In any applied/ run on a repo target, tally evidence citations by file type: src/tests vs README/docs. A tool that mostly cites README back at itself is rubber-stamping. Report the ratio; quote 2-3 example citations.",
+        "weight": 2,
+        "hedge": true
+      }
+    ]
+  },
+  "evidence_citations": [
+    {
+      "dim_id": "dim_1",
+      "evidence_found": true,
+      "confidence": "high",
+      "hedge": false,
+      "citations": [
+        {
+          "quote": "if ev.get(\"hedge\") and (s[\"score\"] < 3 or s[\"score\"] > 7): s[\"score\"] = max(3, min(7, s[\"score\"]))",
+          "location": "src/hermes_rubric/score.py:57-58"
+        },
+        {
+          "quote": "if not ev.get(\"evidence_found\") and s[\"score\"] > 3: s[\"score\"] = 3",
+          "location": "src/hermes_rubric/score.py:62-63"
+        },
+        {
+          "quote": "s[\"score_rationale\"] += \" [Score capped at 3: no evidence found.]\"",
+          "location": "src/hermes_rubric/score.py:64"
+        },
+        {
+          "quote": "score_dimensions(rubric, evidence_list, backend)",
+          "location": "src/hermes_rubric/score.py:43-67 (post-LLM enforcement loop)"
+        }
+      ],
+      "evidence_summary": "score.py:56-64 enforces gates in code after the LLM returns: hedged dimensions are clamped to [3,7] and dimensions with evidence_found=false are capped at 3, with rationale annotation. Enforcement is deterministic and not reliant on the prompt. Caveat: the gate reads flag fields (ev['hedge'], ev['evidence_found']) set during evidence collection rather than re-validating the citation format (e.g. regex for file:line or quote-in-source), so the code trusts the evidence stage's self-report.",
+      "dim_name": "Evidence-gate enforcement in code"
+    },
+    {
+      "dim_id": "dim_2",
+      "evidence_found": true,
+      "confidence": "medium",
+      "hedge": false,
+      "citations": [
+        {
+          "quote": "Dimensions must be DISCRIMINATING: a weak and strong target must score differently. If two targets would always get the same score, drop that dimension.",
+          "location": "src/hermes_rubric/synthesize.py:19"
+        },
+        {
+          "quote": "Do NOT invent dimensions for things you cannot observe in the target.",
+          "location": "src/hermes_rubric/synthesize.py:20"
+        },
+        {
+          "quote": "Given two targets of known different quality, the rubric produces detectably different scores. A rubric that scores everything 6-8 regardless of quality has zero discrimination power.",
+          "location": "calibration/META-RUBRIC.md:33"
+        },
+        {
+          "quote": "FM-06 (Fluency inflation \u2014 rubrics that don't discriminate reward surface polish), FM-19 (Boilerplate dimensions are non-discriminating by construction)",
+          "location": "calibration/META-RUBRIC.md:41"
+        },
+        {
+          "quote": "Apply the META-RUBRIC when evaluating the quality of a synthesized rubric (Stage 1 output) before trusting its Stage 3 scores.",
+          "location": "calibration/META-RUBRIC.md:11"
+        },
+        {
+          "quote": "No stored synthesized rubrics in calibration/dataset.jsonl \u2014 keys are id, domain, intent, context, target, target_name, human_score, notes. No 'dimensions' field present in any of 15 rows.",
+          "location": "calibration/dataset.jsonl (15 lines, grep count '\"dimensions\"' = 0)"
+        },
+        {
+          "quote": "tests/test_synthesize.py contains 3 tests (valid rubric, min-dimensions validation, JSON extraction) \u2014 none assert that synthesized dimensions include target-sinking cuts.",
+          "location": "tests/test_synthesize.py"
+        }
+      ],
+      "evidence_summary": "The synthesis prompt enforces discrimination ('a weak and strong target must score differently') and forbids unobservable dimensions, which indirectly pushes toward target-sinking capacity. A separate META-RUBRIC evaluates Discrimination Power post-hoc and is motivated by fluency-inflation / boilerplate failure modes. However, there is NO explicit instruction in the synthesis prompt to include dimensions that could fail the target, no reward for adversarial cuts, and no stored rubrics in calibration/dataset.jsonl to compute a sinking-vs-friendly ratio (dataset rows contain only human_score, not synthesized dimensions). Adversarial intent is present in the meta-evaluation layer but not wired into synthesis itself.",
+      "dim_name": "Adversarial dimension synthesis"
+    },
+    {
+      "dim_id": "dim_3",
+      "evidence_found": true,
+      "confidence": "high",
+      "hedge": false,
+      "citations": [
+        {
+          "quote": "if ev.get(\"hedge\") and (s[\"score\"] < 3 or s[\"score\"] > 7): ... s[\"hedge_applied\"] = True",
+          "location": "src/hermes_rubric/score.py:57-59"
+        },
+        {
+          "quote": "if s.get(\"hedge_applied\") or dim.get(\"hedge\"): hedge_dims.append(dim[\"name\"])",
+          "location": "src/hermes_rubric/score.py:91-92"
+        },
+        {
+          "quote": "\"hedge\": s.get(\"hedge_applied\", False)",
+          "location": "src/hermes_rubric/score.py:98"
+        },
+        {
+          "quote": "\"hedge_dims\": aggregate_data[\"hedge_dims\"], \"hedge_note\": aggregate_data[\"hedge_note\"]",
+          "location": "src/hermes_rubric/cli.py:114-115"
+        },
+        {
+          "quote": "def test_hedge_clamps_score_to_midrange: Hedged dimensions cannot score 0-2 or 8-10",
+          "location": "tests/test_score.py:46-47"
+        },
+        {
+          "quote": "A high-confidence fabricated score for a low-evidence dim must be corrected by hedge enforcement",
+          "location": "tests/test_adversarial.py:196"
+        },
+        {
+          "quote": "dim_limitations | 4 | **HEDGED** \u2014 cannot assess from abstract. Score provisional.",
+          "location": "applied/papers-20260423.md:74"
+        },
+        {
+          "quote": "Hedge note: dim_limitations score is thin \u2014 abstract-only source.",
+          "location": "applied/papers-20260423.md:81"
+        }
+      ],
+      "evidence_summary": "The output schema carries a per-dimension hedge boolean (score.py:98) plus top-level hedge_dims/hedge_note (cli.py:114-115). Scoring logic sets hedge_applied when evidence quality is low \u2014 triggered by ev.get('hedge') from the evidence stage (confidence=low), not by score value (score.py:57-59). Tests (test_score.py:46, test_adversarial.py:196) enforce the behavior. Real applied run papers-20260423.md explicitly ships dims with HEDGED flags and hedge notes rather than silent mean-compression.",
+      "dim_name": "Hedging discipline (explicit hedge flag, not score shading)"
+    },
+    {
+      "dim_id": "dim_4",
+      "evidence_found": true,
+      "confidence": "high",
+      "hedge": false,
+      "citations": [
+        {
+          "quote": "ADVERSARIAL TEST \u2014 fluency vs substance resistance.",
+          "location": "tests/test_adversarial.py:1"
+        },
+        {
+          "quote": "def test_fluency_does_not_inflate_evidence_score()",
+          "location": "tests/test_adversarial.py:102"
+        },
+        {
+          "quote": "assert score_gap <= 1.0",
+          "location": "tests/test_adversarial.py:188"
+        }
+      ],
+      "evidence_summary": "tests/test_adversarial.py pairs a fluent version vs an awkward/substantive version with the same facts and asserts the fluent aggregate cannot exceed the awkward aggregate by more than 1 point, directly enforcing fluency-bias resistance.",
+      "dim_name": "Fluency-bias resistance (adversarial test presence)"
+    },
+    {
+      "dim_id": "dim_5",
+      "evidence_found": true,
+      "confidence": "medium",
+      "hedge": false,
+      "citations": [
+        {
+          "quote": "\"receipt\": {\"backend\": \"claude-cli\", \"timestamp_utc\": \"...\", \"input_hashes\": {...}}",
+          "location": "README.md \u2014 Quick start output JSON block"
+        },
+        {
+          "quote": "receipt \u2014 same inputs + same backend should produce scores within \u00b11 across runs.",
+          "location": "README.md \u2014 What the output means"
+        }
+      ],
+      "evidence_summary": "The output schema documents a `receipt` object with backend identifier, UTC timestamp, and input_hashes, and the README explicitly frames it as the reproducibility contract. However, the excerpt does not show an explicit rubric hash or prompt/version string field inside the receipt, so manifest coverage appears partial rather than complete.",
+      "dim_name": "Receipt / reproducibility manifest"
+    },
+    {
+      "dim_id": "dim_6",
+      "evidence_found": false,
+      "confidence": "low",
+      "hedge": true,
+      "citations": [
+        {
+          "quote": "papers-20260423.md \u2014 four papers scored on publication-readiness",
+          "location": "README.md: Applied example section"
+        },
+        {
+          "quote": "Scored by: hermes-rubric pipeline (manual execution ... scores are evidence-first human application of the synthesized rubric)",
+          "location": "applied/papers-20260423.md:5"
+        }
+      ],
+      "evidence_summary": "The only artifact in applied/ is papers-20260423.md, which scores four external papers (cogito-ergo, LangQuant LPCI, Epistemic Failure taxonomy, Asymmetric Burden of Proof) \u2014 none of which is hermes-rubric itself. No self-run artifact exists where hermes-rubric has been pointed at its own repo and produced dimensions scoring itself below ceiling. Structural capability is plausible (the CLI accepts any --target), but observable self-scoring evidence is absent.",
+      "dim_name": "Self-scoring non-rubber-stamp"
+    },
+    {
+      "dim_id": "dim_7",
+      "evidence_found": true,
+      "confidence": "high",
+      "hedge": false,
+      "citations": [
+        {
+          "quote": "def read_target(target_path: str) -> tuple[str, str]: ... return p.read_text(errors=\"replace\"), str(p)",
+          "location": "src/hermes_rubric/evidence.py:119-124"
+        },
+        {
+          "quote": "target_content, resolved_target = read_target(args.target)",
+          "location": "src/hermes_rubric/cli.py:46"
+        },
+        {
+          "quote": "ev = _collect_one(dim, target_content, target_path, backend)",
+          "location": "src/hermes_rubric/evidence.py:55"
+        },
+        {
+          "quote": "Truncate target to keep prompts manageable ... excerpt = target_content[:max_chars]",
+          "location": "src/hermes_rubric/evidence.py:67-69"
+        }
+      ],
+      "evidence_summary": "read_target() loads the target verbatim from disk via p.read_text() (or concatenates raw file contents for directories) and returns the string unchanged. cli.py passes this string directly into collect_evidence, which forwards it to _collect_one where it is only truncated (sliced), never LLM-rewritten, before being used as context for evidence extraction. No LLM call sits between load and evidence collection.",
+      "dim_name": "Bounded LLM surface (LLM does not author the claims being judged)"
+    },
+    {
+      "dim_id": "dim_8",
+      "evidence_found": true,
+      "confidence": "low",
+      "hedge": true,
+      "citations": [
+        {
+          "quote": "applied/papers-20260423.md \u2014 four papers scored on publication-readiness",
+          "location": "README.md \u00a7 Applied example"
+        },
+        {
+          "quote": "test_fluency_does_not_inflate_evidence_score \u2014 a fluent rewrite of weak evidence must not outscore a subst[...]",
+          "location": "README.md \u00a7 Running the tests"
+        },
+        {
+          "quote": "calibration/dataset.jsonl \u2014 15 labeled cases across 5 domains",
+          "location": "README.md \u00a7 Calibration"
+        }
+      ],
+      "evidence_summary": "The README excerpt references applied/ runs and calibration artifacts but does not itself contain an applied/ run showing the src-vs-README citation ratio. Only README-level self-description is visible in this excerpt; no concrete tally of evidence sources from a real applied/ run is observable, so confidence is low.",
+      "dim_name": "Evidence-source discrimination (code vs README-marketing)"
+    }
+  ],
+  "per_dim_scores": [
+    {
+      "dim_id": "dim_1",
+      "dim_name": "Evidence-gate enforcement in code",
+      "score": 8,
+      "score_rationale": "Enforcement is deterministic and post-LLM: hedged scores are clamped to [3,7] and evidence_found=false is capped at 3 with rationale annotation (score.py:56-64). Short of exemplary because the gate trusts the evidence stage's self-reported flags rather than re-validating citation format (e.g. file:line regex or quote-in-source check).",
+      "evidence_drove_score": "if not ev.get(\"evidence_found\") and s[\"score\"] > 3: s[\"score\"] = 3 [src/hermes_rubric/score.py:62-63]",
+      "hedge_applied": false
+    },
+    {
+      "dim_id": "dim_2",
+      "dim_name": "Adversarial dimension synthesis",
+      "score": 4,
+      "score_rationale": "Synthesis prompt enforces discrimination and bans unobservable dimensions (indirect pressure toward target-sinking), and a post-hoc META-RUBRIC explicitly targets fluency-inflation/boilerplate failure modes \u2014 but there is no explicit instruction or reward in the synthesis stage itself to include dimensions capable of sinking the target, and no stored rubric data to measure sinking-vs-friendly ratio.",
+      "evidence_drove_score": "'Dimensions must be DISCRIMINATING: a weak and strong target must score differently' [src/hermes_rubric/synthesize.py:19] combined with the absence of any explicit adversarial-cut instruction in synthesize.py and no 'dimensions' field in calibration/dataset.jsonl (grep count = 0).",
+      "hedge_applied": false
+    },
+    {
+      "dim_id": "dim_3",
+      "dim_name": "Hedging discipline (explicit hedge flag, not score shading)",
+      "score": 9,
+      "score_rationale": "Hedge is a first-class explicit boolean in the schema (score.py:98) and top-level hedge_dims/hedge_note (cli.py:114-115), triggered by evidence confidence rather than score value (score.py:57-59), enforced by tests (test_score.py:46, test_adversarial.py:196), and demonstrably exercised in a real run (papers-20260423.md:74,81) with explicit HEDGED flags instead of silent mean-compression.",
+      "evidence_drove_score": "\"hedge\": s.get(\"hedge_applied\", False) [src/hermes_rubric/score.py:98] combined with applied/papers-20260423.md:74 shipping **HEDGED** flag",
+      "hedge_applied": false
+    },
+    {
+      "dim_id": "dim_4",
+      "dim_name": "Fluency-bias resistance (adversarial test presence)",
+      "score": 10,
+      "score_rationale": "The repo contains a dedicated adversarial test (tests/test_adversarial.py) that explicitly pairs a fluent version against an awkward-substantive one with identical facts and asserts the fluent aggregate cannot exceed the substantive one by more than 1 point, directly enforcing fluency-bias resistance.",
+      "evidence_drove_score": "assert score_gap <= 1.0 [tests/test_adversarial.py:188]",
+      "hedge_applied": false
+    },
+    {
+      "dim_id": "dim_5",
+      "dim_name": "Receipt / reproducibility manifest",
+      "score": 6,
+      "score_rationale": "A receipt object is present with backend, UTC timestamp, and input_hashes, and is explicitly framed as the reproducibility contract \u2014 meaningful substance, not just surface. But the cited fields omit an explicit rubric hash and prompt/version identifier, so a third party cannot fully diff rubric or prompt drift across runs.",
+      "evidence_drove_score": "\"receipt\": {\"backend\": \"claude-cli\", \"timestamp_utc\": \"...\", \"input_hashes\": {...}}",
+      "hedge_applied": false
+    },
+    {
+      "dim_id": "dim_6",
+      "dim_name": "Self-scoring non-rubber-stamp",
+      "score": 3,
+      "score_rationale": "No self-run artifact exists where hermes-rubric scores its own repo below ceiling; only external papers have been scored. Structural capability via --target is plausible but unobserved, so the score sits in the lower half of the hedge band. [Score capped at 3: no evidence found.]",
+      "evidence_drove_score": "No self-run artifact exists where hermes-rubric has been pointed at its own repo and produced dimensions scoring itself below ceiling. Structural capability is plausible (the CLI accepts any --target), but observable self-scoring evidence is absent.",
+      "hedge_applied": true
+    },
+    {
+      "dim_id": "dim_7",
+      "dim_name": "Bounded LLM surface (LLM does not author the claims being judged)",
+      "score": 9,
+      "score_rationale": "Evidence shows the target is loaded verbatim from disk and passed unchanged (only sliced for length) into evidence collection, with no LLM call between load and scoring \u2014 the LLM only synthesizes/extracts, it does not author the scored content.",
+      "evidence_drove_score": "'ev = _collect_one(dim, target_content, target_path, backend)' [src/hermes_rubric/evidence.py:55] combined with 'return p.read_text(errors=\"replace\"), str(p)' [evidence.py:119-124] \u2014 raw file content flows directly to extraction with no intermediate LLM rewrite.",
+      "hedge_applied": false
+    },
+    {
+      "dim_id": "dim_8",
+      "dim_name": "Evidence-source discrimination (code vs README-marketing)",
+      "score": 4,
+      "score_rationale": "Evidence is limited to README self-description; no actual applied/ run is visible to tally src-vs-README citation ratios, so discrimination cannot be confirmed in practice. The test name hints at guarding against fluency-inflation, but that is a fluency guard, not a source-discrimination guard.",
+      "evidence_drove_score": "The README excerpt references applied/ runs and calibration artifacts but does not itself contain an applied/ run showing the src-vs-README citation ratio.",
+      "hedge_applied": true
+    }
+  ],
+  "aggregate": 6.8,
+  "max_possible": 10.0,
+  "hedge_dims": [
+    "Self-scoring non-rubber-stamp",
+    "Evidence-source discrimination (code vs README-marketing)"
+  ],
+  "hedge_note": "2 dimension(s) had thin evidence \u2014 scores for these are less reliable: Self-scoring non-rubber-stamp, Evidence-source discrimination (code vs README-marketing)",
+  "dim_summaries": [
+    {
+      "dim_id": "dim_1",
+      "name": "Evidence-gate enforcement in code",
+      "score": 8,
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "dim_id": "dim_2",
+      "name": "Adversarial dimension synthesis",
+      "score": 4,
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "dim_id": "dim_3",
+      "name": "Hedging discipline (explicit hedge flag, not score shading)",
+      "score": 9,
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "dim_id": "dim_4",
+      "name": "Fluency-bias resistance (adversarial test presence)",
+      "score": 10,
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "dim_id": "dim_5",
+      "name": "Receipt / reproducibility manifest",
+      "score": 6,
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "dim_id": "dim_6",
+      "name": "Self-scoring non-rubber-stamp",
+      "score": 3,
+      "weight": 2,
+      "hedge": true
+    },
+    {
+      "dim_id": "dim_7",
+      "name": "Bounded LLM surface (LLM does not author the claims being judged)",
+      "score": 9,
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "dim_id": "dim_8",
+      "name": "Evidence-source discrimination (code vs README-marketing)",
+      "score": 4,
+      "weight": 2,
+      "hedge": true
+    }
+  ],
+  "receipt": {
+    "receipt_version": "1.0",
+    "timestamp_utc": "2026-04-24T20:19:01.461702+00:00",
+    "tool_version": "hermes-rubric 0.1.0",
+    "python_version": "3.14.3",
+    "platform": "macOS-15.7.3-arm64-arm-64bit-Mach-O",
+    "backend": "claude-cli",
+    "inputs": {
+      "intent": "Does hermes-rubric actually deliver evidence-first, hedge-disciplined, non-fluency-biased scoring \u2014 or is it posturing?",
+      "context_path": "/tmp/rubric-self-intent.md",
+      "target_path": "/tmp/rubric-self-digest.md",
+      "target_hash_sha256": "d130f80f663dd6c9",
+      "context_hash_sha256": "3c03f7e66da418ed",
+      "target_length_chars": 47260,
+      "context_length_chars": 1613
+    },
+    "pipeline": {
+      "stage_1_rubric_dimensions": 8,
+      "stage_2_evidence_items": 8,
+      "stage_3_scores": 8,
+      "hedge_dimensions": [
+        "dim_6",
+        "dim_8"
+      ]
+    },
+    "reproducibility_note": "Same inputs + same backend + same model version should produce scores within \u00b11 point. LLM non-determinism may cause small variance. Re-run with same parameters to verify."
+  }
+}

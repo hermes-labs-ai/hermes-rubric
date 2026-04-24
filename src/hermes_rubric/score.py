@@ -4,6 +4,7 @@ import json
 from typing import Any
 
 from . import backends
+from .evidence import SOURCE_CLASS_WEIGHT
 
 _SCORE_PROMPT_TEMPLATE = """\
 You are a structured scorer. Score ONE rubric dimension based ONLY on the evidence provided. Do not infer beyond what the evidence shows.
@@ -62,9 +63,43 @@ def score_dimensions(
         if not ev.get("evidence_found") and s["score"] > 3:
             s["score"] = 3
             s["score_rationale"] += " [Score capped at 3: no evidence found.]"
+        # Source-class down-weight: if all citations are self-marketing (readme/doc),
+        # cap the score so README prose can't outrank tests/code.
+        if _only_self_marketing(ev) and s["score"] > 6:
+            s["score"] = 6
+            s["score_rationale"] += " [Score capped at 6: all citations are README/doc (self-marketing); no code/test evidence.]"
+        s["citation_source_weight"] = _citation_source_weight(ev)
         scores.append(s)
 
     return scores
+
+
+def _only_self_marketing(ev: dict[str, Any]) -> bool:
+    """True iff every citation is readme/doc (no code/test/config evidence)."""
+    cits = ev.get("citations") or []
+    if not cits:
+        return False
+    ground_truth = {"code", "test", "config"}
+    for c in cits:
+        sc = c.get("source_class", "other") if isinstance(c, dict) else "other"
+        if sc in ground_truth:
+            return False
+    # All are readme / doc / other
+    return any(isinstance(c, dict) and c.get("source_class") in ("readme", "doc") for c in cits)
+
+
+def _citation_source_weight(ev: dict[str, Any]) -> float:
+    """Weighted average of source-class weights across the evidence's citations.
+    1.0 = all ground-truth (code/test); 0.7 = all README/doc; 0.0 = no citations."""
+    cits = ev.get("citations") or []
+    if not cits:
+        return 0.0
+    weights = [
+        SOURCE_CLASS_WEIGHT.get(c.get("source_class", "other"), 0.8)
+        for c in cits
+        if isinstance(c, dict)
+    ]
+    return round(sum(weights) / len(weights), 2) if weights else 0.0
 
 
 def compute_aggregate(

@@ -1,10 +1,53 @@
 """Stage 2: collect per-dimension evidence with explicit hedge annotation."""
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
 from . import backends
+
+# Source-class taxonomy. Higher-authority classes should outweigh marketing prose.
+SOURCE_CLASSES = ("code", "test", "config", "readme", "doc", "other")
+
+# Weight applied during scoring — README/doc prose is down-weighted because it
+# can be self-marketing. Code and tests are ground-truth.
+SOURCE_CLASS_WEIGHT = {
+    "code": 1.0,
+    "test": 1.0,
+    "config": 0.9,
+    "doc": 0.7,
+    "readme": 0.7,
+    "other": 0.8,
+}
+
+_README_PAT = re.compile(r"(^|/)(readme|changelog|contributing|code_of_conduct)\b", re.I)
+_DOC_PAT = re.compile(r"(^|/)(docs?/|.*\.rst$|AGENTS\.md|INTENT\.md|llms\.txt)", re.I)
+_TEST_PAT = re.compile(r"(^|/)tests?/|(?:^|[/_])test_|_test\.", re.I)
+_CODE_PAT = re.compile(r"\.(py|js|ts|go|rs|java|c|cpp|h|rb)(\b|:)", re.I)
+_CONFIG_PAT = re.compile(r"(pyproject\.toml|setup\.cfg|\.ya?ml|\.toml|\.json|Dockerfile|\.env)($|:)", re.I)
+
+
+def classify_source(location: str) -> str:
+    """Deterministic fallback classifier for a citation location string.
+
+    LLM may also suggest a source_class; we always run this classifier on top
+    as a safety net so README prose can't be mis-classified as code.
+    """
+    if not location:
+        return "other"
+    loc = location.strip()
+    if _TEST_PAT.search(loc):
+        return "test"
+    if _README_PAT.search(loc):
+        return "readme"
+    if _DOC_PAT.search(loc):
+        return "doc"
+    if _CONFIG_PAT.search(loc):
+        return "config"
+    if _CODE_PAT.search(loc):
+        return "code"
+    return "other"
 
 _EVIDENCE_PROMPT_TEMPLATE = """\
 You are an evidence collector. Your job: find observable evidence in the target content for ONE rubric dimension.
@@ -27,6 +70,19 @@ Instructions:
 
 Output valid JSON only. No prose before or after.
 
+Each citation MUST include a source_class tag describing WHERE the evidence came from:
+- "code"   — source code (e.g. src/*.py, functions, classes, logic)
+- "test"   — a test file that asserts behavior
+- "config" — config/manifest (pyproject.toml, yaml, json schemas, dotfiles)
+- "readme" — README/CHANGELOG/CONTRIBUTING/CODE_OF_CONDUCT
+- "doc"    — prose documentation (docs/*, *.rst, AGENTS.md, INTENT.md, llms.txt)
+- "other"  — none of the above
+
+Code and test citations are ground-truth; README and doc citations are self-description
+and may be marketing. Tag accurately — a later step down-weights README/doc evidence.
+
+Output valid JSON only. No prose before or after.
+
 Format:
 {{
   "dim_id": "{dim_id}",
@@ -34,7 +90,7 @@ Format:
   "confidence": "high" | "medium" | "low",
   "hedge": false,
   "citations": [
-    {{"quote": "<exact short quote or section reference>", "location": "<file:line or section name>"}}
+    {{"quote": "<exact short quote or section reference>", "location": "<file:line or section name>", "source_class": "code|test|config|readme|doc|other"}}
   ],
   "evidence_summary": "<1-2 sentence summary of what the evidence shows>"
 }}
@@ -96,8 +152,34 @@ def _collect_one(
     if ev.get("confidence") == "low":
         ev["hedge"] = True
 
+    # Source-class safety net: always reclassify via deterministic regex,
+    # don't trust the LLM tag alone. README prose must not masquerade as code.
+    citations = ev.get("citations") or []
+    for c in citations:
+        if isinstance(c, dict):
+            suggested = c.get("source_class")
+            fallback = classify_source(c.get("location", ""))
+            # If regex detected a specific class, prefer it over a generic LLM guess.
+            if fallback != "other":
+                c["source_class"] = fallback
+            elif suggested in SOURCE_CLASSES:
+                c["source_class"] = suggested
+            else:
+                c["source_class"] = "other"
+    ev["citations"] = citations
+    ev["source_class_mix"] = _source_class_mix(citations)
+
     ev["dim_name"] = dim["name"]
     return ev
+
+
+def _source_class_mix(citations: list[dict[str, Any]]) -> dict[str, int]:
+    mix = {k: 0 for k in SOURCE_CLASSES}
+    for c in citations:
+        sc = c.get("source_class", "other") if isinstance(c, dict) else "other"
+        if sc in mix:
+            mix[sc] += 1
+    return mix
 
 
 def _extract_json(text: str) -> dict[str, Any]:

@@ -1,0 +1,114 @@
+name: issue-worthiness
+version: 0.1.0
+description: >
+  Decide whether a candidate idea surfaced in a Claude Code transcript warrants
+  filing as a GitHub issue. Used by the daily issue-harvester.
+
+  Evidence-first: every dimension score must cite a specific quote from the
+  candidate text or surrounding transcript context. Dimensions without evidence
+  are hedged and clamped; items with hard-gate dims hedged are auto-skipped.
+
+dimensions:
+  - id: concreteness
+    weight: 3
+    hard_gate: true
+    evidence_required: >
+      Names a specific file, function, behavior, bypass, or named thing.
+      Vibes and vague aspirations do not qualify.
+      Good: "the caller-of-verify script at scripts/onboard.sh can be edited".
+      Bad: "we should probably think about security more".
+
+  - id: actionability
+    weight: 3
+    hard_gate: true
+    evidence_required: >
+      Has an owner-executable next step. A competent reader can infer the first
+      action without asking follow-up questions.
+      Good: "add RFC 3161 timestamp field to signed manifest".
+      Bad: "think about the trust model".
+
+  - id: novelty
+    weight: 3
+    hard_gate: true
+    evidence_required: >
+      Not already captured as an open issue in the target repo, not already
+      addressed in README/SPEC/SECURITY.md, not already logged as a cogito
+      memory with "addressed" status. The context provided to the scorer
+      includes top cogito memories and recent open issue titles; check them.
+
+  - id: effort
+    weight: 2
+    evidence_required: >
+      Explicit or inferable scope signal — minutes, hours, days, weeks.
+      Good: "2-hour calibration run" or "1-3 days for Rekor integration".
+      Bad: no scope mentioned anywhere.
+
+  - id: correctness_vs_polish
+    weight: 2
+    evidence_required: >
+      Is this a correctness issue (affects a claim in docs/code, a threat-model
+      gap, a bug) or a polish/cosmetic preference? Correctness scores higher.
+      Evidence: identify whether the candidate describes something that is
+      currently *wrong* vs. something that could be *nicer*.
+
+  - id: blast_radius
+    weight: 2
+    evidence_required: >
+      Downstream impact — does this affect every user of the tool, or only
+      internal workflow? Affects a published claim, or an internal polish?
+      Evidence: identify who is harmed if this is not fixed.
+
+gates:
+  # Hard gate: any of these dims hedged → auto-skip (do not file)
+  hard_gates:
+    - concreteness
+    - actionability
+    - novelty
+
+  # Aggregate threshold for automatic filing
+  auto_file_threshold: 7.0
+
+  # Items below auto-file but above review go to review queue for human decision
+  review_queue_threshold: 6.0
+
+rejection_signals:
+  # Phrases near the candidate that indicate the idea was retracted/rejected
+  # If detected within 5 messages of candidate, auto-skip regardless of score
+  - "scratch that"
+  - "nevermind"
+  - "never mind"
+  - "don't file"
+  - "don't do that"
+  - "actually skip"
+  - "not worth"
+  - "skip it"
+  - "let's not"
+  - "not gonna do"
+
+output_format:
+  issue_body_template: |
+    {summary}
+
+    ## Context
+
+    Surfaced in session {session_id} on {date}.
+
+    **Surrounding conversation:**
+    > {context_quote}
+
+    ## Rubric evaluation
+
+    Aggregate: **{aggregate}** / 10
+
+    | Dimension | Score | Evidence |
+    |---|---|---|
+    {per_dim_table}
+
+    {hedge_note_if_any}
+
+    ## Related prior context (cogito)
+
+    {cogito_memories}
+
+    ---
+    *Filed autonomously by issue-harvester. Audit: `~/.harvester/verdicts/{verdict_id}.json`*
