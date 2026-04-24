@@ -91,12 +91,16 @@ def main() -> None:
         sys.exit(4)
     log(f"  aggregate: {aggregate_data['aggregate']}/10")
 
-    # Build receipt
+    # Build receipt — surface claude-cli mode (bare vs contextual) so
+    # downstream readers know whether the score was context-compensated.
+    backend_label = backend
+    if backend == "claude-cli":
+        backend_label = backends.claude_cli_mode()
     receipt = build_receipt(
         intent=args.intent,
         context_path=args.context,
         target_path=args.target,
-        backend=backend,
+        backend=backend_label,
         rubric=rubric,
         evidence_list=evidence_list,
         scores=scores,

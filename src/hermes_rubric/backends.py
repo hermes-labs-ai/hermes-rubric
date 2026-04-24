@@ -1,6 +1,22 @@
-"""Backend auto-detection and invocation. Priority: claude-cli > ollama-local."""
+"""Backend auto-detection and invocation. Priority: claude-cli > ollama-local.
+
+Context-compensation: when the claude-cli backend is available and
+ANTHROPIC_API_KEY is set, we invoke it in `--bare` mode. Bare mode strips
+hooks, LSP, plugin sync, auto-memory, CLAUDE.md discovery, and keychain
+reads, which prevents the scoring subprocess from inheriting session
+context that would bias its judgment (e.g. knowledge that the scored
+target was authored by the caller, or access to the caller's preferences
+via CLAUDE.md / memory files). This upholds the rubric's evidence-first
+invariant even when the scorer and the target share an owner.
+
+If ANTHROPIC_API_KEY is not set, --bare cannot be used (OAuth and
+keychain auth are blocked in bare mode); we fall back to non-bare
+--print, accepting the context-contamination risk and surfacing it
+in the receipt.
+"""
 
 import json
+import os
 import shutil
 import subprocess
 import urllib.request
@@ -71,16 +87,50 @@ def call(prompt: str, backend: Backend | None = None, max_tokens: int = 2048) ->
         raise ValueError(f"Unknown backend: {backend}")
 
 
+def _claude_cli_uses_bare() -> bool:
+    """Return True if bare mode is available (ANTHROPIC_API_KEY set)."""
+    return bool(os.environ.get("ANTHROPIC_API_KEY"))
+
+
 def _call_claude_cli(prompt: str, max_tokens: int) -> str:
+    """Invoke `claude --print` with context compensation when possible.
+
+    Prefers --bare mode (requires ANTHROPIC_API_KEY) to isolate the
+    subprocess from the caller's session context, hooks, memory, and
+    CLAUDE.md. Falls back to non-bare mode if no API key is available,
+    in which case the receipt will note 'claude-cli-contextual' instead
+    of 'claude-cli-bare' so downstream consumers know the score may have
+    been influenced by caller-side context.
+
+    Timeout is set to 300s — bare mode is fast (no bootstrap), but
+    non-bare mode can take 60-180s on first call due to hook + memory
+    initialization.
+    """
+    cmd = ["claude", "--print"]
+    if _claude_cli_uses_bare():
+        cmd.append("--bare")
+    else:
+        # Even without --bare, strip per-machine sections to reduce
+        # context bleed (cwd, env info, memory paths, git status).
+        cmd.append("--exclude-dynamic-system-prompt-sections")
+    cmd.append(prompt)
+
     r = subprocess.run(
-        ["claude", "--print", prompt],
+        cmd,
         capture_output=True,
         text=True,
-        timeout=120,
+        timeout=300,
     )
     if r.returncode != 0:
-        raise RuntimeError(f"claude --print failed (exit {r.returncode}): {r.stderr[:400]}")
+        raise RuntimeError(
+            f"claude --print failed (exit {r.returncode}): {r.stderr[:400]}"
+        )
     return r.stdout.strip()
+
+
+def claude_cli_mode() -> str:
+    """Return 'claude-cli-bare' or 'claude-cli-contextual' for the receipt."""
+    return "claude-cli-bare" if _claude_cli_uses_bare() else "claude-cli-contextual"
 
 
 def _call_ollama(prompt: str, max_tokens: int) -> str:
