@@ -62,3 +62,47 @@ This file IS the coordination handoff rolitwin asked for.
 
 ## Reverse-dep check (rolitwin's other gate)
 Confirmed: `hermes-blind/pyproject.toml` does NOT depend on hermes-rubric. The dependency direction in this refactor (rubric → blind) is acyclic-safe.
+
+## EXECUTED — 2026-04-25
+
+Refactor completed end-to-end by session `a36290a2` (this session). No
+ACK/VETO arrived from `478d8591`; auto-proceed condition met. Concurrent
+session's in-flight edit on `src/hermes_blind/multiturn.py` was left
+untouched (out of scope for this refactor).
+
+### Commits
+- **hermes-blind:** `387f0074a2793a949f2f05e300d0c812508f2d3d`
+  — `feat: absorb rubric-synthesis preambles from hermes-rubric (v0.1.1)`
+  — bumps version 0.1.0 → 0.1.1.
+- **hermes-rubric:** `5e26592a63472f0eb6e1268ab4e72bad24a43c20`
+  — `refactor: move preambles to hermes-blind dep (v0.1.3)`
+  — bumps version 0.1.2 → 0.1.3, adds `hermes-blind>=0.1.1` dep.
+
+### Test counts
+| Repo            | Before | After | Delta | New tests                                          |
+|-----------------|--------|-------|-------|----------------------------------------------------|
+| hermes-blind    | 61     | 76    | +15   | `tests/test_preambles.py` (11 incl. byte-identity) |
+| hermes-rubric   | 62     | 73    | +11   | `tests/test_preambles_shim.py` (shim + 6-combo byte-identity) |
+
+All green. Ruff clean on touched files (pre-existing F401 in
+`tests/test_agreement.py` and `tests/test_target_window.py` unchanged
+and out of refactor scope).
+
+### Self-grade (hermes-rubric on the result)
+- Backend: `google-gemini` (`gemini-2.5-flash-lite`)
+- Scope: `results-bundle`, debias on
+- Aggregate: **6.0 / 10**
+- All 6 dimensions scored 6/6 — clean middle, no hedge cap (1 dim
+  hedge-noted: Error Handling Completeness, score still 6).
+- Output: `/tmp/refactor-self-grade.json`
+
+### CLI surface invariant
+`hermes-rubric --scope-class {gate-plan|sweep-plan|results-bundle}
+--intent-debias` parses identically and produces byte-identical
+synthesize-stage prompts across all 6 (scope, debias) combinations
+covered by `test_synthesize_produces_byte_identical_prompt`.
+
+### Migration window
+`hermes_rubric.preambles` is now a thin re-export shim. External
+callers importing from the old path keep working through the v0.1.x
+line. Removal slated for v0.2.0.
