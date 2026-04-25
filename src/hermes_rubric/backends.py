@@ -23,7 +23,10 @@ import urllib.request
 import urllib.error
 from typing import Literal
 
-Backend = Literal["claude-cli", "ollama-local"]
+Backend = Literal["claude-cli", "ollama-local", "dashscope-qwen"]
+
+_DASHSCOPE_DEFAULT_MODEL = "qwen-plus"
+_DASHSCOPE_URL = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions"
 
 _OLLAMA_DEFAULT_MODEL = "qwen3.5:14b"
 # Prefer non-reasoning models for structured JSON output. qwen3.5 reasoning
@@ -83,6 +86,8 @@ def call(prompt: str, backend: Backend | None = None, max_tokens: int = 2048) ->
         return _call_claude_cli(prompt, max_tokens)
     elif backend == "ollama-local":
         return _call_ollama(prompt, max_tokens)
+    elif backend == "dashscope-qwen":
+        return _call_dashscope(prompt, max_tokens)
     else:
         raise ValueError(f"Unknown backend: {backend}")
 
@@ -131,6 +136,50 @@ def _call_claude_cli(prompt: str, max_tokens: int) -> str:
 def claude_cli_mode() -> str:
     """Return 'claude-cli-bare' or 'claude-cli-contextual' for the receipt."""
     return "claude-cli-bare" if _claude_cli_uses_bare() else "claude-cli-contextual"
+
+
+def _call_dashscope(prompt: str, max_tokens: int) -> str:
+    """Invoke Alibaba DashScope (Qwen) via OpenAI-compatible endpoint.
+
+    Uses temperature=0 and a fixed seed for determinism. Model is qwen-plus
+    by default; override via HERMES_RUBRIC_QWEN_MODEL env var (e.g. qwen-max,
+    qwen-turbo). Requires DASHSCOPE_API_KEY in env.
+    """
+    api_key = os.environ.get("DASHSCOPE_API_KEY")
+    if not api_key:
+        raise RuntimeError("DASHSCOPE_API_KEY not set; cannot use dashscope-qwen backend")
+    model = os.environ.get("HERMES_RUBRIC_QWEN_MODEL", _DASHSCOPE_DEFAULT_MODEL)
+
+    payload = json.dumps({
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0,
+        "seed": 42,
+        "max_tokens": max_tokens,
+    }).encode()
+    req = urllib.request.Request(
+        _DASHSCOPE_URL,
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=300) as resp:
+            data = json.loads(resp.read())
+            return data["choices"][0]["message"]["content"].strip()
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", errors="replace")[:400]
+        raise RuntimeError(f"DashScope call failed (HTTP {e.code}): {body}") from e
+    except urllib.error.URLError as e:
+        raise RuntimeError(f"DashScope call failed: {e}") from e
+
+
+def dashscope_model() -> str:
+    """Return the resolved Qwen model name for receipts."""
+    return os.environ.get("HERMES_RUBRIC_QWEN_MODEL", _DASHSCOPE_DEFAULT_MODEL)
 
 
 def _call_ollama(prompt: str, max_tokens: int) -> str:

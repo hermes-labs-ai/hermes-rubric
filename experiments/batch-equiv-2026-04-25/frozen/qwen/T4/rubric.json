@@ -1,0 +1,54 @@
+{
+  "rubric_intent": "Score this research report on rigor and evidence",
+  "target_type": "research-report",
+  "dimensions": [
+    {
+      "id": "dim_1",
+      "name": "Methodological Transparency",
+      "description": "The extent to which the report explicitly states and justifies its research design, data collection procedures, sampling strategy, and analytical methods.",
+      "evidence_instructions": "Look for a dedicated methods section or equivalent labeled subsection; verify that each major methodological choice (e.g., sampling frame, instrument selection, statistical test) is named and justified\u2014not merely listed.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_2",
+      "name": "Data Source Documentation",
+      "description": "The clarity and specificity with which primary or secondary data sources are identified, including provenance, temporal scope, access conditions, and known limitations.",
+      "evidence_instructions": "Scan for citations or descriptions of datasets (e.g., '2022 NHANES public-use file, cycle 2021\u20132022'); check whether version numbers, repository DOIs/URLs, or institutional custodians are provided\u2014and whether caveats about data quality or representativeness are acknowledged.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_3",
+      "name": "Analytical Traceability",
+      "description": "The degree to which reported findings can be directly linked to underlying data and analysis steps, enabling independent verification of key results.",
+      "evidence_instructions": "Identify at least one core quantitative or qualitative finding and trace it backward: confirm presence of raw or processed data excerpts (e.g., tables, codebook snippets), analysis code references (if included), or step-by-step derivation logic (e.g., 'Equation 3 applied to Table 4 yields effect size d = 0.42'). Absence of any such linkage is evidence of low traceability.",
+      "weight": 3,
+      "hedge": true
+    },
+    {
+      "id": "dim_4",
+      "name": "Limitations Disclosure",
+      "description": "The explicit identification and critical discussion of methodological, conceptual, or empirical constraints that affect interpretation or generalizability of findings.",
+      "evidence_instructions": "Search for a dedicated 'Limitations' section or integrated statements in discussion/conclusion; count how many distinct, non-generic limitations (e.g., 'selection bias due to opt-in survey mode', not 'more research is needed') are named and explained in relation to specific findings.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_5",
+      "name": "Causal Language Calibration",
+      "description": "The precision with which claims about causality, association, or directionality align with the study\u2019s actual design and analytical capacity.",
+      "evidence_instructions": "Extract all statements containing causal or directional language (e.g., 'causes', 'leads to', 'drives', 'mediates'); cross-check against the stated design (e.g., RCT vs. cross-sectional); flag mismatches (e.g., asserting causation from correlational analysis without robustness checks or causal identification strategy).",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_6",
+      "name": "Replication Support Infrastructure",
+      "description": "The provision of materials or metadata enabling replication or reanalysis\u2014such as code, cleaned datasets, or detailed protocols\u2014even if not embedded in the main text.",
+      "evidence_instructions": "Check for supplementary materials section, data/code availability statements, DOIs to repositories, or links to OSF/GitHub; verify that referenced resources exist and contain usable artifacts (e.g., not just 'code available upon request'); absence of any mention counts as zero evidence.",
+      "weight": 2,
+      "hedge": true
+    }
+  ]
+}

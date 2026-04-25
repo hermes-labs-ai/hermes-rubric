@@ -1,0 +1,120 @@
+[
+  {
+    "dim_id": "dim_methodological_transparency",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [],
+    "evidence_summary": "No dedicated methods section or equivalent subsection is present in the target content; all excerpts are from a rubric application report analyzing papers via abstracts only, with no description or justification of research design, sampling, data collection, or analytical methods for the assessment itself or for the papers being scored.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Methodological Transparency"
+  },
+  {
+    "dim_id": "dim_evidence",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [],
+    "evidence_summary": "No observable evidence for Data Source Documentation (e.g., dataset names with version, DOI, URL, custodian, or explicit caveats about provenance, temporal scope, access conditions, or limitations) appears in the target content. All references are to model names (e.g., 'GPT-4o') or abstract-level counts ('1,461 controlled experiments'), with no identification of underlying datasets, repositories, or data provenance details.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Data Source Documentation"
+  },
+  {
+    "dim_id": "dim_evidence",
+    "evidence_found": true,
+    "confidence": "medium",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "6 model-format conditions named (GPT-4o, GPT-5.2 Thinking, Claude Haiku 4.5 \u00d7 2 formats)",
+        "location": "Paper 1: Evidence (per dimension) \u2192 dim_evidence",
+        "source_class": "other"
+      },
+      {
+        "quote": "\"23/24 pair-condition cells\" directionally consistent \u2014 specific cell-level claim",
+        "location": "Paper 1: Evidence (per dimension) \u2192 dim_evidence",
+        "source_class": "other"
+      },
+      {
+        "quote": "\"19.6-56.7 percentage points\" \u2014 specific range with condition (across 6 cells)",
+        "location": "Paper 1: dim_precision",
+        "source_class": "other"
+      }
+    ],
+    "evidence_summary": "The text reports specific quantitative findings (e.g., '23/24 pair-condition cells', '19.6-56.7 percentage points') and names underlying data conditions (e.g., six model-format conditions), but provides no raw data excerpts, code references, or step-by-step derivation linking those numbers to source data \u2014 linkage is descriptive, not traceable.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 3
+    },
+    "dim_name": "Analytical Traceability"
+  },
+  {
+    "dim_id": "dim_limitations",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [],
+    "evidence_summary": "No observable evidence of a dedicated 'Limitations' section or integrated statements naming and explaining specific, non-generic limitations (e.g., selection bias, external validity constraints) in relation to findings. Abstracts of both papers lack explicit limitations discussion; the rubric assessment explicitly hedges dim_limitations due to absence of full-text access and absence of limitations content in abstracts.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Limitations Disclosure"
+  },
+  {
+    "dim_id": "dim_5",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [],
+    "evidence_summary": "No causal or directional language (e.g., 'causes', 'leads to', 'drives', 'mediates') appears in the provided excerpt; all claims are descriptive, comparative, or methodological (e.g., 'characterize', 'defined mechanistically', 'primarily on GPT-4o'). No study design details (e.g., RCT, cross-sectional) are stated, preventing cross-check for calibration mismatches.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Causal Language Calibration"
+  },
+  {
+    "dim_id": "dim_reproducibility",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [],
+    "evidence_summary": "No observable evidence for Replication Support Infrastructure (e.g., supplementary materials section, data/code availability statement, DOI, OSF/GitHub link, or repository reference) appears in the provided excerpt. The text discusses 'dim_reproducibility' as a rubric dimension and notes 'Code availability and dataset release status unknown from abstract' for Paper 1, but contains no actual citation, link, DOI, or statement confirming provision of replicable artifacts.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Replication Support Infrastructure"
+  }
+]

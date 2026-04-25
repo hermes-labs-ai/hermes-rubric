@@ -42,9 +42,19 @@ from hermes_rubric.score import (
 from hermes_rubric.synthesize import synthesize
 
 EXP_ROOT = Path(__file__).parent
-FROZEN = EXP_ROOT / "frozen"
+FROZEN_ROOT = EXP_ROOT / "frozen"
 RUNS = EXP_ROOT / "runs"
 MANIFEST = EXP_ROOT / "RUNS-MANIFEST.csv"
+
+_BACKEND_SHORT = {
+    "claude-cli": "claude",
+    "ollama-local": "ollama",
+    "dashscope-qwen": "qwen",
+}
+
+
+def frozen_dir(backend: str) -> Path:
+    return FROZEN_ROOT / _BACKEND_SHORT.get(backend, backend)
 
 # Deterministic ordering seed
 SEED = 42
@@ -112,10 +122,11 @@ def now_iso() -> str:
 
 
 def freeze_phase(targets: list[str], backend: str) -> None:
-    FROZEN.mkdir(parents=True, exist_ok=True)
+    base = frozen_dir(backend)
+    base.mkdir(parents=True, exist_ok=True)
     for tid in targets:
         spec = TARGETS[tid]
-        tdir = FROZEN / tid
+        tdir = base / tid
         tdir.mkdir(exist_ok=True)
         rubric_path = tdir / "rubric.json"
         evidence_path = tdir / "evidence.json"
@@ -150,8 +161,8 @@ def freeze_phase(targets: list[str], backend: str) -> None:
               file=sys.stderr)
 
 
-def load_frozen(tid: str) -> tuple[dict, list[dict], str]:
-    tdir = FROZEN / tid
+def load_frozen(tid: str, backend: str) -> tuple[dict, list[dict], str]:
+    tdir = frozen_dir(backend) / tid
     rubric = json.loads((tdir / "rubric.json").read_text())
     evidence = json.loads((tdir / "evidence.json").read_text())
     target = (tdir / "target.txt").read_text()
@@ -159,7 +170,7 @@ def load_frozen(tid: str) -> tuple[dict, list[dict], str]:
 
 
 def _run_score_only(tid: str, mode: str, rep: int, phase: str, backend: str) -> dict:
-    rubric, evidence, _target = load_frozen(tid)
+    rubric, evidence, _target = load_frozen(tid, backend)
     started = time.monotonic()
     started_iso = now_iso()
     fallback_used = False
@@ -190,8 +201,12 @@ def _run_score_only(tid: str, mode: str, rep: int, phase: str, backend: str) -> 
     elapsed = time.monotonic() - started
 
     backend_label = backend
+    model_id = None
     if backend == "claude-cli":
         backend_label = backends_mod.claude_cli_mode()
+    elif backend == "dashscope-qwen":
+        model_id = backends_mod.dashscope_model()
+        backend_label = f"dashscope-{model_id}"
     if mode == "batched":
         backend_label = f"{backend_label}+batch"
 
@@ -206,7 +221,7 @@ def _run_score_only(tid: str, mode: str, rep: int, phase: str, backend: str) -> 
         "tool_version": __version__,
         "backend": backend,
         "backend_label": backend_label,
-        "model_id": None,  # claude-cli does not expose model_id; ollama could
+        "model_id": model_id,
         "started_at": started_iso,
         "ended_at": now_iso(),
         "latency_seconds": round(elapsed, 2),
@@ -221,7 +236,7 @@ def _run_score_only(tid: str, mode: str, rep: int, phase: str, backend: str) -> 
 
 
 def _run_end_to_end(tid: str, mode: str, rep: int, phase: str, backend: str) -> dict:
-    rubric, _frozen_evidence, target = load_frozen(tid)
+    rubric, _frozen_evidence, target = load_frozen(tid, backend)
     started = time.monotonic()
     started_iso = now_iso()
 
@@ -252,8 +267,12 @@ def _run_end_to_end(tid: str, mode: str, rep: int, phase: str, backend: str) -> 
     fallback_used = (mode == "batched" and call_count["n"] > expected_calls)
 
     backend_label = backend
+    model_id = None
     if backend == "claude-cli":
         backend_label = backends_mod.claude_cli_mode()
+    elif backend == "dashscope-qwen":
+        model_id = backends_mod.dashscope_model()
+        backend_label = f"dashscope-{model_id}"
     if mode == "batched":
         backend_label = f"{backend_label}+batch"
 
@@ -268,6 +287,7 @@ def _run_end_to_end(tid: str, mode: str, rep: int, phase: str, backend: str) -> 
         "tool_version": __version__,
         "backend": backend,
         "backend_label": backend_label,
+        "model_id": model_id,
         "started_at": started_iso,
         "ended_at": now_iso(),
         "latency_seconds": round(elapsed, 2),
@@ -339,7 +359,7 @@ def main() -> None:
     p.add_argument("--n", type=int, default=None,
                    help="reps per (target, mode); defaults: pilot=3, main_a=5, main_b=3, validate=3")
     p.add_argument("--backend", default="claude-cli",
-                   choices=["claude-cli", "ollama-local"])
+                   choices=["claude-cli", "ollama-local", "dashscope-qwen"])
     args = p.parse_args()
 
     if args.phase == "pilot":
@@ -358,7 +378,7 @@ def main() -> None:
         return
 
     # Ensure all requested targets are frozen
-    missing = [t for t in targets if not (FROZEN / t / "evidence.json").exists()]
+    missing = [t for t in targets if not (frozen_dir(args.backend) / t / "evidence.json").exists()]
     if missing:
         print(f"ERROR: targets not frozen yet: {missing}. Run `freeze` first.", file=sys.stderr)
         sys.exit(2)
