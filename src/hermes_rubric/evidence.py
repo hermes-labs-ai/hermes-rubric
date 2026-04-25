@@ -349,21 +349,51 @@ def _extract_json(text: str) -> dict[str, Any]:
     raise ValueError(f"Cannot extract JSON from evidence response: {text[:300]}")
 
 
-def read_target(target_path: str) -> tuple[str, str]:
-    """Read target file(s). Returns (content, resolved_path)."""
+DEFAULT_TARGET_WINDOW_BYTES = 8000
+
+
+def _warn_truncation(path: str, actual: int, window: int) -> None:
+    """Emit a stderr warning when a target file is silently truncated."""
+    import sys
+    lost = actual - window
+    sys.stderr.write(
+        f"[hermes-rubric] WARNING: target file exceeds --target-window-bytes "
+        f"({actual} > {window}); last {lost} chars will not be visible to the "
+        f"rubric. Consider a tighter gate-card style artifact "
+        f"(see hermes-handbook/rubric-passthrough-pattern.md). [{path}]\n"
+    )
+
+
+def read_target(target_path: str, window_bytes: int = DEFAULT_TARGET_WINDOW_BYTES) -> tuple[str, str]:
+    """Read target file(s). Returns (content, resolved_path).
+
+    Files larger than ``window_bytes`` are silently visible-only up to that
+    cap; a stderr warning is emitted so the caller knows evidence beyond the
+    window is invisible to the rubric.
+    """
     p = Path(target_path).expanduser()
 
     if p.is_file():
-        return p.read_text(errors="replace"), str(p)
+        # Single-file mode: surface full content to the caller, but warn if
+        # the file is larger than the configured window. Downstream stages
+        # are responsible for honoring the window when they construct prompts.
+        text = p.read_text(errors="replace")
+        if len(text) > window_bytes:
+            _warn_truncation(str(p), len(text), window_bytes)
+        return text, str(p)
 
     if p.is_dir():
-        # Concatenate all text files in the directory (up to 50 files, 8K chars each)
+        # Concatenate all text files in the directory (up to 50 files,
+        # window_bytes chars each).
         parts = []
         count = 0
         for f in sorted(p.rglob("*")):
             if f.is_file() and f.suffix in (".md", ".py", ".txt", ".json", ".yaml", ".toml", ".rst"):
                 try:
-                    text = f.read_text(errors="replace")[:8000]
+                    raw = f.read_text(errors="replace")
+                    if len(raw) > window_bytes:
+                        _warn_truncation(str(f), len(raw), window_bytes)
+                    text = raw[:window_bytes]
                     parts.append(f"=== {f.relative_to(p)} ===\n{text}")
                     count += 1
                     if count >= 50:
@@ -376,21 +406,30 @@ def read_target(target_path: str) -> tuple[str, str]:
     raise FileNotFoundError(f"Target not found: {target_path}")
 
 
-def read_context(context_path: str) -> str:
+def read_context(context_path: str, window_bytes: int = DEFAULT_TARGET_WINDOW_BYTES) -> str:
     """Read context file(s) for rubric synthesis."""
     import glob as glob_mod
 
     p = Path(context_path).expanduser()
     if p.is_file():
-        return p.read_text(errors="replace")[:8000]
+        raw = p.read_text(errors="replace")
+        if len(raw) > window_bytes:
+            _warn_truncation(str(p), len(raw), window_bytes)
+        return raw[:window_bytes]
 
     # Try glob
     matches = sorted(glob_mod.glob(str(p)))
     if matches:
         parts = []
+        # Per-file budget when concatenating multiple matches: half the window,
+        # preserving the historical 8000 -> 4000 ratio.
+        per_file = max(1, window_bytes // 2)
         for m in matches[:5]:
             try:
-                parts.append(Path(m).read_text(errors="replace")[:4000])
+                raw = Path(m).read_text(errors="replace")
+                if len(raw) > per_file:
+                    _warn_truncation(str(m), len(raw), per_file)
+                parts.append(raw[:per_file])
             except OSError:
                 continue
         return "\n\n---\n\n".join(parts)

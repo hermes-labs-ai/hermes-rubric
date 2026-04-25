@@ -29,6 +29,9 @@ def main() -> None:
     parser.add_argument("--batch", action="store_true",
                         help="Batch evidence + score into one LLM call per stage. "
                              "Falls back to per-dim on parse failure or oversize prompt.")
+    parser.add_argument("--target-window-bytes", type=int, default=8000,
+                        help="Max bytes of target/context content visible to the rubric. "
+                             "Files exceeding this trigger a stderr warning. Default: 8000.")
 
     args = parser.parse_args()
 
@@ -46,12 +49,12 @@ def main() -> None:
 
     # Read inputs
     try:
-        target_content, resolved_target = read_target(args.target)
+        target_content, resolved_target = read_target(args.target, window_bytes=args.target_window_bytes)
     except FileNotFoundError as e:
         print(f"ERROR: {e}", file=sys.stderr)
         sys.exit(1)
 
-    context_content = read_context(args.context)
+    context_content = read_context(args.context, window_bytes=args.target_window_bytes)
     log(f"target: {resolved_target} ({len(target_content)} chars)")
     log(f"context: {args.context} ({len(context_content)} chars)")
 
