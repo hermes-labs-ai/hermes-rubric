@@ -1,0 +1,155 @@
+[
+  {
+    "dim_id": "Test Coverage Depth",
+    "evidence_found": true,
+    "confidence": "medium",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "Every edge case has a test. Every error path is exercised.",
+        "location": "README.md:Quality",
+        "source_class": "readme"
+      },
+      {
+        "quote": "100% test coverage on the core API",
+        "location": "README.md:Features",
+        "source_class": "readme"
+      }
+    ],
+    "evidence_summary": "The README claims that every edge case has a test and every error path is exercised, in addition to 100% test coverage on the core API. This suggests a focus on depth beyond basic functionality.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 2,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Test Coverage Depth"
+  },
+  {
+    "dim_id": "dim_2",
+    "evidence_found": true,
+    "confidence": "medium",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "Type-safe field access with full mypy coverage",
+        "location": "README.md:Features",
+        "source_class": "readme"
+      }
+    ],
+    "evidence_summary": "The README explicitly states 'Type-safe field access with full mypy coverage', indicating an intention to use mypy for static analysis and type safety.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 1,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Type Safety and Static Analysis"
+  },
+  {
+    "dim_id": "dim_3",
+    "evidence_found": true,
+    "confidence": "medium",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "Errors are caught and re-raised with structured context.",
+        "location": "README.md#Quality",
+        "source_class": "readme"
+      }
+    ],
+    "evidence_summary": "The README states that errors are caught and re-raised with structured context, indicating a focus on error handling granularity and context.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 1,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Error Handling Granularity and Context"
+  },
+  {
+    "dim_id": "dim_4",
+    "evidence_found": true,
+    "confidence": "high",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "Zero dependencies",
+        "location": "README.md:11",
+        "source_class": "readme"
+      }
+    ],
+    "evidence_summary": "The README explicitly states that the library has 'Zero dependencies'.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 1,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Dependency Management Rigor"
+  },
+  {
+    "dim_id": "dim_5",
+    "evidence_found": true,
+    "confidence": "high",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "Every public function has a docstring.",
+        "location": "README.md#Quality",
+        "source_class": "readme"
+      },
+      {
+        "quote": "Type-safe field access with full mypy coverage",
+        "location": "README.md#Features",
+        "source_class": "readme"
+      }
+    ],
+    "evidence_summary": "The README explicitly states that every public function has a docstring and highlights features like type-safe field access with mypy coverage, indicating a focus on code clarity and documentation.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 2,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Code Readability and Documentation"
+  },
+  {
+    "dim_id": "dim_6",
+    "evidence_found": true,
+    "confidence": "medium",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "Production-ready.",
+        "location": "README.md:4",
+        "source_class": "readme"
+      },
+      {
+        "quote": "Battle-tested in production at multiple companies",
+        "location": "README.md:11",
+        "source_class": "readme"
+      }
+    ],
+    "evidence_summary": "The README explicitly claims the library is 'production-ready' and 'battle-tested in production at multiple companies'.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 2,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Production Readiness Claims Verification"
+  }
+]

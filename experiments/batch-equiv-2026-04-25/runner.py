@@ -50,6 +50,7 @@ _BACKEND_SHORT = {
     "claude-cli": "claude",
     "ollama-local": "ollama",
     "dashscope-qwen": "qwen",
+    "google-gemini": "gemini",
 }
 
 
@@ -207,6 +208,9 @@ def _run_score_only(tid: str, mode: str, rep: int, phase: str, backend: str) -> 
     elif backend == "dashscope-qwen":
         model_id = backends_mod.dashscope_model()
         backend_label = f"dashscope-{model_id}"
+    elif backend == "google-gemini":
+        model_id = backends_mod.gemini_model()
+        backend_label = f"gemini-{model_id}"
     if mode == "batched":
         backend_label = f"{backend_label}+batch"
 
@@ -273,6 +277,9 @@ def _run_end_to_end(tid: str, mode: str, rep: int, phase: str, backend: str) -> 
     elif backend == "dashscope-qwen":
         model_id = backends_mod.dashscope_model()
         backend_label = f"dashscope-{model_id}"
+    elif backend == "google-gemini":
+        model_id = backends_mod.gemini_model()
+        backend_label = f"gemini-{model_id}"
     if mode == "batched":
         backend_label = f"{backend_label}+batch"
 
@@ -359,7 +366,7 @@ def main() -> None:
     p.add_argument("--n", type=int, default=None,
                    help="reps per (target, mode); defaults: pilot=3, main_a=5, main_b=3, validate=3")
     p.add_argument("--backend", default="claude-cli",
-                   choices=["claude-cli", "ollama-local", "dashscope-qwen"])
+                   choices=["claude-cli", "ollama-local", "dashscope-qwen", "google-gemini"])
     args = p.parse_args()
 
     if args.phase == "pilot":

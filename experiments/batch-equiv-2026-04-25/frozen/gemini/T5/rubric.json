@@ -1,0 +1,54 @@
+{
+  "rubric_intent": "Score this document on engineering substance.",
+  "target_type": "document",
+  "dimensions": [
+    {
+      "id": "dim_1",
+      "name": "Technical Depth",
+      "description": "Measures the extent to which the document delves into specific technical details, algorithms, or architectural choices.",
+      "evidence_instructions": "Look for detailed explanations of technical concepts, code snippets, data structures, or system designs. Assess the level of specificity and rigor in these explanations.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_2",
+      "name": "Problem Definition Clarity",
+      "description": "Evaluates how clearly and precisely the engineering problem or challenge being addressed is articulated.",
+      "evidence_instructions": "Examine the introduction and problem statement sections. Assess if the scope, constraints, and desired outcomes of the problem are unambiguously defined.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_3",
+      "name": "Solution Rationale",
+      "description": "Assesses the justification provided for the chosen engineering approach or solution.",
+      "evidence_instructions": "Review sections discussing proposed solutions, design choices, or implementation strategies. Look for explanations of why a particular approach was selected over alternatives, supported by technical reasoning.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_4",
+      "name": "Completeness of Scope",
+      "description": "Determines if the document covers all essential aspects of the engineering problem and its proposed solution.",
+      "evidence_instructions": "Scan the document for sections addressing requirements, design, implementation considerations, testing, and potential future work. Assess if any critical engineering areas appear to be omitted.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_5",
+      "name": "Technical Feasibility",
+      "description": "Measures the perceived practicality and achievability of the proposed engineering solutions within realistic constraints.",
+      "evidence_instructions": "Examine the proposed solutions and implementation plans. Look for discussions of resource requirements, potential risks, and whether the proposed work aligns with known technological capabilities.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_6",
+      "name": "Use of Engineering Terminology",
+      "description": "Evaluates the appropriate and accurate use of industry-standard engineering terms and concepts.",
+      "evidence_instructions": "Read through the document, paying attention to the language used. Assess if technical terms are used correctly and if the overall vocabulary reflects an understanding of the engineering domain.",
+      "weight": 1,
+      "hedge": false
+    }
+  ]
+}

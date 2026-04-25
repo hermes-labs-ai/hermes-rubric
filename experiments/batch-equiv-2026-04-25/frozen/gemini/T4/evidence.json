@@ -1,0 +1,263 @@
+[
+  {
+    "dim_id": "dim_methodological_soundness",
+    "evidence_found": true,
+    "confidence": "medium",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "Matched-vignette benchmark described (fictional scientific vignettes)",
+        "location": "Paper 1: Asymmetric Burden of Proof (Zenodo 18867694) - Evidence (per dimension) - dim_reproducibility",
+        "source_class": "other"
+      },
+      {
+        "quote": "Three models named with versions (GPT-4o, GPT-5.2 Thinking, Claude Haiku 4.5)",
+        "location": "Paper 1: Asymmetric Burden of Proof (Zenodo 18867694) - Evidence (per dimension) - dim_reproducibility",
+        "source_class": "other"
+      },
+      {
+        "quote": "\"Bottom-up analysis of 1,461 controlled experiments\"",
+        "location": "Paper 2: Taxonomy of Epistemic Failure Modes (Zenodo 19042469) - Evidence (per dimension) - dim_evidence",
+        "source_class": "other"
+      },
+      {
+        "quote": "\"primarily on GPT-4o\"",
+        "location": "Paper 2: Taxonomy of Epistemic Failure Modes (Zenodo 19042469) - Evidence (per dimension) - dim_evidence",
+        "source_class": "other"
+      },
+      {
+        "quote": "Seven failure modes each \"defined mechanistically, illustrated with experimental evidence\"",
+        "location": "Paper 2: Taxonomy of Epistemic Failure Modes (Zenodo 19042469) - Evidence (per dimension) - dim_evidence",
+        "source_class": "other"
+      }
+    ],
+    "evidence_summary": "Evidence for methodological soundness is found in the description of the benchmark design (matched-vignette) and the specific models and versions used (GPT-4o, GPT-5.2 Thinking, Claude Haiku 4.5) for Paper 1. For Paper 2, the evidence includes the sample size (1,461 controlled experiments), the primary model used (GPT-4o), and the approach to defining and illustrating failure modes (mechanistically defined, illustrated with experimental evidence).",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 5
+    },
+    "dim_name": "Methodological Soundness"
+  },
+  {
+    "dim_id": "dim_evidence",
+    "evidence_found": true,
+    "confidence": "high",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "Every numeric claim has a file:line, DOI, or named dataset pointer",
+        "location": "Rubric Applied (synthesized from intent + context)",
+        "source_class": "doc"
+      },
+      {
+        "quote": "6 model-format conditions named (GPT-4o, GPT-5.2 Thinking, Claude Haiku 4.5 \u00d7 2 formats)",
+        "location": "Paper 1: Asymmetric Burden of Proof (Zenodo 18867694) -> Evidence (per dimension) -> dim_evidence [Evidence Grounding]",
+        "source_class": "other"
+      },
+      {
+        "quote": "Bootstrap 95% confidence intervals reported: all \"excluding zero\"",
+        "location": "Paper 1: Asymmetric Burden of Proof (Zenodo 18867694) -> Evidence (per dimension) -> dim_evidence [Evidence Grounding]",
+        "source_class": "other"
+      },
+      {
+        "quote": "Gaps quantified: \"19.6-56.7 percentage points\"",
+        "location": "Paper 1: Asymmetric Burden of Proof (Zenodo 18867694) -> Evidence (per dimension) -> dim_evidence [Evidence Grounding]",
+        "source_class": "other"
+      },
+      {
+        "quote": "\"23/24 pair-condition cells\" directionally consistent \u2014 specific cell-level claim",
+        "location": "Paper 1: Asymmetric Burden of Proof (Zenodo 18867694) -> Evidence (per dimension) -> dim_evidence [Evidence Grounding]",
+        "source_class": "other"
+      },
+      {
+        "quote": "Matched-vignette benchmark described (fictional scientific vignettes)",
+        "location": "Paper 1: Asymmetric Burden of Proof (Zenodo 18867694) -> Evidence (per dimension) -> dim_evidence [Evidence Grounding]",
+        "source_class": "other"
+      },
+      {
+        "quote": "Evidence tier: MEDIUM \u2014 specific numbers from abstract, no file:line possible from abstract alone",
+        "location": "Paper 1: Asymmetric Burden of Proof (Zenodo 18867694) -> Evidence (per dimension) -> dim_evidence [Evidence Grounding]",
+        "source_class": "other"
+      },
+      {
+        "quote": "\"Bottom-up analysis of 1,461 controlled experiments\" \u2014 N is named with specific count",
+        "location": "Paper 2: Taxonomy of Epistemic Failure Modes (Zenodo 19042469) -> Evidence (per dimension) -> dim_evidence [Evidence Grounding]",
+        "source_class": "other"
+      },
+      {
+        "quote": "\"primarily on GPT-4o\" \u2014 model named (but hedged: \"primarily\" suggests multi-model or single-model ambiguity)",
+        "location": "Paper 2: Taxonomy of Epistemic Failure Modes (Zenodo 19042469) -> Evidence (per dimension) -> dim_evidence [Evidence Grounding]",
+        "source_class": "other"
+      },
+      {
+        "quote": "Seven failure modes each \"defined mechanistically, illustrated with experimental evidence\"",
+        "location": "Paper 2: Taxonomy of Epistemic Failure Modes (Zenodo 19042469) -> Evidence (per dimension) -> dim_evidence [Evidence Grounding]",
+        "source_class": "other"
+      },
+      {
+        "quote": "\"surface-level signals\" common pattern \u2014 characterization claim with corpus basis",
+        "location": "Paper 2: Taxonomy of Epistemic Failure Modes (Zenodo 19042469) -> Evidence (per dimension) -> dim_evidence [Evidence Grounding]",
+        "source_class": "other"
+      },
+      {
+        "quote": "Evidence tier: HIGH for N=1,461 claim; MEDIUM for per-mode illustration claim (cannot verify from abstract)",
+        "location": "Paper 2: Taxonomy of Epistemic Failure Modes (Zenodo 19042469) -> Evidence (per dimension) -> dim_evidence [Evidence Grounding]",
+        "source_class": "other"
+      }
+    ],
+    "evidence_summary": "The rubric explicitly defines evidence grounding as requiring specific pointers for numeric claims. The collected evidence shows specific counts, ranges, and model names being reported for both papers, with an assessment of the evidence tier based on the availability of detailed sources.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 1,
+      "other": 11
+    },
+    "dim_name": "Data Quality and Integrity"
+  },
+  {
+    "dim_id": "dim_evidence",
+    "evidence_found": true,
+    "confidence": "high",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "6 model-format conditions named (GPT-4o, GPT-5.2 Thinking, Claude Haiku 4.5 \u00d7 2 formats)",
+        "location": "Paper 1: Evidence (per dimension) - dim_evidence [Evidence Grounding]",
+        "source_class": "other"
+      },
+      {
+        "quote": "Bootstrap 95% confidence intervals reported: all \"excluding zero\"",
+        "location": "Paper 1: Evidence (per dimension) - dim_evidence [Evidence Grounding]",
+        "source_class": "other"
+      },
+      {
+        "quote": "Gaps quantified: \"19.6-56.7 percentage points\"",
+        "location": "Paper 1: Evidence (per dimension) - dim_evidence [Evidence Grounding]",
+        "source_class": "other"
+      },
+      {
+        "quote": "\"23/24 pair-condition cells\" directionally consistent \u2014 specific cell-level claim",
+        "location": "Paper 1: Evidence (per dimension) - dim_evidence [Evidence Grounding]",
+        "source_class": "other"
+      },
+      {
+        "quote": "Matched-vignette benchmark described (fictional scientific vignettes)",
+        "location": "Paper 1: Evidence (per dimension) - dim_evidence [Evidence Grounding]",
+        "source_class": "other"
+      },
+      {
+        "quote": "\"Bottom-up analysis of 1,461 controlled experiments\" \u2014 N is named with specific count",
+        "location": "Paper 2: Evidence (per dimension) - dim_evidence [Evidence Grounding]",
+        "source_class": "other"
+      },
+      {
+        "quote": "\"primarily on GPT-4o\" \u2014 model named (but hedged: \"primarily\" suggests multi-model or single-model ambiguity)",
+        "location": "Paper 2: Evidence (per dimension) - dim_evidence [Evidence Grounding]",
+        "source_class": "other"
+      },
+      {
+        "quote": "Seven failure modes each \"defined mechanistically, illustrated with experimental evidence\"",
+        "location": "Paper 2: Evidence (per dimension) - dim_evidence [Evidence Grounding]",
+        "source_class": "other"
+      },
+      {
+        "quote": "\"surface-level signals\" common pattern \u2014 characterization claim with corpus basis",
+        "location": "Paper 2: Evidence (per dimension) - dim_evidence [Evidence Grounding]",
+        "source_class": "other"
+      }
+    ],
+    "evidence_summary": "The report explicitly links numeric claims to specific data points, such as named model formats, quantified confidence intervals, and exact counts of experimental conditions or failure modes, demonstrating a strong grounding in the presented evidence.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 9
+    },
+    "dim_name": "Evidence-Based Argumentation"
+  },
+  {
+    "dim_id": "dim_literature_integration",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [],
+    "evidence_summary": "The provided excerpt focuses on the application of a rubric to two papers and details evidence for other rubric dimensions. There is no observable evidence within the 'Introduction' or 'Literature Review' sections of the target content that demonstrates how the reports critically engage with or build upon existing relevant literature, nor how they position their research within the scholarly conversation or identify gaps. The content is focused on scoring and evidence grounding for other dimensions.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Literature Integration"
+  },
+  {
+    "dim_id": "dim_limitations",
+    "evidence_found": true,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [
+      {
+        "quote": "Abstract does not contain a limitations statement (expected \u2014 limitations belong in body)",
+        "location": "Paper 1: Asymmetric Burden of Proof (Zenodo 18867694) -> Evidence (per dimension) -> dim_limitations [Limitations Honesty]",
+        "source_class": "other"
+      },
+      {
+        "quote": "Known gap from abstract: fictional vignettes (external validity question \u2014 unconfirmed whether the paper addresses this)",
+        "location": "Paper 1: Asymmetric Burden of Proof (Zenodo 18867694) -> Evidence (per dimension) -> dim_limitations [Limitations Honesty]",
+        "source_class": "other"
+      },
+      {
+        "quote": "Abstract acknowledges \"primarily GPT-4o\" \u2014 implicit limitation",
+        "location": "Paper 2: Taxonomy of Epistemic Failure Modes (Zenodo 19042469) -> Evidence (per dimension) -> dim_limitations [Limitations Honesty]",
+        "source_class": "other"
+      },
+      {
+        "quote": "No explicit limitations statement in abstract",
+        "location": "Paper 2: Taxonomy of Epistemic Failure Modes (Zenodo 19042469) -> Evidence (per dimension) -> dim_limitations [Limitations Honesty]",
+        "source_class": "other"
+      },
+      {
+        "quote": "Known gap: primarily single-model; is 1,461 experiments distributed evenly across modes? Unknown",
+        "location": "Paper 2: Taxonomy of Epistemic Failure Modes (Zenodo 19042469) -> Evidence (per dimension) -> dim_limitations [Limitations Honesty]",
+        "source_class": "other"
+      }
+    ],
+    "evidence_summary": "The provided abstracts do not contain explicit limitations sections. While Paper 1 notes a potential limitation regarding fictional vignettes, and Paper 2 implicitly acknowledges a limitation with its \"primarily GPT-4o\" scope, neither abstract offers a dedicated or comprehensive discussion of limitations.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 5
+    },
+    "dim_name": "Clarity of Findings and Limitations"
+  },
+  {
+    "dim_id": "dim_statistical_rigor",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [],
+    "evidence_summary": "The provided text does not contain information about statistical rigor. The rubric dimensions listed do not include statistical rigor, and the content focuses on other aspects of paper evaluation such as evidence grounding, claim precision, and limitations.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Statistical Rigor (if applicable)"
+  }
+]

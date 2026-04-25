@@ -19,14 +19,21 @@ import json
 import os
 import shutil
 import subprocess
+import time
 import urllib.request
 import urllib.error
 from typing import Literal
 
-Backend = Literal["claude-cli", "ollama-local", "dashscope-qwen"]
+Backend = Literal["claude-cli", "ollama-local", "dashscope-qwen", "google-gemini"]
 
 _DASHSCOPE_DEFAULT_MODEL = "qwen-plus"
 _DASHSCOPE_URL = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions"
+
+_GEMINI_DEFAULT_MODEL = "gemini-2.0-flash"
+_GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
+# Free-tier rate-limit throttle: ~15 RPM means >=4s between calls. Add slack.
+_GEMINI_MIN_INTERVAL_S = 4.5
+_gemini_last_call_t: list[float] = [0.0]
 
 _OLLAMA_DEFAULT_MODEL = "qwen3.5:14b"
 # Prefer non-reasoning models for structured JSON output. qwen3.5 reasoning
@@ -88,6 +95,8 @@ def call(prompt: str, backend: Backend | None = None, max_tokens: int = 2048) ->
         return _call_ollama(prompt, max_tokens)
     elif backend == "dashscope-qwen":
         return _call_dashscope(prompt, max_tokens)
+    elif backend == "google-gemini":
+        return _call_gemini(prompt, max_tokens)
     else:
         raise ValueError(f"Unknown backend: {backend}")
 
@@ -180,6 +189,69 @@ def _call_dashscope(prompt: str, max_tokens: int) -> str:
 def dashscope_model() -> str:
     """Return the resolved Qwen model name for receipts."""
     return os.environ.get("HERMES_RUBRIC_QWEN_MODEL", _DASHSCOPE_DEFAULT_MODEL)
+
+
+def _call_gemini(prompt: str, max_tokens: int) -> str:
+    """Invoke Google Gemini via OpenAI-compatible endpoint.
+
+    temperature=0 + seed=42 for determinism. Model defaults to gemini-2.0-flash;
+    override via HERMES_RUBRIC_GEMINI_MODEL env var. Requires GEMINI_API_KEY.
+    """
+    api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+    if not api_key:
+        raise RuntimeError("GEMINI_API_KEY / GOOGLE_API_KEY not set")
+    model = os.environ.get("HERMES_RUBRIC_GEMINI_MODEL", _GEMINI_DEFAULT_MODEL)
+
+    # Free-tier RPM throttle. Sleep until >=_GEMINI_MIN_INTERVAL_S since last call.
+    now = time.monotonic()
+    elapsed = now - _gemini_last_call_t[0]
+    if elapsed < _GEMINI_MIN_INTERVAL_S:
+        time.sleep(_GEMINI_MIN_INTERVAL_S - elapsed)
+    _gemini_last_call_t[0] = time.monotonic()
+
+    # Gemini OpenAI-compat does not accept "seed".
+    payload = json.dumps({
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0,
+        "max_tokens": max_tokens,
+    }).encode()
+    req = urllib.request.Request(
+        _GEMINI_URL,
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}",
+        },
+        method="POST",
+    )
+    # Retry on transient errors (429 rate-limit, 503 unavailable, 502/504 gateway).
+    # Max 4 attempts with exponential backoff: 5s, 15s, 30s, 60s.
+    last_err: Exception | None = None
+    for attempt, backoff in enumerate([5, 15, 30, 60]):
+        try:
+            with urllib.request.urlopen(req, timeout=300) as resp:
+                data = json.loads(resp.read())
+                return data["choices"][0]["message"]["content"].strip()
+        except urllib.error.HTTPError as e:
+            body = e.read().decode("utf-8", errors="replace")[:400]
+            if e.code in (429, 502, 503, 504) and attempt < 3:
+                last_err = e
+                time.sleep(backoff)
+                continue
+            raise RuntimeError(f"Gemini call failed (HTTP {e.code}): {body}") from e
+        except urllib.error.URLError as e:
+            if attempt < 3:
+                last_err = e
+                time.sleep(backoff)
+                continue
+            raise RuntimeError(f"Gemini call failed: {e}") from e
+    raise RuntimeError(f"Gemini call failed after retries: {last_err}")
+
+
+def gemini_model() -> str:
+    """Return the resolved Gemini model name for receipts."""
+    return os.environ.get("HERMES_RUBRIC_GEMINI_MODEL", _GEMINI_DEFAULT_MODEL)
 
 
 def _call_ollama(prompt: str, max_tokens: int) -> str:

@@ -127,6 +127,66 @@ post-Anthropic-SDK validation** because:
 - Per-dim equivalence to the level a clinical / regulatory consumer might
   require — only aggregate-level equivalence at the pre-registered margin.
 
+## Cross-model run: Gemini-2.5-flash-lite
+
+100 runs Sub-A, same 5 targets, same protocol (temp=0; gemini OpenAI-compat does not accept seed). Free-tier rate-limit throttle (4.5s min interval) applied in `backends.py`.
+
+| metric | per_dim | batched |
+|---|---|---|
+| n | 50 | 50 |
+| mean aggregate | 4.620 | 4.980 |
+| σ aggregate | 2.869 | 3.375 |
+| mean latency | 27.1s | **5.5s** (4.9× faster) |
+| mean backend calls | 6.4 | 1.0 |
+| fallback events | 0 | 0 |
+
+**Aggregate Δ = +0.360** ✓ (within ±1.0)
+
+Per-target paired means:
+
+| target | per_dim | batched | Δ |
+|---|---|---|---|
+| T1 | 8.200 | 10.000 | **+1.800** ⚠ |
+| T2 | 5.900 | 5.900 | +0.000 |
+| T3 | 6.000 | 6.000 | +0.000 |
+| T4 | 0.000 | 0.000 | +0.000 |
+| T5 | 3.000 | 3.000 | +0.000 |
+
+**T1 trips the per-target margin on Gemini** (Qwen showed +0.45 on T1 — same direction, smaller magnitude).
+
+**Per-(target, dim):** 23 of 29 pairs had Δ exactly 0 across all 10 reps. The 6 that disagreed showed σ_Δ = 0 — same shift every rep, not noise:
+
+| (target, dim) | mean Δ | σ_Δ |
+|---|---|---|
+| T1 / Library Function Error Handling | +2.0 | 0.0 |
+| T1 / dim_2 | +2.0 | 0.0 |
+| T1 / dim_4 | +2.0 | 0.0 |
+| T1 / dim_5 | +2.0 | 0.0 |
+| T1 / dim_7 | +1.0 | 0.0 |
+| T4 / dim_evidence | **-3.0** | 0.0 |
+
+## Source-class clamp behavior across modes
+
+The rubric applies three post-hoc clamps based on evidence properties, defined at `score.py:58-70`:
+- **Hedge clamp:** if `evidence.hedge=true`, score is clamped to [3,7].
+- **No-evidence cap:** if `evidence.evidence_found=false`, score is capped at 3.
+- **Self-marketing cap:** if all citations are `source_class ∈ {readme, doc}`, score is capped at 6.
+
+Across our 230 paired runs (100 Qwen Sub-A + 100 Gemini Sub-A + 30 Qwen Sub-B), clamp activation rates were near-identical between modes — the clamps fire on the same `evidence_list` regardless of mode (the post-hoc layer reads `ev`, not the score response). The exception is **Sub-B end-to-end on Gemini**, where the evidence stage produced different `evidence_found` flags between modes:
+
+- T4 per_dim: `evidence_found=false` → no-evidence cap fires → score floor 0–3
+- T4 batched: `evidence_found=true` → no cap → score in normal range
+
+This is the source of T4's +5.8 swing in Gemini Sub-B. **The aggregate margin "passes" but the underlying mechanism is that batched-mode evidence collection found things per-dim mode missed.** Whether that's a feature (batched sees cross-dim relationships) or a confound (batched scoring inflates evidence presence) is unresolvable from this experiment.
+
+## Cross-model comparison
+
+T4 / dim_evidence on both backends (same target, structurally same dim concept):
+- Qwen: batched -1.0 (consistent)
+- Gemini: batched -3.0 (consistent)
+
+**Same direction, different magnitude per model.** Engineering takeaway: aggregate equivalence holds, per-dim shifts are reproducible signals about how each model handles the batched-vs-isolated prompt structure, not LLM noise.
+
 ## Files
 
 - `frozen/qwen/{T1..T5}/{rubric.json, evidence.json, target.txt}` — committed

@@ -1,0 +1,54 @@
+{
+  "rubric_intent": "Score this repo on engineering qualities (tests, code, error handling).",
+  "target_type": "repo",
+  "dimensions": [
+    {
+      "id": "dim_1",
+      "name": "Test Coverage Depth",
+      "description": "Measures the extent to which the test suite covers the core API and edge cases, going beyond simple functional tests.",
+      "evidence_instructions": "Examine the test files (e.g., in a 'tests/' directory) for the variety of test cases, looking for tests that specifically target edge cases, error conditions, and complex interactions, and check for reported coverage metrics if available.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_2",
+      "name": "Type Safety and Static Analysis",
+      "description": "Assesses the implementation of type safety and the adherence to static analysis tools like mypy for robust code.",
+      "evidence_instructions": "Review the source code for type hints and check the project's CI configuration or documentation for evidence of mypy or other static analysis tool integration and successful runs.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_3",
+      "name": "Error Handling Granularity and Context",
+      "description": "Evaluates the comprehensiveness and structure of error handling, specifically how errors are caught, re-raised, and augmented with context.",
+      "evidence_instructions": "Inspect the source code for try-except blocks and how exceptions are handled, looking for custom exception types or mechanisms to add contextual information to raised errors.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_4",
+      "name": "Dependency Management Rigor",
+      "description": "Determines the intentionality and minimal nature of external dependencies, indicating a focus on stability and reduced attack surface.",
+      "evidence_instructions": "Examine the project's dependency list (e.g., in 'setup.py', 'pyproject.toml', or 'requirements.txt') and verify the claim of 'zero dependencies' or assess the necessity and impact of any listed dependencies.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_5",
+      "name": "Code Readability and Documentation",
+      "description": "Assesses the clarity of the codebase and the presence of comprehensive documentation for public APIs.",
+      "evidence_instructions": "Browse the source code for clear variable names, logical structure, and comments, and check for the presence and quality of docstrings on all public functions and classes.",
+      "weight": 1,
+      "hedge": false
+    },
+    {
+      "id": "dim_6",
+      "name": "Production Readiness Claims Verification",
+      "description": "Investigates evidence supporting the claim of being 'production-ready' and 'battle-tested'.",
+      "evidence_instructions": "Look for mentions of production usage in the README, issue tracker, or commit history, and assess if the project's maturity and stability seem consistent with production use.",
+      "weight": 2,
+      "hedge": true
+    }
+  ]
+}
