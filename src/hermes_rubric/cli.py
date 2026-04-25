@@ -8,6 +8,7 @@ from typing import Any
 
 from . import backends
 from .evidence import collect_evidence, read_context, read_target
+from .preambles import SCOPE_CHOICES
 from .receipt import build_receipt
 from .score import compute_aggregate, score_dimensions
 from .synthesize import synthesize
@@ -32,6 +33,13 @@ def main() -> None:
     parser.add_argument("--target-window-bytes", type=int, default=8000,
                         help="Max bytes of target/context content visible to the rubric. "
                              "Files exceeding this trigger a stderr warning. Default: 8000.")
+    parser.add_argument("--scope-class", choices=list(SCOPE_CHOICES), default=None,
+                        help="Tag the target's kind so the synthesizer judges it on "
+                             "the right axes (gate-plan / sweep-plan / results-bundle). "
+                             "Absorbs the hermes-rubric-blinded wrapper.")
+    parser.add_argument("--intent-debias", action="store_true",
+                        help="Prepend a debias preamble that neutralizes valence-loaded "
+                             "framing in the intent (e.g. 'sound', 'ready', 'rigorous').")
 
     args = parser.parse_args()
 
@@ -66,6 +74,8 @@ def main() -> None:
             context_summary=context_content,
             target_type=args.target_type,
             backend=backend,
+            scope_class=args.scope_class,
+            intent_debias=args.intent_debias,
         )
     except Exception as e:
         print(f"ERROR in Stage 1 (rubric synthesis): {e}", file=sys.stderr)

@@ -4,6 +4,7 @@ import json
 from typing import Any
 
 from . import backends
+from .preambles import compose_intent
 
 _SYNTH_PROMPT_TEMPLATE = """\
 You are a rubric generator. Your job: produce a structured evaluation rubric for the given intent and context.
@@ -45,10 +46,23 @@ def synthesize(
     context_summary: str,
     target_type: str,
     backend: str | None = None,
+    *,
+    scope_class: str | None = None,
+    intent_debias: bool = False,
 ) -> dict[str, Any]:
-    """Produce a rubric dict from intent + context summary + target type."""
+    """Produce a rubric dict from intent + context summary + target type.
+
+    ``scope_class`` and ``intent_debias`` (G7) prepend optional preambles to
+    the intent before formatting. When both are unset the call is identical
+    to the v0.1.x behavior.
+    """
+    composed_intent = compose_intent(
+        intent,
+        scope_class=scope_class,
+        intent_debias=intent_debias,
+    )
     prompt = _SYNTH_PROMPT_TEMPLATE.format(
-        intent=intent,
+        intent=composed_intent,
         target_type=target_type,
         context_summary=context_summary[:4000],
     )
