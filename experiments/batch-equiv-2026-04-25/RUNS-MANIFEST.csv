@@ -1,0 +1,7 @@
+target_id,mode,sub_exp,rep,aggregate,fallback_used,n_backend_calls,latency_seconds,tool_version,backend_label,started_at,path
+T1,per_dim,pilot,0,6.0,False,8,59.68,0.1.2,claude-cli-contextual,2026-04-25T07:56:02.237477+00:00,runs/pilot/T1_per_dim_rep0_20260425T075602.json
+T1,batched,pilot,0,6.1,False,1,22.59,0.1.2,claude-cli-contextual+batch,2026-04-25T07:57:01.914925+00:00,runs/pilot/T1_batched_rep0_20260425T075701.json
+T1,batched,pilot,1,6.2,False,1,21.48,0.1.2,claude-cli-contextual+batch,2026-04-25T07:57:24.506141+00:00,runs/pilot/T1_batched_rep1_20260425T075724.json
+T1,per_dim,pilot,1,5.8,False,8,62.82,0.1.2,claude-cli-contextual,2026-04-25T07:57:45.988887+00:00,runs/pilot/T1_per_dim_rep1_20260425T075745.json
+T1,per_dim,pilot,2,6.0,False,8,80.65,0.1.2,claude-cli-contextual,2026-04-25T07:58:48.810411+00:00,runs/pilot/T1_per_dim_rep2_20260425T075848.json
+T1,batched,pilot,2,6.1,False,1,26.06,0.1.2,claude-cli-contextual+batch,2026-04-25T08:00:09.465633+00:00,runs/pilot/T1_batched_rep2_20260425T080009.json

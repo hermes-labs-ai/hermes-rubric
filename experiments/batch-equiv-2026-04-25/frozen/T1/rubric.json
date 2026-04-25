@@ -1,0 +1,70 @@
+{
+  "rubric_intent": "Score a small Python utility (agent-convergence-scorer) on engineering qualities including tests, docs, and error handling.",
+  "target_type": "python-tool",
+  "dimensions": [
+    {
+      "id": "dim_1",
+      "name": "Test coverage of metric correctness",
+      "description": "Measures whether each public metric (exact_match_rate, token_overlap, jaccard, divergence_point, convergence_score) has unit tests covering known-value cases and boundary inputs.",
+      "evidence_instructions": "Look for tests/ directory or test_*.py files. Count tests per public function. Check for asserted numeric outputs against hand-computed expected values, not just smoke tests. Verify boundary cases: identical runs (score=1.0), fully disjoint runs, single run, two runs.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_2",
+      "name": "Edge-case input handling",
+      "description": "Measures whether the scorer gracefully handles empty runs list, single-element runs, empty strings, runs of differing lengths, and non-string inputs.",
+      "evidence_instructions": "Read score_runs and metric functions. Look for explicit guards (if not runs, len checks, type checks) and corresponding raised exceptions or documented behavior. Check tests for these edge cases. Try mentally invoking score_runs([]), score_runs([\"\"]), score_runs([\"a\"]).",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_3",
+      "name": "CLI robustness and error messages",
+      "description": "Measures whether the CLI entry point validates input JSON shape, handles malformed stdin, missing 'runs' key, and non-list values with actionable error messages rather than tracebacks.",
+      "evidence_instructions": "Find the CLI module (entry point in pyproject.toml or setup.cfg). Inspect argument parsing and JSON loading. Check for try/except around json.loads and key access, and for non-zero exit codes on failure. Verify --help text exists and is informative.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_4",
+      "name": "API docstring quality",
+      "description": "Measures whether public functions have docstrings specifying inputs, outputs, metric formulas, and value ranges matching the README's metrics table.",
+      "evidence_instructions": "Read each public function in the package's __init__ exports (score_runs, exact_match_rate, token_overlap, divergence_point, convergence_score, tokenize). Check for docstrings with Args/Returns sections, formula descriptions, and range annotations. Compare against README claims for consistency.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_5",
+      "name": "README usability and accuracy",
+      "description": "Measures whether the README's quick-start and library examples actually run as shown and whether the metrics table matches implementation behavior.",
+      "evidence_instructions": "Mentally execute the README's bash and Python snippets against the source. Verify imports resolve, function signatures match, and that the example outputs (e.g., convergence_score 0.703) are plausible given the documented formula 0.5*exact + 0.3*overlap + 0.2*div_distance_norm.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_6",
+      "name": "Numerical determinism and rounding discipline",
+      "description": "Measures whether outputs are deterministic, rounding is consistent (e.g., to 3 decimals as in README), and floating-point edge cases (division by zero on empty token sets) are handled.",
+      "evidence_instructions": "Inspect metric implementations for round() calls, default zero-division behavior, and handling of empty tokenize() output. Check that repeated calls return identical values. Look for tests pinning numeric output to specific decimals.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_7",
+      "name": "Packaging and zero-dependency claim",
+      "description": "Measures whether pyproject.toml declares Python 3.9+, has no runtime dependencies as claimed, exposes the CLI entry point, and installs cleanly.",
+      "evidence_instructions": "Read pyproject.toml. Check [project] requires-python, dependencies (should be empty or absent), [project.scripts] for the agent-convergence-scorer entry point, and that imports in source use only stdlib modules.",
+      "weight": 1,
+      "hedge": false
+    },
+    {
+      "id": "dim_8",
+      "name": "CI test execution",
+      "description": "Measures whether the advertised CI workflow actually runs the test suite across declared Python versions and would fail on regressions.",
+      "evidence_instructions": "Read .github/workflows/ci.yml. Verify it installs the package, runs pytest (or equivalent), and uses a matrix covering Python 3.9+. Check that the badge target in README matches the workflow filename.",
+      "weight": 1,
+      "hedge": true
+    }
+  ]
+}

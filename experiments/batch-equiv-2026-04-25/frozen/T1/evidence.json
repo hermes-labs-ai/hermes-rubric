@@ -1,0 +1,335 @@
+[
+  {
+    "dim_id": "dim_1",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [
+      {
+        "quote": "Files shown: __init__.py, __main__.py, cli.py, scorer.py \u2014 no tests/ directory or test_*.py file appears in the excerpt",
+        "location": "target content excerpt (truncated at 6000/7769 chars)",
+        "source_class": "other"
+      },
+      {
+        "quote": "Public metrics defined: convergence_score, divergence_point, exact_match_rate, score_runs, token_overlap, tokenize",
+        "location": "agent_convergence_scorer/__init__.py __all__",
+        "source_class": "code"
+      }
+    ],
+    "evidence_summary": "No test files or test directory are visible in the provided excerpt. Public metric functions are defined in scorer.py, but no unit tests asserting known-value outputs or boundary cases (identical runs, disjoint runs, single run, two runs) can be observed.",
+    "source_class_mix": {
+      "code": 1,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 1
+    },
+    "dim_name": "Test coverage of metric correctness"
+  },
+  {
+    "dim_id": "dim_2",
+    "evidence_found": true,
+    "confidence": "high",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "if not isinstance(runs, list) or len(runs) == 0: raise ValueError(\"input must be a non-empty list of strings...\")",
+        "location": "agent_convergence_scorer/cli.py:_extract_runs",
+        "source_class": "code"
+      },
+      {
+        "quote": "if not all(isinstance(r, str) for r in runs): raise ValueError(\"all run entries must be strings\")",
+        "location": "agent_convergence_scorer/cli.py:_extract_runs",
+        "source_class": "code"
+      },
+      {
+        "quote": "if len(runs) < 2: return 1.0",
+        "location": "agent_convergence_scorer/scorer.py:exact_match_rate",
+        "source_class": "code"
+      },
+      {
+        "quote": "If len(runs) < 2, returns {\"avg_overlap\": 1.0, \"jaccard\": 1.0} by convention.",
+        "location": "agent_convergence_scorer/scorer.py:token_overlap docstring",
+        "source_class": "code"
+      },
+      {
+        "quote": "if len(runs) < 2: return {\"diverges_at_token\": None, \"token_position\": 0, \"num_tokens_to_divergence\": 0}",
+        "location": "agent_convergence_scorer/scorer.py:divergence_point",
+        "source_class": "code"
+      },
+      {
+        "quote": "jaccard = len(inter01) / len(union01) if union01 else 0.0",
+        "location": "agent_convergence_scorer/scorer.py:token_overlap",
+        "source_class": "code"
+      },
+      {
+        "quote": "avg_overlap = sum(overlaps) / len(overlaps) if overlaps else 1.0",
+        "location": "agent_convergence_scorer/scorer.py:token_overlap",
+        "source_class": "code"
+      }
+    ],
+    "evidence_summary": "CLI layer guards empty lists and non-string entries with explicit ValueError. Scorer functions guard len(runs) < 2 by returning convention values (1.0 / None / 0). Empty-string runs are handled implicitly via tokenize (returns []) and empty-set Jaccard guarded by 'if union01 else 0.0'. No test files visible in the excerpt to confirm coverage of these edge cases via tests.",
+    "source_class_mix": {
+      "code": 7,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Edge-case input handling"
+  },
+  {
+    "dim_id": "dim_3",
+    "evidence_found": true,
+    "confidence": "high",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "except FileNotFoundError:\n    print(f\"error: file not found: {args.input}\", file=sys.stderr)\n    return 1",
+        "location": "agent_convergence_scorer/cli.py main()",
+        "source_class": "code"
+      },
+      {
+        "quote": "except json.JSONDecodeError as e:\n    print(f\"error: invalid JSON in {args.input}: {e}\", file=sys.stderr)\n    return 1",
+        "location": "agent_convergence_scorer/cli.py main()",
+        "source_class": "code"
+      },
+      {
+        "quote": "except OSError as e:\n    print(f\"error: could not read {args.input}: {e}\", file=sys.stderr)\n    return 1",
+        "location": "agent_convergence_scorer/cli.py main()",
+        "source_class": "code"
+      },
+      {
+        "quote": "raise ValueError(\"input must be a non-empty list of strings (or {'runs': [...]})\")",
+        "location": "agent_convergence_scorer/cli.py _extract_runs()",
+        "source_class": "code"
+      },
+      {
+        "quote": "if not all(isinstance(r, str) for r in runs):\n    raise ValueError(\"all run entries must be strings\")",
+        "location": "agent_convergence_scorer/cli.py _extract_runs()",
+        "source_class": "code"
+      },
+      {
+        "quote": "except ValueError as e:\n    print(f\"error: {e}\", file=sys.stderr)\n    return 1",
+        "location": "agent_convergence_scorer/cli.py main()",
+        "source_class": "code"
+      },
+      {
+        "quote": "Exit codes: 0 \u2014 scoring succeeded; 1 \u2014 input parse error; 2 \u2014 usage error (no input argument)",
+        "location": "agent_convergence_scorer/cli.py module docstring",
+        "source_class": "code"
+      },
+      {
+        "quote": "description=(\"Score how similar N agent outputs are. Produces exact-match rate, Jaccard token overlap, divergence point, and a composite convergence score in [0, 1].\")",
+        "location": "agent_convergence_scorer/cli.py argparse setup",
+        "source_class": "code"
+      },
+      {
+        "quote": "help='JSON file (or \"-\" for stdin). Shape: [\"run1\",\"run2\",...] or {\"runs\":[...]}'",
+        "location": "agent_convergence_scorer/cli.py argparse input arg",
+        "source_class": "code"
+      },
+      {
+        "quote": "if path == \"-\": return json.load(sys.stdin)",
+        "location": "agent_convergence_scorer/cli.py _load()",
+        "source_class": "code"
+      }
+    ],
+    "evidence_summary": "CLI wraps json.load in try/except for FileNotFoundError, JSONDecodeError, and OSError, each printing an actionable 'error: ...' message to stderr and returning exit code 1. Shape validation in _extract_runs raises ValueError with specific messages for non-list/empty/non-string entries, also caught and returned as exit 1. argparse provides --help, --version, and a descriptive prog description; stdin supported via '-'.",
+    "source_class_mix": {
+      "code": 10,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "CLI robustness and error messages"
+  },
+  {
+    "dim_id": "dim_4",
+    "evidence_found": true,
+    "confidence": "medium",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "Whitespace tokenizer, lowercased. Intentionally simple.",
+        "location": "agent_convergence_scorer/scorer.py:tokenize",
+        "source_class": "code"
+      },
+      {
+        "quote": "Fraction of runs identical to run[0]. Range [0, 1]. 1.0 if len(runs) < 2.",
+        "location": "agent_convergence_scorer/scorer.py:exact_match_rate",
+        "source_class": "code"
+      },
+      {
+        "quote": "Pairwise token set overlap across all run pairs. Returns: avg_overlap... Range [0, 1]. jaccard: Jaccard of the first two runs only",
+        "location": "agent_convergence_scorer/scorer.py:token_overlap",
+        "source_class": "code"
+      },
+      {
+        "quote": "Token position where outputs first differ. Returns: diverges_at_token... token_position: 0-indexed position. Equals min_len if no divergence.",
+        "location": "agent_convergence_scorer/scorer.py:divergence_point",
+        "source_class": "code"
+      },
+      {
+        "quote": "All metrics operate on a list of N strings (one per agent run). Tokenization is whitespace-only and case-insensitive",
+        "location": "agent_convergence_scorer/scorer.py module docstring",
+        "source_class": "code"
+      },
+      {
+        "quote": "convergence_score function body not visible in excerpt (truncated at 6000 chars); docstring presence unconfirmed",
+        "location": "agent_convergence_scorer/scorer.py (truncated)",
+        "source_class": "code"
+      },
+      {
+        "quote": "README content not included in target excerpt; cannot verify consistency with metrics table",
+        "location": "README.md (not provided)",
+        "source_class": "readme"
+      }
+    ],
+    "evidence_summary": "Five of six public functions (tokenize, exact_match_rate, token_overlap, divergence_point) have docstrings with range annotations [0,1] and Returns descriptions; token_overlap and divergence_point use structured Returns sections. None use explicit Args sections, and formulas are described in prose rather than mathematical notation. The convergence_score function and README were truncated/not provided, so consistency with the README metrics table cannot be verified.",
+    "source_class_mix": {
+      "code": 6,
+      "test": 0,
+      "config": 0,
+      "readme": 1,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "API docstring quality"
+  },
+  {
+    "dim_id": "dim_5",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [
+      {
+        "quote": "from agent_convergence_scorer.scorer import (convergence_score, divergence_point, exact_match_rate, score_runs, token_overlap, tokenize,)",
+        "location": "agent_convergence_scorer/__init__.py",
+        "source_class": "code"
+      },
+      {
+        "quote": "Entry point: `agent-convergence-scorer <input.json>` or `python -m agent_convergence_scorer`",
+        "location": "agent_convergence_scorer/cli.py docstring",
+        "source_class": "code"
+      },
+      {
+        "quote": "Whitespace tokenizer, lowercased. Intentionally simple.",
+        "location": "agent_convergence_scorer/scorer.py tokenize()",
+        "source_class": "code"
+      }
+    ],
+    "evidence_summary": "The README content was not included in the target excerpt \u2014 only package source (__init__, cli, scorer) is visible. Public API symbols (convergence_score, score_runs, etc.) and the CLI entry point exist in code, but without README text I cannot verify quick-start commands, library examples, or the documented 0.5/0.3/0.2 composite formula and example convergence_score 0.703 against the implementation.",
+    "source_class_mix": {
+      "code": 3,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "README usability and accuracy"
+  },
+  {
+    "dim_id": "dim_6",
+    "evidence_found": true,
+    "confidence": "high",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "return round(matches / len(runs), 3)",
+        "location": "agent_convergence_scorer/scorer.py exact_match_rate",
+        "source_class": "code"
+      },
+      {
+        "quote": "return {\"avg_overlap\": round(avg_overlap, 3), \"jaccard\": round(jaccard, 3)}",
+        "location": "agent_convergence_scorer/scorer.py token_overlap",
+        "source_class": "code"
+      },
+      {
+        "quote": "jaccard = len(inter01) / len(union01) if union01 else 0.0",
+        "location": "agent_convergence_scorer/scorer.py token_overlap",
+        "source_class": "code"
+      },
+      {
+        "quote": "avg_overlap = sum(overlaps) / len(overlaps) if overlaps else 1.0",
+        "location": "agent_convergence_scorer/scorer.py token_overlap",
+        "source_class": "code"
+      },
+      {
+        "quote": "If len(runs) < 2, returns {\"avg_overlap\": 1.0, \"jaccard\": 1.0} by convention.",
+        "location": "agent_convergence_scorer/scorer.py token_overlap docstring",
+        "source_class": "code"
+      }
+    ],
+    "evidence_summary": "Metrics consistently use round(..., 3) for exact_match_rate, avg_overlap, and jaccard. Empty-set/zero-division cases are explicitly guarded (`if union01 else 0.0`, `if overlaps else 1.0`, and len(runs)<2 short-circuits). Tokenization is deterministic (lowercase whitespace split). Test file content was truncated, so test-level pinning of decimals was not directly observed.",
+    "source_class_mix": {
+      "code": 5,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Numerical determinism and rounding discipline"
+  },
+  {
+    "dim_id": "dim_7",
+    "evidence_found": true,
+    "confidence": "medium",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "import argparse\nimport json\nimport sys\nfrom typing import Any",
+        "location": "agent_convergence_scorer/cli.py",
+        "source_class": "code"
+      },
+      {
+        "quote": "from __future__ import annotations\nfrom typing import Any",
+        "location": "agent_convergence_scorer/scorer.py",
+        "source_class": "code"
+      },
+      {
+        "quote": "from agent_convergence_scorer.cli import main",
+        "location": "agent_convergence_scorer/__main__.py",
+        "source_class": "code"
+      },
+      {
+        "quote": "Entry point: `agent-convergence-scorer <input.json>` or `python -m agent_convergence_scorer`.",
+        "location": "agent_convergence_scorer/cli.py docstring",
+        "source_class": "code"
+      }
+    ],
+    "evidence_summary": "Source code in cli.py and scorer.py imports only stdlib modules (argparse, json, sys, typing), supporting the zero-runtime-dependency claim. A console entry point named 'agent-convergence-scorer' is referenced in the CLI docstring, and __main__.py enables `python -m` invocation. However, pyproject.toml itself is not included in the target excerpt, so requires-python, [project.scripts], and the empty dependencies array cannot be directly verified from the provided content.",
+    "source_class_mix": {
+      "code": 4,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Packaging and zero-dependency claim"
+  },
+  {
+    "dim_id": "dim_8",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [],
+    "evidence_summary": "The provided target excerpt does not include .github/workflows/ci.yml or a README badge reference. No observable evidence of CI configuration, pytest invocation, Python version matrix, or badge target is present in the truncated content.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "CI test execution"
+  }
+]
