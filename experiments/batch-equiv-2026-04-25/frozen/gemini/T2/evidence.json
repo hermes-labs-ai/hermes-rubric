@@ -1,0 +1,155 @@
+[
+  {
+    "dim_id": "dim_1",
+    "evidence_found": true,
+    "confidence": "high",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "The next-generation observability platform for AI workloads.",
+        "location": "# Hyperflow",
+        "source_class": "readme"
+      },
+      {
+        "quote": "Hyperflow gives engineering teams instant visibility into model performance, cost, and reliability.",
+        "location": "# Hyperflow",
+        "source_class": "readme"
+      },
+      {
+        "quote": "Built on a cloud-native stack and trusted by leading AI-first companies.",
+        "location": "# Hyperflow",
+        "source_class": "readme"
+      }
+    ],
+    "evidence_summary": "The platform is explicitly described as an \"observability platform for AI workloads\" and provides visibility into \"model performance, cost, and reliability,\" directly addressing AI-specific engineering concerns.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 3,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "AI Workload Specificity"
+  },
+  {
+    "dim_id": "dim_2",
+    "evidence_found": true,
+    "confidence": "high",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "Built on a cloud-native stack",
+        "location": "README",
+        "source_class": "readme"
+      }
+    ],
+    "evidence_summary": "The description explicitly states that the platform is 'Built on a cloud-native stack', directly indicating its underlying engineering architecture.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 1,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Technical Foundation Clues"
+  },
+  {
+    "dim_id": "dim_3",
+    "evidence_found": true,
+    "confidence": "high",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "instant visibility into model performance, cost, and reliability",
+        "location": "README:1",
+        "source_class": "readme"
+      }
+    ],
+    "evidence_summary": "The platform explicitly states it provides 'instant visibility into model performance, cost, and reliability', directly addressing the depth of insights offered.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 1,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Observability Depth"
+  },
+  {
+    "dim_id": "dim_4",
+    "evidence_found": true,
+    "confidence": "high",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "Speed. Reliability. Confidence.",
+        "location": "Why teams choose Hyperflow",
+        "source_class": "readme"
+      },
+      {
+        "quote": "Hyperflow gives engineering teams instant visibility into model performance, cost, and reliability.",
+        "location": "Introduction",
+        "source_class": "readme"
+      }
+    ],
+    "evidence_summary": "The content explicitly lists 'Speed. Reliability. Confidence.' as reasons teams choose Hyperflow and states it provides 'instant visibility into model performance, cost, and reliability,' directly linking technical features to engineering benefits.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 2,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Engineering Benefit Articulation"
+  },
+  {
+    "dim_id": "dim_5",
+    "evidence_found": true,
+    "confidence": "high",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "Built on a cloud-native stack and trusted by leading AI-first companies.",
+        "location": "README",
+        "source_class": "readme"
+      }
+    ],
+    "evidence_summary": "The description explicitly states that the platform is 'trusted by leading AI-first companies', which serves as social proof and builds engineering credibility.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 1,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Credibility Indicators"
+  },
+  {
+    "dim_id": "dim_6",
+    "evidence_found": true,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [
+      {
+        "quote": "Get started today.",
+        "location": "README: Why teams choose Hyperflow",
+        "source_class": "readme"
+      }
+    ],
+    "evidence_summary": "The phrase 'Get started today' is present, but the surrounding text does not provide specific details about the engineering integration or evaluation process, making its actionability unclear.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 1,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Actionability of 'Get Started'"
+  }
+]

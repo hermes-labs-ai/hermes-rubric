@@ -1,0 +1,62 @@
+{
+  "rubric_intent": "Score the agent-convergence-scorer Python utility on its engineering qualities, specifically tests, documentation, and error handling.",
+  "target_type": "python-tool",
+  "dimensions": [
+    {
+      "id": "dim_1",
+      "name": "Test Coverage Depth",
+      "description": "Assesses the extent to which the library's core functionalities, including all scoring metrics and edge cases, are covered by automated tests.",
+      "evidence_instructions": "Examine the `tests/` directory. Look for tests covering `score_runs`, `exact_match_rate`, `token_overlap`, `divergence_point`, and `convergence_score`. Check for tests that handle empty inputs, single runs, identical runs, and runs with varying degrees of similarity. Look for a CI configuration (e.g., GitHub Actions) that runs these tests.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_2",
+      "name": "Test Robustness to Input Variations",
+      "description": "Evaluates how well the tests handle diverse and potentially problematic input scenarios for the scoring functions.",
+      "evidence_instructions": "Within the `tests/` directory, look for tests that specifically target edge cases such as: empty input lists, lists with only one run, runs with identical content, runs with completely different content, runs with special characters or different encodings, and runs of varying lengths. Verify that these tests pass.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_3",
+      "name": "Clarity and Completeness of README Documentation",
+      "description": "Measures the quality and comprehensiveness of the README file in explaining the tool's purpose, installation, usage, and output interpretation.",
+      "evidence_instructions": "Review the `README.md` file. Assess if it clearly states the tool's purpose, provides straightforward installation instructions, includes illustrative 'Quick start' and 'Library usage' examples with expected outputs, and offers clear interpretations of the generated metrics.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_4",
+      "name": "Inline Code Documentation (Docstrings)",
+      "description": "Assesses the presence and quality of docstrings within the Python code, explaining functions, classes, and their parameters.",
+      "evidence_instructions": "Inspect the source code files (e.g., `agent_convergence_scorer/__init__.py` or similar). Look for docstrings on public functions like `score_runs` and any helper functions. Check if these docstrings explain the purpose, arguments, and return values.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_5",
+      "name": "Command-Line Interface (CLI) Error Handling",
+      "description": "Evaluates how gracefully the command-line interface handles invalid or unexpected input, such as malformed JSON or incorrect arguments.",
+      "evidence_instructions": "Test the CLI tool by providing invalid input. For example, try piping malformed JSON to `agent-convergence-scorer -`. Observe if the tool provides informative error messages and exits gracefully rather than crashing.",
+      "weight": 2,
+      "hedge": true
+    },
+    {
+      "id": "dim_6",
+      "name": "Library Function Error Handling",
+      "description": "Assesses how the core Python library functions handle invalid inputs, such as non-list arguments or elements that are not strings.",
+      "evidence_instructions": "Examine the source code for the `score_runs` function and other exported library functions. Look for explicit checks for input types and formats. If possible, write small test cases that pass invalid data types to these functions and observe if they raise appropriate exceptions (e.g., `TypeError`, `ValueError`).",
+      "weight": 2,
+      "hedge": true
+    },
+    {
+      "id": "dim_7",
+      "name": "Metric Interpretation Guidance",
+      "description": "Measures the clarity and usefulness of the explanations provided for each calculated metric.",
+      "evidence_instructions": "Review the 'Metrics \u2014 what they mean' section in the README. Assess if the descriptions for `exact_match_rate`, `token_metrics`, `divergence_point`, and `convergence_score` are clear, concise, and accurately reflect what each metric quantifies.",
+      "weight": 2,
+      "hedge": false
+    }
+  ]
+}

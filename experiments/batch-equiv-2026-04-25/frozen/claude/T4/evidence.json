@@ -1,0 +1,396 @@
+[
+  {
+    "dim_id": "dim_1",
+    "evidence_found": true,
+    "confidence": "high",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "Bootstrap 95% confidence intervals reported: all \"excluding zero\"",
+        "location": "papers-20260423.md \u00a7 Paper 1 / dim_evidence",
+        "source_class": "doc"
+      },
+      {
+        "quote": "\"19.6-56.7 percentage points\" \u2014 specific range with condition (across 6 cells)",
+        "location": "papers-20260423.md \u00a7 Paper 1 / dim_precision",
+        "source_class": "doc"
+      },
+      {
+        "quote": "\"23/24 pair-condition cells\" \u2014 exact fraction, not \"most\"",
+        "location": "papers-20260423.md \u00a7 Paper 1 / dim_precision",
+        "source_class": "doc"
+      },
+      {
+        "quote": "\"Bottom-up analysis of 1,461 controlled experiments\" \u2014 N is named with specific count",
+        "location": "papers-20260423.md \u00a7 Paper 2 / dim_evidence",
+        "source_class": "doc"
+      },
+      {
+        "quote": "Seven failure modes each \"defined mechanistically, illustrated with experimental evidence\"",
+        "location": "papers-20260423.md \u00a7 Paper 2 / dim_evidence",
+        "source_class": "doc"
+      },
+      {
+        "quote": "Evidence tier: MEDIUM \u2014 specific numbers from abstract, no file:line possible from abstract alone",
+        "location": "papers-20260423.md \u00a7 Paper 1 / dim_evidence",
+        "source_class": "doc"
+      },
+      {
+        "quote": "Abstract does not contain a limitations statement (expected \u2014 limitations belong in body)",
+        "location": "papers-20260423.md \u00a7 Paper 1 / dim_limitations",
+        "source_class": "doc"
+      },
+      {
+        "quote": "\"primarily GPT-4o\" \u2014 vague; does the analysis generalize? Not specified in abstract",
+        "location": "papers-20260423.md \u00a7 Paper 2 / dim_precision",
+        "source_class": "doc"
+      }
+    ],
+    "evidence_summary": "Substantive claims in the scoring report are consistently tied to locatable evidence: each numeric or characterization claim is anchored to a specific quoted passage from the paper abstracts (e.g. '19.6-56.7 pp', '23/24 cells', 'N=1,461') and tagged with an explicit evidence tier. Where backing is unavailable (full PDFs unread), the report flags the gap rather than asserting unsupported claims.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 8,
+      "other": 0
+    },
+    "dim_name": "Claim\u2013Evidence Linkage"
+  },
+  {
+    "dim_id": "dim_2",
+    "evidence_found": true,
+    "confidence": "medium",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "Three models named with versions (GPT-4o, GPT-5.2 Thinking, Claude Haiku 4.5)",
+        "location": "papers-20260423.md, Paper 1 dim_reproducibility section",
+        "source_class": "doc"
+      },
+      {
+        "quote": "Bottom-up analysis of 1,461 controlled experiments",
+        "location": "papers-20260423.md, Paper 2 dim_evidence section",
+        "source_class": "doc"
+      },
+      {
+        "quote": "primarily on GPT-4o \u2014 model named (but hedged: 'primarily' suggests multi-model or single-model ambiguity)",
+        "location": "papers-20260423.md, Paper 2 dim_evidence section",
+        "source_class": "doc"
+      },
+      {
+        "quote": "No reproduction command in abstract (expected)",
+        "location": "papers-20260423.md, Paper 1 dim_reproducibility section",
+        "source_class": "doc"
+      },
+      {
+        "quote": "Benchmark described as 'matched-vignette' with enough info to replicate design",
+        "location": "papers-20260423.md, Paper 1 dim_reproducibility section",
+        "source_class": "doc"
+      },
+      {
+        "quote": "Model versions named. Code availability and dataset release status unknown.",
+        "location": "papers-20260423.md, Paper 1 scores rationale",
+        "source_class": "doc"
+      },
+      {
+        "quote": "is 1,461 experiments distributed evenly across modes? Unknown",
+        "location": "papers-20260423.md, Paper 2 dim_limitations section",
+        "source_class": "doc"
+      }
+    ],
+    "evidence_summary": "Target reports model names with versions (GPT-4o, GPT-5.2 Thinking, Claude Haiku 4.5) and sample sizes (N=1,461 experiments) for the reviewed papers, plus high-level benchmark design ('matched-vignette'). However, the source is an abstract-only review noting code availability, dataset release status, hyperparameters, seeds, and per-condition n are unknown/unreported, which directly impacts method reproducibility.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 7,
+      "other": 0
+    },
+    "dim_name": "Method Reproducibility"
+  },
+  {
+    "dim_id": "dim_3",
+    "evidence_found": true,
+    "confidence": "medium",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "Bootstrap 95% confidence intervals reported: all \"excluding zero\"",
+        "location": "Paper 1: Asymmetric Burden of Proof \u2014 dim_evidence",
+        "source_class": "doc"
+      },
+      {
+        "quote": "Gaps quantified: \"19.6-56.7 percentage points\"",
+        "location": "Paper 1 \u2014 dim_evidence",
+        "source_class": "doc"
+      },
+      {
+        "quote": "\"23/24 pair-condition cells\" directionally consistent",
+        "location": "Paper 1 \u2014 dim_evidence",
+        "source_class": "doc"
+      },
+      {
+        "quote": "Matched-vignette benchmark described (fictional scientific vignettes)",
+        "location": "Paper 1 \u2014 dim_evidence",
+        "source_class": "doc"
+      },
+      {
+        "quote": "\"Bottom-up analysis of 1,461 controlled experiments\" \u2014 N is named with specific count",
+        "location": "Paper 2: Taxonomy \u2014 dim_evidence",
+        "source_class": "doc"
+      },
+      {
+        "quote": "\"primarily GPT-4o\" \u2014 vague; does the analysis generalize? Not specified in abstract",
+        "location": "Paper 2 \u2014 dim_precision",
+        "source_class": "doc"
+      },
+      {
+        "quote": "is 1,461 experiments distributed evenly across modes? Unknown",
+        "location": "Paper 2 \u2014 dim_limitations",
+        "source_class": "doc"
+      },
+      {
+        "quote": "Aggregate (weighted): (7\u00d73 + 8\u00d73 + 4\u00d72 + 7\u00d72 + 5\u00d72 + 8\u00d71) / 13 = ... = 6.5/10",
+        "location": "Paper 1 \u2014 Scores aggregate",
+        "source_class": "doc"
+      }
+    ],
+    "evidence_summary": "Paper 1's abstract reports bootstrap 95% CIs (all excluding zero), a quantified effect range (19.6-56.7 pp), and a precise cell-level fraction (23/24) \u2014 strong indicators of appropriate uncertainty reporting and defensible inferential framing, though no explicit test name or seed/n-per-cell is given in the excerpt. Paper 2 names N=1,461 experiments but the excerpt does not mention dispersion, CIs, or a stated test, and flags 'primarily GPT-4o' as a scope hedge; the rubric's own aggregate scores are bare point estimates without uncertainty.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 8,
+      "other": 0
+    },
+    "dim_name": "Statistical Soundness"
+  },
+  {
+    "dim_id": "dim_4",
+    "evidence_found": true,
+    "confidence": "medium",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "Hedge dims: dim_comparison (thin or unavailable evidence for papers without direct comparison tables)",
+        "location": "papers-20260423.md, Rubric Applied section",
+        "source_class": "doc"
+      },
+      {
+        "quote": "HEDGE: true \u2014 cannot score from abstract",
+        "location": "papers-20260423.md, Paper 1 dim_limitations",
+        "source_class": "doc"
+      },
+      {
+        "quote": "Abstract-only limits assessment.",
+        "location": "papers-20260423.md, Paper 1 Scores rationale",
+        "source_class": "doc"
+      },
+      {
+        "quote": "Hedge note: dim_limitations score is thin \u2014 abstract-only source. Full paper almost certainly has a limitations section that would raise this to 6+.",
+        "location": "papers-20260423.md, Paper 1 Hedge note",
+        "source_class": "doc"
+      },
+      {
+        "quote": "'primarily GPT-4o' \u2014 vague; does the analysis generalize? Not specified in abstract",
+        "location": "papers-20260423.md, Paper 2 dim_precision",
+        "source_class": "doc"
+      },
+      {
+        "quote": "Known gap: primarily single-model; is 1,461 experiments distributed evenly across modes? Unknown",
+        "location": "papers-20260423.md, Paper 2 dim_limitations",
+        "source_class": "doc"
+      },
+      {
+        "quote": "Evidence tier: LOW \u2014 hedge applies",
+        "location": "papers-20260423.md, Paper 2 dim_limitations",
+        "source_class": "doc"
+      },
+      {
+        "quote": "external validity question \u2014 unconfirmed whether the paper addresses this",
+        "location": "papers-20260423.md, Paper 1 dim_limitations",
+        "source_class": "doc"
+      }
+    ],
+    "evidence_summary": "The report repeatedly acknowledges its own scope limits (abstract-only sources, inability to assess limitations sections from abstracts), explicitly hedges scores with 'HEDGE: true' flags, and surfaces known gaps (e.g., 'primarily GPT-4o' single-model scope, fictional vignette external validity). However, the report identifies these limits in the *target papers* and in its own *evidence access*, rather than presenting a dedicated 'threats to validity' section for its own scoring methodology; alternative explanations for score patterns are not explored.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 8,
+      "other": 0
+    },
+    "dim_name": "Counter-Evidence and Limitations"
+  },
+  {
+    "dim_id": "dim_5",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [
+      {
+        "quote": "Source available: Abstract + distribution metadata only. Full PDF not read in this session.",
+        "location": "papers-20260423.md, Paper 1 section",
+        "source_class": "doc"
+      },
+      {
+        "quote": "Source available: Abstract + distribution metadata only. Full PDF not read in this session.",
+        "location": "papers-20260423.md, Paper 2 section",
+        "source_class": "doc"
+      },
+      {
+        "quote": "Rubric synthesized from: STYLE-GUIDE-v1.md, PIPELINE.md, META-RUBRIC.md, and the two published papers as comparison baseline",
+        "location": "papers-20260423.md, header",
+        "source_class": "doc"
+      },
+      {
+        "quote": "The 6-dimension rubric (dim_evidence, dim_precision, dim_limitations, dim_voice, dim_reproducibility, dim_comparison) contains no Citation Quality / Currency dimension",
+        "location": "papers-20260423.md, Rubric Applied table",
+        "source_class": "doc"
+      }
+    ],
+    "evidence_summary": "The target content does not include a bibliography or any sampled citations from the scored papers \u2014 only abstracts/metadata were read. The synthesized rubric itself omits a citation-quality dimension, and no per-citation classification (primary/secondary, peer-reviewed/preprint/grey, year) is present in the visible excerpt. No observable evidence for Citation Quality and Currency.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 4,
+      "other": 0
+    },
+    "dim_name": "Citation Quality and Currency"
+  },
+  {
+    "dim_id": "dim_6",
+    "evidence_found": true,
+    "confidence": "medium",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "23/24 pair-condition cells directionally consistent",
+        "location": "papers-20260423.md, Paper 1 dim_evidence",
+        "source_class": "doc"
+      },
+      {
+        "quote": "all bootstrap 95% CIs excluding zero",
+        "location": "papers-20260423.md, Paper 1 dim_precision",
+        "source_class": "doc"
+      },
+      {
+        "quote": "Bottom-up analysis of 1,461 controlled experiments",
+        "location": "papers-20260423.md, Paper 2 dim_evidence",
+        "source_class": "doc"
+      },
+      {
+        "quote": "These distortions are distinct from hallucination",
+        "location": "papers-20260423.md, Paper 2 dim_voice",
+        "source_class": "doc"
+      },
+      {
+        "quote": "Seven failure modes each defined mechanistically, illustrated with experimental evidence",
+        "location": "papers-20260423.md, Paper 2 dim_evidence",
+        "source_class": "doc"
+      },
+      {
+        "quote": "matched-vignette benchmark described (fictional scientific vignettes)",
+        "location": "papers-20260423.md, Paper 1 dim_evidence",
+        "source_class": "doc"
+      }
+    ],
+    "evidence_summary": "The scoring document reports correlational/observational findings (matched-vignette benchmark, bootstrap CIs, bottom-up analysis of 1,461 experiments) using appropriately hedged language ('characterize', 'directionally consistent', 'distinct from'). No strong causal verbs (causes, drives, leads to) appear in the visible excerpt; claims are framed as patterns/distinctions rather than causal mechanisms, though 'defined mechanistically' for failure modes hints at causal framing whose underlying design (observational corpus analysis vs. intervention) cannot be confirmed from the excerpt.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 6,
+      "other": 0
+    },
+    "dim_name": "Causal vs. Correlational Discipline"
+  },
+  {
+    "dim_id": "dim_7",
+    "evidence_found": true,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [
+      {
+        "quote": "Source available: Abstract + distribution metadata only. Full PDF not read in this session.",
+        "location": "Paper 1: Asymmetric Burden of Proof (Zenodo 18867694)",
+        "source_class": "doc"
+      },
+      {
+        "quote": "Code availability and dataset release status unknown.",
+        "location": "Paper 1 \u2014 dim_reproducibility rationale",
+        "source_class": "doc"
+      },
+      {
+        "quote": "Bottom-up analysis of 1,461 controlled experiments",
+        "location": "Paper 2: Taxonomy of Epistemic Failure Modes (Zenodo 19042469)",
+        "source_class": "doc"
+      },
+      {
+        "quote": "Zenodo 18867694 / Zenodo 19042469",
+        "location": "Paper 1 and Paper 2 headers (Zenodo DOIs referenced as source identifiers)",
+        "source_class": "doc"
+      }
+    ],
+    "evidence_summary": "The target document references two papers by Zenodo IDs (18867694, 19042469) which serve as DOI-style artifact pointers, but the document explicitly notes only abstract+metadata were read and that 'code availability and dataset release status unknown.' No Data Availability statement, repo URL, supplementary material pointer, or confirmed-resolving link to raw/processed artifacts is present in the excerpt; available evidence is indirect and incomplete.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 4,
+      "other": 0
+    },
+    "dim_name": "Data and Artifact Availability"
+  },
+  {
+    "dim_id": "dim_8",
+    "evidence_found": true,
+    "confidence": "medium",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "Aggregate (weighted): (7\u00d73 + 8\u00d73 + 4\u00d72 + 7\u00d72 + 5\u00d72 + 8\u00d71) / 13 = (21+24+8+14+10+8)/13 = 85/13 = 6.5/10",
+        "location": "papers-20260423.md, Paper 1 Scores section",
+        "source_class": "doc"
+      },
+      {
+        "quote": "6 model-format conditions named (GPT-4o, GPT-5.2 Thinking, Claude Haiku 4.5 \u00d7 2 formats)",
+        "location": "papers-20260423.md, Paper 1 dim_evidence",
+        "source_class": "doc"
+      },
+      {
+        "quote": "Three models named with versions (GPT-4o, GPT-5.2 Thinking, Claude Haiku 4.5)",
+        "location": "papers-20260423.md, Paper 1 dim_reproducibility",
+        "source_class": "doc"
+      },
+      {
+        "quote": "Bottom-up analysis of 1,461 controlled experiments ... primarily on GPT-4o",
+        "location": "papers-20260423.md, Paper 2 dim_evidence",
+        "source_class": "doc"
+      },
+      {
+        "quote": "23/24 pair-condition cells directionally consistent",
+        "location": "papers-20260423.md, Paper 1 dim_evidence",
+        "source_class": "doc"
+      }
+    ],
+    "evidence_summary": "Cross-checks within the scoring doc itself: Paper 1's weighted aggregate arithmetic (21+24+8+14+10+8=85, 85/13=6.538) is internally consistent. However, Paper 1 has an internal inconsistency: dim_evidence cites '6 model-format conditions' covering 'GPT-4o, GPT-5.2 Thinking, Claude Haiku 4.5 \u00d7 2 formats' (which sums to 4, not 6), while dim_reproducibility says 'Three models named with versions' \u2014 the model count vs. format-condition count is not reconciled. Paper 2's '1,461 controlled experiments' and '7 failure modes' are precise but the abstract's 'primarily GPT-4o' is flagged as vague within the same evidence block. Full cross-document consistency check (abstract vs. results vs. tables) is not possible from the truncated excerpt because only abstracts were available to the original scorer.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 5,
+      "other": 0
+    },
+    "dim_name": "Internal Consistency"
+  }
+]

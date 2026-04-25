@@ -1,0 +1,54 @@
+{
+  "rubric_intent": "Score this research report on rigor and evidence.",
+  "target_type": "research-report",
+  "dimensions": [
+    {
+      "id": "dim_1",
+      "name": "Methodological Soundness",
+      "description": "Evaluates the appropriateness and robustness of the research methods employed to answer the research question.",
+      "evidence_instructions": "Examine the 'Methods' or 'Methodology' section for details on study design, sampling, data collection techniques, and analytical procedures; assess if these align with the research question and are described with sufficient detail for replication.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_2",
+      "name": "Data Quality and Integrity",
+      "description": "Assesses the reliability, validity, and ethical handling of the data used in the report.",
+      "evidence_instructions": "Look for descriptions of data sources, data cleaning procedures, measures taken to ensure data accuracy, and any discussion of potential biases or limitations in the data; check for ethical considerations in data collection and use.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_3",
+      "name": "Evidence-Based Argumentation",
+      "description": "Measures how effectively the report uses evidence to support its claims and conclusions.",
+      "evidence_instructions": "Review the 'Results' and 'Discussion' sections to see if findings are directly linked to the data presented; check if interpretations are logical and well-supported by the evidence, and if counterarguments or alternative explanations are addressed.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_4",
+      "name": "Literature Integration",
+      "description": "Examines the extent to which the report critically engages with and builds upon existing relevant literature.",
+      "evidence_instructions": "Analyze the 'Introduction' and 'Literature Review' sections for the breadth and depth of cited sources; assess if the report clearly positions its research within the existing scholarly conversation and identifies gaps or contributions.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_5",
+      "name": "Clarity of Findings and Limitations",
+      "description": "Assesses the report's ability to clearly articulate its findings and acknowledge the limitations of the research.",
+      "evidence_instructions": "Examine the 'Results' and 'Discussion' sections for clear presentation of key findings; look for a dedicated section or integrated discussion of the study's limitations, potential biases, and areas for future research.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_6",
+      "name": "Statistical Rigor (if applicable)",
+      "description": "Evaluates the appropriate and accurate application of statistical methods for data analysis.",
+      "evidence_instructions": "If statistical analysis is used, review the 'Methods' and 'Results' sections for the selection of appropriate statistical tests, correct application, and clear reporting of statistical significance and effect sizes; check for adherence to statistical reporting guidelines.",
+      "weight": 2,
+      "hedge": true
+    }
+  ]
+}

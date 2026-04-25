@@ -1,0 +1,252 @@
+=== agent_convergence_scorer/__init__.py ===
+"""agent-convergence-scorer — measure how similar N agent outputs are."""
+
+from agent_convergence_scorer.scorer import (
+    convergence_score,
+    divergence_point,
+    exact_match_rate,
+    score_runs,
+    token_overlap,
+    tokenize,
+)
+
+__version__ = "0.1.0"
+
+__all__ = [
+    "__version__",
+    "convergence_score",
+    "divergence_point",
+    "exact_match_rate",
+    "score_runs",
+    "token_overlap",
+    "tokenize",
+]
+
+
+=== agent_convergence_scorer/__main__.py ===
+"""Allow `python -m agent_convergence_scorer <input.json>`."""
+
+from agent_convergence_scorer.cli import main
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+
+
+=== agent_convergence_scorer/cli.py ===
+"""Command-line interface for agent-convergence-scorer.
+
+Entry point: `agent-convergence-scorer <input.json>` or `python -m agent_convergence_scorer`.
+
+Input JSON may be either:
+    {"runs": ["output 1", "output 2", ...]}
+or:
+    ["output 1", "output 2", ...]
+
+Use `-` as the filename to read from stdin.
+
+Exit codes:
+    0 — scoring succeeded
+    1 — input parse error (file missing, invalid JSON, wrong shape)
+    2 — usage error (no input argument)
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from typing import Any
+
+from agent_convergence_scorer import __version__
+from agent_convergence_scorer.scorer import score_runs
+
+
+def _load(path: str) -> Any:
+    if path == "-":
+        return json.load(sys.stdin)
+    with open(path) as f:
+        return json.load(f)
+
+
+def _extract_runs(data: Any) -> list[str]:
+    runs = data.get("runs", data) if isinstance(data, dict) else data
+    if not isinstance(runs, list) or len(runs) == 0:
+        raise ValueError("input must be a non-empty list of strings (or {'runs': [...]})")
+    if not all(isinstance(r, str) for r in runs):
+        raise ValueError("all run entries must be strings")
+    return runs
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        prog="agent-convergence-scorer",
+        description=(
+            "Score how similar N agent outputs are. "
+            "Produces exact-match rate, Jaccard token overlap, divergence point, "
+            "and a composite convergence score in [0, 1]."
+        ),
+    )
+    parser.add_argument(
+        "input",
+        help='JSON file (or "-" for stdin). Shape: ["run1","run2",...] or {"runs":[...]}',
+    )
+    parser.add_argument(
+        "--indent",
+        type=int,
+        default=2,
+        help="JSON indent for output (default: 2; use 0 for compact)",
+    )
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
+    args = parser.parse_args(argv)
+
+    try:
+        data = _load(args.input)
+    except FileNotFoundError:
+        print(f"error: file not found: {args.input}", file=sys.stderr)
+        return 1
+    except json.JSONDecodeError as e:
+        print(f"error: invalid JSON in {args.input}: {e}", file=sys.stderr)
+        return 1
+    except OSError as e:
+        print(f"error: could not read {args.input}: {e}", file=sys.stderr)
+        return 1
+
+    try:
+        runs = _extract_runs(data)
+    except ValueError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 1
+
+    result = score_runs(runs)
+    indent = args.indent if args.indent > 0 else None
+    print(json.dumps(result, indent=indent))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+
+
+=== agent_convergence_scorer/scorer.py ===
+"""Core convergence metrics.
+
+All metrics operate on a list of N strings (one per agent run). Tokenization
+is whitespace-only and case-insensitive — this is a lexical comparison, not
+semantic. For semantic convergence, pair these metrics with an embedding model
+externally.
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+
+def tokenize(text: str) -> list[str]:
+    """Whitespace tokenizer, lowercased. Intentionally simple."""
+    return text.lower().split()
+
+
+def exact_match_rate(runs: list[str]) -> float:
+    """Fraction of runs identical to run[0]. Range [0, 1]. 1.0 if len(runs) < 2."""
+    if len(runs) < 2:
+        return 1.0
+    first = runs[0]
+    matches = sum(1 for r in runs if r == first)
+    return round(matches / len(runs), 3)
+
+
+def token_overlap(runs: list[str]) -> dict[str, float]:
+    """Pairwise token set overlap across all run pairs.
+
+    Returns:
+        avg_overlap: mean pairwise Jaccard across all C(N,2) pairs. Range [0, 1].
+        jaccard: Jaccard of the first two runs only (kept for quick eyeballing).
+
+    If len(runs) < 2, returns {"avg_overlap": 1.0, "jaccard": 1.0} by convention.
+    """
+    if len(runs) < 2:
+        return {"avg_overlap": 1.0, "jaccard": 1.0}
+
+    tokenized = [set(tokenize(r)) for r in runs]
+    union01 = tokenized[0] | tokenized[1]
+    inter01 = tokenized[0] & tokenized[1]
+    jaccard = len(inter01) / len(union01) if union01 else 0.0
+
+    overlaps: list[float] = []
+    for i in range(len(tokenized)):
+        for j in range(i + 1, len(tokenized)):
+            pair_union = tokenized[i] | tokenized[j]
+            pair_inter = tokenized[i] & tokenized[j]
+            if pair_union:
+                overlaps.append(len(pair_inter) / len(pair_union))
+
+    avg_overlap = sum(overlaps) / len(overlaps) if overlaps else 1.0
+    return {"avg_overlap": round(avg_overlap, 3), "jaccard": round(jaccard, 3)}
+
+
+def divergence_point(runs: list[str]) -> dict[str, Any]:
+    """Token position where outputs first differ.
+
+    Returns:
+        diverges_at_token: the token at the divergence position from run[0], or
+            None if all runs are identical up to min length.
+        token_position: 0-indexed position. Equals min_len if no divergence.
+        num_tokens_to_divergence: alias for token_position, kept for readability.
+    """
+    if len(runs) < 2:
+        return {"diverges_at_token": None, "token_position": 0, "num_tokens_to_divergence": 0}
+
+    tokenized = [tokenize(r) for r in runs]
+    min_len = min(len(t) for t in tokenized) if tokenized else 0
+
+    for pos in range(min_len):
+        tokens_at_pos = [t[pos] for t in tokenized]
+        if len(set(tokens_at_pos)) > 1:
+            return {
+                "diverges_at_token": tokens_at_pos[0],
+                "token_position": pos,
+                "num_tokens_to_divergence": pos,
+            }
+
+    return {
+        "diverges_at_token": None,
+        "token_position": min_len,
+        "num_tokens_to_divergence": min_len,
+    }
+
+
+def convergence_score(runs: list[str]) -> dict[str, float]:
+    """Composite convergence score in [0, 1]. 1.0 = perfect convergence.
+
+    Weighting (heuristic, not learned):
+        0.5 * exact_match_rate
+        0.3 * avg_token_overlap
+        0.2 * normalized_divergence_distance   (where divergence at end = 1.0)
+
+    Returns {"convergence_score": float}. If len(runs) < 2, returns 1.0.
+    """
+    if len(runs) < 2:
+        return {"convergence_score": 1.0}
+
+    exact = exact_match_rate(runs)
+    overlap = token_overlap(runs)["avg_overlap"]
+    div_pos = divergence_point(runs)["num_tokens_to_divergence"]
+    max_tokens = max(len(tokenize(r)) for r in runs)
+    div_distance = min(div_pos / max_tokens, 1.0) if max_tokens > 0 else 1.0
+
+    score = 0.5 * exact + 0.3 * overlap + 0.2 * div_distance
+    return {"convergence_score": round(score, 3)}
+
+
+def score_runs(runs: list[str]) -> dict[str, Any]:
+    """Compute all four metrics for a list of agent runs.
+
+    Convenience wrapper. Returns a dict shaped for JSON output.
+    """
+    return {
+        "num_runs": len(runs),
+        "exact_match_rate": exact_match_rate(runs),
+        "token_metrics": token_overlap(runs),
+        "convergence_score": convergence_score(runs)["convergence_score"],
+        "divergence_point": divergence_point(runs),
+    }

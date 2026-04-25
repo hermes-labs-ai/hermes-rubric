@@ -1,0 +1,14 @@
+{
+  "rubric_intent": "Score a small Python utility on basic engineering qualities.",
+  "target_type": "tool",
+  "dimensions": [
+    {"id": "fr_a", "name": "Tested behavior", "description": "Behavior is covered by automated tests.",
+     "evidence_instructions": "Look for test files asserting behavior.", "weight": 3, "hedge": false},
+    {"id": "fr_b", "name": "Documented surface", "description": "Public API has clear documentation.",
+     "evidence_instructions": "Look for docstrings or README sections describing usage.", "weight": 2, "hedge": false},
+    {"id": "fr_c", "name": "Error handling", "description": "Failure modes are handled, not raised generically.",
+     "evidence_instructions": "Look for try/except blocks and named exceptions.", "weight": 2, "hedge": false},
+    {"id": "fr_d", "name": "Stated invariants", "description": "Invariants/contracts stated in code or docs.",
+     "evidence_instructions": "Look for comments, asserts, or doc claims about invariants.", "weight": 1, "hedge": true}
+  ]
+}

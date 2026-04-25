@@ -3,6 +3,8 @@
 import json
 from typing import Any
 
+from hermes_blind import wrap_intent_for_rubric
+
 from . import backends
 
 _SYNTH_PROMPT_TEMPLATE = """\
@@ -45,10 +47,23 @@ def synthesize(
     context_summary: str,
     target_type: str,
     backend: str | None = None,
+    *,
+    scope_class: str | None = None,
+    intent_debias: bool = False,
 ) -> dict[str, Any]:
-    """Produce a rubric dict from intent + context summary + target type."""
+    """Produce a rubric dict from intent + context summary + target type.
+
+    ``scope_class`` and ``intent_debias`` (G7) prepend optional preambles to
+    the intent before formatting. When both are unset the call is identical
+    to the v0.1.x behavior.
+    """
+    composed_intent = wrap_intent_for_rubric(
+        intent,
+        scope_class=scope_class,
+        debias=intent_debias,
+    )
     prompt = _SYNTH_PROMPT_TEMPLATE.format(
-        intent=intent,
+        intent=composed_intent,
         target_type=target_type,
         context_summary=context_summary[:4000],
     )

@@ -1,0 +1,211 @@
+[
+  {
+    "dim_id": "dim_1",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [
+      {
+        "quote": "100% test coverage on the core API",
+        "location": "README.md \u00a7 Features",
+        "source_class": "readme"
+      },
+      {
+        "quote": "Every edge case has a test. Every error path is exercised.",
+        "location": "README.md \u00a7 Quality",
+        "source_class": "readme"
+      },
+      {
+        "quote": "Run the suite: pytest",
+        "location": "README.md \u00a7 Testing",
+        "source_class": "readme"
+      }
+    ],
+    "evidence_summary": "The target excerpt contains only README claims of '100% test coverage' and exhaustive edge/error testing, but no tests/ directory, test files, or test functions are visible in the provided content to substantiate these claims.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 3,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Test Suite Depth"
+  },
+  {
+    "dim_id": "dim_2",
+    "evidence_found": true,
+    "confidence": "high",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "100% test coverage on the core API",
+        "location": "README.md, Features section",
+        "source_class": "readme"
+      },
+      {
+        "quote": "Run the suite: pytest",
+        "location": "README.md, Testing section",
+        "source_class": "readme"
+      },
+      {
+        "quote": "No pyproject.toml, setup.cfg, .coveragerc, tox.ini, CI workflow, or coverage badge present in target content",
+        "location": "target excerpt (README.md only)",
+        "source_class": "other"
+      }
+    ],
+    "evidence_summary": "README claims '100% test coverage on the core API' but the target content shows no coverage configuration (no pyproject.toml/.coveragerc/tox.ini), no CI step, and no coverage badge \u2014 only a bare `pytest` invocation. The claim is asserted without substantiating tooling visible in the excerpt.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 2,
+      "doc": 0,
+      "other": 1
+    },
+    "dim_name": "Coverage Verifiability"
+  },
+  {
+    "dim_id": "dim_3",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [
+      {
+        "quote": "Type-safe field access with full mypy coverage",
+        "location": "README.md: Features",
+        "source_class": "readme"
+      }
+    ],
+    "evidence_summary": "Only the README claims 'full mypy coverage'; the excerpt contains no pyproject.toml, mypy.ini, py.typed marker, or Box class source to verify type annotations or strict mypy configuration.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 1,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Type Safety Rigor"
+  },
+  {
+    "dim_id": "dim_4",
+    "evidence_found": true,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [
+      {
+        "quote": "Comprehensive error handling",
+        "location": "README.md, Features section",
+        "source_class": "readme"
+      },
+      {
+        "quote": "Every error path is exercised. Errors are caught and re-raised with structured context.",
+        "location": "README.md, Quality section",
+        "source_class": "readme"
+      }
+    ],
+    "evidence_summary": "Only README claims about error handling are visible in the excerpt; no source code, exception classes, or tests are shown to verify structured context, specific exception types, or absence of bare excepts.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 2,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Error Handling Quality"
+  },
+  {
+    "dim_id": "dim_5",
+    "evidence_found": true,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [
+      {
+        "quote": "Every public function has a docstring.",
+        "location": "README.md, Quality section",
+        "source_class": "readme"
+      }
+    ],
+    "evidence_summary": "Only README self-description claims every public function has a docstring; no source code (e.g., __init__.py, Box class) is provided in the target content to verify docstring presence or Args/Returns/Raises conventions.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 1,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Public API Documentation"
+  },
+  {
+    "dim_id": "dim_6",
+    "evidence_found": true,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [
+      {
+        "quote": "Zero dependencies",
+        "location": "README.md: Features section",
+        "source_class": "readme"
+      }
+    ],
+    "evidence_summary": "README claims 'Zero dependencies' but no pyproject.toml, setup.py, or requirements.txt was provided in the target excerpt to verify the runtime dependency list or check whether dev/test deps are scoped under extras_require.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 1,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Dependency Discipline"
+  },
+  {
+    "dim_id": "dim_7",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [
+      {
+        "quote": "Run the suite: pytest",
+        "location": "README.md: Testing section",
+        "source_class": "readme"
+      }
+    ],
+    "evidence_summary": "No CI configuration files (.github/workflows/, .circleci/, .gitlab-ci.yml, tox.ini) are present in the provided target content. Only a README mention of running pytest manually exists; no evidence that tests, type checks, or lints run automatically on every commit despite 'production-ready' claim.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 1,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "CI and Quality Gates"
+  },
+  {
+    "dim_id": "dim_8",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [
+      {
+        "quote": "Every public function has a docstring.",
+        "location": "README.md, Quality section",
+        "source_class": "readme"
+      }
+    ],
+    "evidence_summary": "Only the README excerpt is available; no pyproject.toml, source files, or linter configuration are visible to assess linting/formatting setup or presence of TODO/FIXME markers. README claims of rigor are self-description, not observable lint evidence.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 1,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Code Cleanliness and Linting"
+  }
+]

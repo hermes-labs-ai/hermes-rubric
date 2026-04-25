@@ -1,0 +1,54 @@
+{
+  "rubric_intent": "Score the engineering substance of a marketing document for an AI observability platform",
+  "target_type": "marketing-doc",
+  "dimensions": [
+    {
+      "id": "dim_1",
+      "name": "Technical Specificity of Observability Scope",
+      "description": "Measures whether the description names concrete, observable engineering signals (e.g., latency percentiles, token-level drift, inference queue depth) rather than vague terms like 'visibility' or 'performance'.",
+      "evidence_instructions": "Scan all text for nouns and phrases that denote measurable system attributes; count occurrences of domain-specific, quantifiable metrics (e.g., 'p95 latency', 'OOM rate', 'KV cache hit ratio') vs. generic abstractions ('performance', 'reliability', 'insight'); zero instances of concrete signals is weak evidence.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_2",
+      "name": "Architecture-Exposed Differentiation",
+      "description": "Measures whether the description references distinctive, engineering-relevant architectural choices (e.g., sidecar instrumentation, async telemetry batching, model-level tracing) that explain *how* observability is achieved.",
+      "evidence_instructions": "Look for proper nouns or technical constructs implying implementation decisions (e.g., 'eBPF-based capture', 'schema-on-read telemetry ingestion', 'per-pipeline span propagation'); absence of any architecture-adjacent terms beyond 'cloud-native stack' is weak evidence.",
+      "weight": 3,
+      "hedge": true
+    },
+    {
+      "id": "dim_3",
+      "name": "AI-Workload Specificity",
+      "description": "Measures whether the description names challenges or signals unique to AI/ML systems (e.g., prompt degradation, embedding drift, GPU memory fragmentation) rather than generic SaaS or infra observability concerns.",
+      "evidence_instructions": "Identify terms tied to AI lifecycle stages (preprocessing, inference, fine-tuning) or ML-specific failure modes (e.g., 'logit collapse', 'RAG retrieval latency', 'batch size throttling'); 'model performance' without qualification is insufficient.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_4",
+      "name": "Operational Precision of Value Claims",
+      "description": "Measures whether value propositions (e.g., 'instant visibility') are anchored to engineering outcomes with measurable scope, latency, or fidelity (e.g., 'sub-second p99 trace tail sampling', 'per-token cost attribution').",
+      "evidence_instructions": "Examine adverbs and modifiers attached to benefit claims ('instant', 'real-time', 'granular'); check if they are qualified by engineering constraints (e.g., 'within 200ms', 'at batch level', 'with <1% sampling bias'); unqualified superlatives score low.",
+      "weight": 2,
+      "hedge": true
+    },
+    {
+      "id": "dim_5",
+      "name": "Instrumentation Transparency",
+      "description": "Measures whether the description indicates *what* must be instrumented, *how* (e.g., SDK, OpenTelemetry exporter, auto-inject), or *what\u2019s inferred* vs. *what\u2019s measured*.",
+      "evidence_instructions": "Search for verbs or nouns indicating integration mechanics (e.g., 'auto-instrumented LLM wrappers', 'OpenTelemetry collector plugin', 'inference log parsing'); 'built on cloud-native stack' alone provides no observable evidence.",
+      "weight": 2,
+      "hedge": true
+    },
+    {
+      "id": "dim_6",
+      "name": "Failure Mode Coverage",
+      "description": "Measures whether the description acknowledges or enables detection of AI-specific operational failures (e.g., hallucination spikes, context window overflow, tokenizer mismatch).",
+      "evidence_instructions": "Look for named failure conditions or anti-patterns (e.g., 'prompt injection detection', 'KV cache thrashing alerts', 'output length truncation monitoring'); generic terms like 'reliability' without failure semantics are insufficient.",
+      "weight": 2,
+      "hedge": true
+    }
+  ]
+}

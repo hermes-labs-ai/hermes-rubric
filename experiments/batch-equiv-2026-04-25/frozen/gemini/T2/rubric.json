@@ -1,0 +1,54 @@
+{
+  "rubric_intent": "Score this product description on engineering substance for an AI observability platform.",
+  "target_type": "marketing-doc",
+  "dimensions": [
+    {
+      "id": "dim_1",
+      "name": "AI Workload Specificity",
+      "description": "Measures how clearly the description articulates the specific engineering challenges and benefits related to AI workloads.",
+      "evidence_instructions": "Look for explicit mentions of AI model performance, AI cost optimization, AI reliability, or other AI-specific engineering concerns addressed by the platform.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_2",
+      "name": "Technical Foundation Clues",
+      "description": "Assesses whether the description provides any hints about the underlying engineering architecture or technology stack.",
+      "evidence_instructions": "Search for terms like 'cloud-native stack', 'microservices', 'distributed systems', or specific technologies that suggest the engineering approach.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_3",
+      "name": "Observability Depth",
+      "description": "Evaluates the extent to which the description suggests the platform offers deep, actionable insights into AI workloads, beyond superficial metrics.",
+      "evidence_instructions": "Examine phrases related to 'instant visibility', 'model performance', 'cost', and 'reliability' to infer the depth of observability provided.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_4",
+      "name": "Engineering Benefit Articulation",
+      "description": "Determines how well the description translates technical features into tangible engineering benefits for users.",
+      "evidence_instructions": "Analyze the 'Why teams choose Hyperflow' section and other benefit-oriented statements for clear connections to engineering outcomes like speed, reliability, and confidence.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_5",
+      "name": "Credibility Indicators",
+      "description": "Assesses if the description includes any elements that build engineering credibility or trust.",
+      "evidence_instructions": "Look for mentions of 'trusted by leading AI-first companies' or any other social proof that implies engineering validation.",
+      "weight": 1,
+      "hedge": false
+    },
+    {
+      "id": "dim_6",
+      "name": "Actionability of 'Get Started'",
+      "description": "Measures whether the call to action implies a straightforward engineering integration or evaluation process.",
+      "evidence_instructions": "Evaluate the 'Get started today' phrase in the context of the overall description to infer if it suggests a quick and easy engineering setup.",
+      "weight": 1,
+      "hedge": true
+    }
+  ]
+}

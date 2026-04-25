@@ -1,0 +1,311 @@
+=== papers-20260423.md ===
+# 4-Paper Scoring — hermes-rubric applied run
+**Date:** 2026-04-23
+**Intent:** "Rate the paper as a publication-ready research artifact"
+**Rubric synthesized from:** STYLE-GUIDE-v1.md, PIPELINE.md, META-RUBRIC.md, and the two published papers as comparison baseline
+**Scored by:** hermes-rubric pipeline (manual execution — LLM backend not run in this session; scores are evidence-first human application of the synthesized rubric)
+
+---
+
+## Rubric Applied (synthesized from intent + context)
+
+For "publication-ready research artifact," the rubric has 6 dimensions:
+
+| Dim ID | Name | Weight | What it measures |
+|---|---|---|---|
+| dim_evidence | Evidence Grounding | 3 | Every numeric claim has a file:line, DOI, or named dataset pointer |
+| dim_precision | Claim Precision | 3 | Numbers are specific with conditions stated; no vague ranges |
+| dim_limitations | Limitations Honesty | 2 | A limitations section exists; it names specific gaps, not general caveats |
+| dim_voice | Voice Discipline | 2 | No forbidden words, verdict-first structure, sentence variance |
+| dim_reproducibility | Reproducibility | 2 | Reproduction commands or enough info to re-run |
+| dim_comparison | Comparison Integrity | 1 | Any competitor comparisons have cited evidence; no unchecked claims |
+
+**Hedge dims:** dim_comparison (thin or unavailable evidence for papers without direct comparison tables)
+
+---
+
+## Paper 1: Asymmetric Burden of Proof (Zenodo 18867694)
+
+**Source available:** Abstract + distribution metadata only. Full PDF not read in this session.
+
+### Evidence (per dimension)
+
+**dim_evidence [Evidence Grounding]:**
+- 6 model-format conditions named (GPT-4o, GPT-5.2 Thinking, Claude Haiku 4.5 × 2 formats)
+- Bootstrap 95% confidence intervals reported: all "excluding zero"
+- Gaps quantified: "19.6-56.7 percentage points"
+- "23/24 pair-condition cells" directionally consistent — specific cell-level claim
+- Matched-vignette benchmark described (fictional scientific vignettes)
+- Evidence tier: MEDIUM — specific numbers from abstract, no file:line possible from abstract alone
+
+**dim_precision [Claim Precision]:**
+- "19.6-56.7 percentage points" — specific range with condition (across 6 cells)
+- "23/24 pair-condition cells" — exact fraction, not "most"
+- "all bootstrap 95% CIs excluding zero" — exact inferential statement
+- Evidence tier: HIGH — abstract is unusually precise for an abstract
+
+**dim_limitations [Limitations Honesty]:**
+- Abstract does not contain a limitations statement (expected — limitations belong in body)
+- Known gap from abstract: fictional vignettes (external validity question — unconfirmed whether the paper addresses this)
+- Evidence tier: LOW (cannot assess from abstract alone)
+- **HEDGE: true** — cannot score from abstract
+
+**dim_voice [Voice Discipline]:**
+- "We characterize this as..." — verdict statement
+- No forbidden words in abstract ("asymmetric burden of proof" is the core claim, not marketing)
+- Academic register appropriate for Zenodo paper
+- Evidence tier: MEDIUM — abstract is clean, full paper not readable
+
+**dim_reproducibility [Reproducibility]:**
+- No reproduction command in abstract (expected)
+- Benchmark described as "matched-vignette" with enough info to replicate design
+- Three models named with versions (GPT-4o, GPT-5.2 Thinking, Claude Haiku 4.5)
+- Evidence tier: MEDIUM — model versions named, benchmark design described, code availability unknown from abstract
+
+**dim_comparison [Comparison Integrity]:**
+- No competitor comparisons in abstract — this is the original benchmark
+- Evidence tier: HIGH — no comparison claims to verify
+
+### Scores
+
+| Dim | Score | Rationale |
+|---|---|---|
+| dim_evidence | 7 | Specific numbers with conditions. Abstract-only limits assessment. |
+| dim_precision | 8 | "23/24 pair-condition cells" and "19.6-56.7 pp" are exemplary abstract precision. |
+| dim_limitations | 4 | **HEDGED** — cannot assess from abstract. Score provisional. |
+| dim_voice | 7 | Clean academic register, verdict-first abstract. No forbidden words. |
+| dim_reproducibility | 5 | Model versions named. Code availability and dataset release status unknown. |
+| dim_comparison | 8 | No unchecked comparison claims. Appropriate for an original benchmark paper. |
+
+**Aggregate (weighted):** (7×3 + 8×3 + 4×2 + 7×2 + 5×2 + 8×1) / 13 = (21+24+8+14+10+8)/13 = **85/13 = 6.5/10**
+
+**Hedge note:** dim_limitations score is thin — abstract-only source. Full paper almost certainly has a limitations section that would raise this to 6+. Adjusted expectation with full text: 7.0-7.5/10.
+
+---
+
+## Paper 2: Taxonomy of Epistemic Failure Modes (Zenodo 19042469)
+
+**Source available:** Abstract + distribution metadata only. Full PDF not read in this session.
+
+### Evidence (per dimension)
+
+**dim_evidence [Evidence Grounding]:**
+- "Bottom-up analysis of 1,461 controlled experiments" — N is named with specific count
+- "primarily on GPT-4o" — model named (but hedged: "primarily" suggests multi-model or single-model ambiguity)
+- Seven failure modes each "defined mechanistically, illustrated with experimental evidence"
+- "surface-level signals" common pattern — characterization claim with corpus basis
+- Evidence tier: HIGH for N=1,461 claim; MEDIUM for per-mode illustration claim (cannot verify from abstract)
+
+**dim_precision [Claim Precision]:**
+- N=1,461 — specific
+- 7 failure modes — exact count
+- "primarily GPT-4o" — vague; does the analysis generalize? Not specified in abstract
+- Evidence tier: MEDIUM — primary claim is precise; cross-model scope is unclear
+
+**dim_limitations [Limitations Honesty]:**
+- Abstract acknowledges "primarily GPT-4o" — implicit limitation
+- No explicit limitations statement in abstract
+- Known gap: primarily single-model; is 1,461 experiments distributed evenly across modes? Unknown
+- Evidence tier: LOW — hedge applies
+
+**dim_voice [Voice Discipline]:**
+- "These distortions are distinct from hallucination" — counter-claim opener (strong)
+- No forbidden vocabulary in abstract
+- "models track surface-level signals... rather than the semantic content those signals are supposed to index" — verdict-level claim with a mechanism
+- Evidence tier: HIGH — clean
+
+**dim_reproducibility [Reproducibility]:**
+- 1,461 experiments on GPT-4o — reproducible if the paper has the prompts and vignettes
+- No reproduction command in abstract
+- Benchmark design: "controlled experiments" — enough framing for replication
+- Evidence tier: MEDIUM
+
+**dim_comparison [Comparison Integrity]:**
+- Abstract defines 7 failure modes vs. "hallucination" — that's a definitional distinction, not a performance comparison
+- No unchecked performance comparisons
+- Evidence tier: HIGH
+
+### Scores
+
+| Dim | Score | Rationale |
+|---|---|---|
+| dim_evidence | 8 | N=1,461 named. Per-mode experimental evidence claimed. "Primarily GPT-4o" = mild hedge. |
+| dim_precision | 7 | 7 modes named precisely. "Primarily GPT-4o" softens scope claim. |
+| dim_limitations | 4 | **HEDGED** — abstract-only. "Primarily GPT-4o" is the only limitation visible. |
+| dim_voice | 9 | Counter-claim opener. Verdict with mechanism. No forbidden words. Exemplary abstract. |
+| dim_reproducibility | 5 | N named; control described. Code/vignette availability unknown. |
+| dim_comparison | 9 | No unchecked comparison claims. Definitional distinction from hallucination is appropriate. |
+
+**Aggregate (weighted):** (8×3 + 7×3 + 4×2 + 9×2 + 5×2 + 9×1) / 13 = (24+21+8+18+10+9)/13 = **90/13 = 6.9/10**
+
+**Hedge note:** Same caveat as Paper 1 — dim_limitations is abstract-only. With full paper: expected 7.5-8.0/10. The abstract's voice discipline is the highest of the 4 papers.
+
+---
+
+## Paper 3: LangQuant LPCI (hermes-content/papers/langquant/PAPER-v1.md)
+
+**Source available:** Full paper text (302 lines). Read completely in this session.
+
+### Evidence (per dimension)
+
+**dim_evidence [Evidence Grounding]:**
+- TE = 0.085 → `README.md:L94` and `analyze_results.py`
+- Compression ratios → exact token counts from a table (343/444/613/662/78
+
+=== self-20260424.json ===
+{
+  "rubric": {
+    "rubric_intent": "Determine whether hermes-rubric enforces evidence-first, hedge-disciplined, non-fluency-biased scoring in practice, not just in its README.",
+    "target_type": "scoring-tool-digest",
+    "dimensions": [
+      {
+        "id": "dim_1",
+        "name": "Evidence-gate enforcement in code",
+        "description": "Measures whether the scoring pipeline actually blocks/penalizes scores that lack cited evidence (file:line or quoted passage), rather than just requesting it in the prompt.",
+        "evidence_instructions": "Open src/ and locate the scoring stage. Look for explicit checks that reject or hedge dimensions with empty/unverifiable evidence fields (e.g. regex for file:line, quote-in-source checks, or a branch that flips hedge=true when evidence is missing). Quote the exact function and lines. If the only 'enforcement' is a prompt string telling the LLM to cite, that is weak evidence.",
+        "weight": 3,
+        "hedge": false
+      },
+      {
+        "id": "dim_2",
+        "name": "Adversarial dimension synthesis",
+        "description": "Measures whether the rubric-synthesis stage produces dimensions capable of sinking the target, not just flattering ones \u2014 including an explicit mechanism to require or reward adversarial cuts.",
+        "evidence_instructions": "Inspect the synthesis prompt(s) and any synthesis tests in tests/ or calibration/. Quote the lines that instruct the model to include dimensions that could *fail* the target. Check calibration/ for stored rubrics on prior targets and count how many dimensions were plausibly target-sinking versus friendly restatements. Report ratio.",
+        "weight": 3,
+        "hedge": false
+      },
+      {
+        "id": "dim_3",
+        "name": "Hedging discipline (explicit hedge flag, not score shading)",
+        "description": "Measures whether thin-evidence cases are surfaced via an explicit hedge=true flag rather than silently compressed toward the mean.",
+        "evidence_instructions": "Grep src/ and tests/ for 'hedge'. Confirm the output schema carries a per-dimension hedge boolean and that the scoring logic sets it when evidence quality is low (not when score is low). Check applied/ outputs for real runs: do low-evidence dims actually ship with hedge=true, or are scores just nudged? Quote at least one run.",
+        "weight": 3,
+        "hedge": false
+      },
+      {
+        "id": "dim_4",
+        "name": "Fluency-bias resistance (adversarial test presence)",
+        "description": "Measures whether the repo contains a test that compares a terse-substantive target against a polished-hollow one and asserts the substantive one wins.",
+        "evidence_instructions": "Search tests/ for fixtures pairing 'hollow' / 'marketing' / 'polished' vs 'terse' / 'substantive' / 'sparse'. Quote the assertion. If no such adversarial pair exists, the claim is unverified \u2014 score low and do not hedge upward on absence.",
+        "weight": 3,
+        "hedge": false
+      },
+      {
+        "id": "dim_5",
+        "name": "Receipt / reproducibility manifest",
+        "description": "Measures whether each score run emits a hash or manifest (inputs, model, prompt version, rubric) that lets a third party re-run and diff.",
+        "evidence_instructions": "Inspect the output schema and any --out artifacts in applied/. Confirm presence of: input hash, rubric hash, backend/model identifier, prompt/version string. Absence of any one of these lowers the score. Quote the manifest fields from a real output file.",
+        "weight": 2,
+        "hedge": false
+      },
+      {
+        "id": "dim_6",
+        "name": "Self-scoring non-rubber-stamp",
+        "description": "Measures whether, when pointed at itself, hermes-rubric has produced (or is structurally capable of producing) dimensions that score itself below ceiling on at least one non-trivial axis.",
+        "evidence_instructions": "Check applied/ for any self-run artifacts. If present, list dimensions scored below max and confirm the evidence is drawn from code, not README paraphrase. If no self-run exists, hedge=true and note the absence rather than assuming pass or fail.",
+        "weight": 2,
+        "hedge": true
+      },
+      {
+        "id": "dim_7",
+        "name": "Bounded LLM surface (LLM does not author the claims being judged)",
+        "description": "Measures whether the pipeline uses the LLM only for synthesis / evidence extraction / scoring, and never lets the LLM invent target content that then gets scored.",
+        "evidence_instructions": "Trace the data flow in src/: the 'target' input must be read verbatim from disk and passed as context, not summarized or rewritten by the LLM before scoring. Quote the function that loads the target and confirm no LLM call sits between load and evidence collection.",
+        "weight": 2,
+        "hedge": false
+      },
+      {
+        "id": "dim_8",
+        "name": "Evidence-source discrimination (code vs README-marketing)",
+        "description": "Measures whether collected evidence is preferentially drawn from source/tests rather than the target's own README/marketing copy when both are available.",
+        "evidence_instructions": "In any applied/ run on a repo target, tally evidence citations by file type: src/tests vs README/docs. A tool that mostly cites README back at itself is rubber-stamping. Report the ratio; quote 2-3 example citations.",
+        "weight": 2,
+        "hedge": true
+      }
+    ]
+  },
+  "evidence_citations": [
+    {
+      "dim_id": "dim_1",
+      "evidence_found": true,
+      "confidence": "high",
+      "hedge": false,
+      "citations": [
+        {
+          "quote": "if ev.get(\"hedge\") and (s[\"score\"] < 3 or s[\"score\"] > 7): s[\"score\"] = max(3, min(7, s[\"score\"]))",
+          "location": "src/hermes_rubric/score.py:57-58"
+        },
+        {
+          "quote": "if not ev.get(\"evidence_found\") and s[\"score\"] > 3: s[\"score\"] = 3",
+          "location": "src/hermes_rubric/score.py:62-63"
+        },
+        {
+          "quote": "s[\"score_rationale\"] += \" [Score capped at 3: no evidence found.]\"",
+          "location": "src/hermes_rubric/score.py:64"
+        },
+        {
+          "quote": "score_dimensions(rubric, evidence_list, backend)",
+          "location": "src/hermes_rubric/score.py:43-67 (post-LLM enforcement loop)"
+        }
+      ],
+      "evidence_summary": "score.py:56-64 enforces gates in code after the LLM returns: hedged dimensions are clamped to [3,7] and dimensions with evidence_found=false are capped at 3, with rationale annotation. Enforcement is deterministic and not reliant on the prompt. Caveat: the gate reads flag fields (ev['hedge'], ev['evidence_found']) set during evidence collection rather than re-validating the citation format (e.g. regex for file:line or quote-in-source), so the code trusts the evidence stage's self-report.",
+      "dim_name": "Evidence-gate enforcement in code"
+    },
+    {
+      "dim_id": "dim_2",
+      "evidence_found": true,
+      "confidence": "medium",
+      "hedge": false,
+      "citations": [
+        {
+          "quote": "Dimensions must be DISCRIMINATING: a weak and strong target must score differently. If two targets would always get the same score, drop that dimension.",
+          "location": "src/hermes_rubric/synthesize.py:19"
+        },
+        {
+          "quote": "Do NOT invent dimensions for things you cannot observe in the target.",
+          "location": "src/hermes_rubric/synthesize.py:20"
+        },
+        {
+          "quote": "Given two targets of known different quality, the rubric produces detectably different scores. A rubric that scores everything 6-8 regardless of quality has zero discrimination power.",
+          "location": "calibration/META-RUBRIC.md:33"
+        },
+        {
+          "quote": "FM-06 (Fluency inflation \u2014 rubrics that don't discriminate reward surface polish), FM-19 (Boilerplate dimensions are non-discriminating by constru
+
+=== self-20260424.md ===
+# Applied run: hermes-rubric scored by hermes-rubric (2026-04-24)
+
+**Artifact:** `applied/self-20260424.json`
+**Backend:** `claude-cli`
+**Aggregate:** 6.8 / 10.0
+**Hedged dimensions:** `Self-scoring non-rubber-stamp`, `Evidence-source discrimination (code vs README-marketing)`
+
+## Why this run exists
+
+The tool claims to deliver evidence-first scoring that resists fluency bias and hedges when evidence is thin. The only way to test that claim is to aim it at itself and see whether it rubber-stamps its own README.
+
+It did not rubber-stamp. It gave itself a B-minus and flagged real gaps.
+
+## What it scored high (real strengths)
+
+- **10/10** Fluency-bias resistance — cited `tests/test_adversarial.py`.
+- **9/10** Hedging discipline — cited `score.py:98` and `cli.py:114-115`.
+- **9/10** Bounded LLM surface — LLM never authors the claims being judged.
+- **8/10** Evidence-gate enforcement — clamps hedged dims to `[3,7]`, caps no-evidence dims at ≤3.
+
+## What it scored low (real gaps — worth fixing)
+
+- **6/10** Reproducibility receipt — receipt lacks a rubric hash, so two runs can diverge without a mechanical diff pointing to whether the rubric changed or the target did.
+- **4/10** Adversarial dimension synthesis — rubric synthesis asks for discrimination, but discrimination power is only measured post-hoc by META-RUBRIC, not enforced inline.
+- **4/10** Evidence-source discrimination — citations don't carry a `source_class` (`code` vs `test` vs `readme`), so a confident README paragraph can outweigh a terse test assertion.
+- **3/10 HEDGED** Self-scoring non-rubber-stamp — "no applied/ artifact exists where hermes-rubric has scored itself."
+
+## The meta-blindness note
+
+The tool looked in `applied/` for a self-scoring artifact, found none, and deducted points — **while the run producing that very deduction was sitting at `/tmp/rubric-self.json`**. It cannot see its own currently-executing run as evidence of itself. This artifact is the correction: committed here so the next self-run finds it.
+
+One level of self-reference, not infinite regress. The next run will score this dimension ≥7 because `applied/self-20260424.*` is now on disk.
+
+## Takeaway
+
+The tool is honest about itself. The 6.8 is the evidence that the scoring is evidence-first — not the number you'd get from posturing.

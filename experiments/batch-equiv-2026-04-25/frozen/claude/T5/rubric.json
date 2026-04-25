@@ -1,0 +1,62 @@
+{
+  "rubric_intent": "Score a notes-style document on engineering substance \u2014 i.e., how much real technical content vs. placeholder.",
+  "target_type": "document",
+  "dimensions": [
+    {
+      "id": "dim_1",
+      "name": "Technical Specificity",
+      "description": "Measures whether the document contains concrete engineering details (APIs, data structures, algorithms, file paths, versions) rather than vague references.",
+      "evidence_instructions": "Scan for named identifiers, code symbols, library/version numbers, file paths, protocols, or numeric parameters. Count distinct concrete technical nouns vs. abstract placeholders.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_2",
+      "name": "Problem Framing",
+      "description": "Measures whether the document defines an engineering problem with constraints, inputs, outputs, and success criteria.",
+      "evidence_instructions": "Look for an explicit problem statement, requirements list, constraints section, or stated goals. Check whether the reader could restate what is being solved after reading.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_3",
+      "name": "Design Reasoning",
+      "description": "Measures presence of trade-off analysis, alternatives considered, or rationale for design choices.",
+      "evidence_instructions": "Search for words like 'because', 'instead of', 'trade-off', 'alternative', 'vs', or comparative tables. Note whether choices are justified or merely asserted.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_4",
+      "name": "Evidence and Validation",
+      "description": "Measures whether claims are backed by benchmarks, measurements, citations, code references, or reproducible procedures.",
+      "evidence_instructions": "Look for numbers with units, links, citations, commit SHAs, benchmark tables, or commands the reader could run. Distinguish opinion from measured claims.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_5",
+      "name": "Actionability",
+      "description": "Measures whether the document contains concrete next steps, implementation guidance, or pseudocode/code that an engineer could act on.",
+      "evidence_instructions": "Scan for code blocks, command-line examples, step-by-step procedures, checklists, or named TODOs with enough specificity to execute.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_6",
+      "name": "Completion State",
+      "description": "Measures whether the document is a finished artifact vs. a placeholder or stub (e.g., 'todo: write this up later').",
+      "evidence_instructions": "Compute ratio of placeholder markers ('TODO', 'TBD', 'write later', 'fixme') to substantive paragraphs. Inspect overall length and section coverage relative to its stated topic.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_7",
+      "name": "Scope Coherence",
+      "description": "Measures whether the document stays focused on a single engineering topic and develops it, rather than drifting or being too thin to evaluate.",
+      "evidence_instructions": "Identify the apparent topic from title/headers and check whether body content develops that topic. Note tangents, context-free fragments, or missing connective tissue.",
+      "weight": 1,
+      "hedge": true
+    }
+  ]
+}

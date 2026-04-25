@@ -1,0 +1,62 @@
+{
+  "rubric_intent": "Score the agent-convergence-scorer Python utility on engineering qualities specific to its role as a lightweight, dependency-free, production-adjacent metric tool for multi-agent output convergence.",
+  "target_type": "python-tool",
+  "dimensions": [
+    {
+      "id": "dim_1",
+      "name": "Zero-Dependency Correctness",
+      "description": "Whether the tool delivers mathematically correct convergence metrics using only Python stdlib\u2014no external packages\u2014and avoids hidden dependencies or version-sensitive behavior.",
+      "evidence_instructions": "Inspect setup.py/pyproject.toml for 'install_requires' (must be empty or contain only conditional extras); verify all imports in source files (e.g., agent_convergence_scorer/__init__.py, core.py) are from stdlib modules (e.g., json, re, itertools, statistics); confirm no use of third-party tokenizers, numpy, or string similarity libs.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_2",
+      "name": "Deterministic Tokenization & Edge-Case Robustness",
+      "description": "Whether the whitespace-based tokenizer and metric calculations behave deterministically across inputs with edge cases (empty strings, whitespace-only runs, unicode, mixed casing, punctuation variants) without silent failure or NaN outputs.",
+      "evidence_instructions": "Review test suite (e.g., tests/test_core.py) for explicit test cases covering: empty list, single run, identical runs, runs differing only by trailing/leading whitespace, runs with only punctuation or spaces, and non-ASCII tokens; check that all test assertions verify exact numeric outputs (not just type or non-None), and that the tokenizer function is pure and stateless.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_3",
+      "name": "CLI Input/Output Contract Fidelity",
+      "description": "Whether the CLI interface strictly adheres to Unix conventions (stdin/stdout JSON I/O, exit codes on error) and guarantees round-trip lossless parsing of its documented input schema and output schema.",
+      "evidence_instructions": "Examine cli.py or __main__.py: confirm it reads from sys.stdin (with fallback handling), writes valid JSON to stdout, exits with code 0 on success and non-zero on parse/validation errors; verify the example input JSON structure matches what the parser expects (e.g., top-level 'runs' list); check for explicit handling of malformed JSON, missing 'runs', or non-string elements.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_4",
+      "name": "Composite Score Transparency & Auditability",
+      "description": "Whether the weighted composite convergence_score formula is explicitly documented, implemented verifiably in code, and decoupled so each component can be tested and substituted independently.",
+      "evidence_instructions": "Locate the convergence_score implementation (e.g., in core.py); confirm it matches the documented weights (0.5 * exact_match + 0.3 * avg_overlap + 0.2 * div_distance_norm); verify docstring or inline comment cites the formula; check that the three subcomponents are computed separately before combination and exposed as public functions or constants.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_5",
+      "name": "Error Handling Granularity",
+      "description": "Whether validation failures (e.g., non-string runs, zero-length input, invalid JSON) produce actionable, typed, and distinguishable error messages\u2014not generic exceptions\u2014that guide users toward correction.",
+      "evidence_instructions": "Search source for try/except blocks around input parsing and validation; verify distinct exception types (e.g., ValueError subclasses like InvalidRunsError) or structured error payloads (e.g., {'error': 'non_string_run', 'index': 2}) are raised\u2014not bare 'raise Exception'; check CLI entrypoint catches and renders these cleanly to stderr without tracebacks.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_6",
+      "name": "Metric Documentation Precision",
+      "description": "Whether the public API documentation (docstrings + README) unambiguously defines behavior for ambiguous cases: token normalization (case/punctuation), Jaccard set construction (multiset vs. set), divergence_point tie-breaking logic, and normalization of div_distance_norm.",
+      "evidence_instructions": "Read docstrings of score_runs(), tokenize(), divergence_point(), and convergence_score(); cross-check against README 'Metrics' table and examples\u2014specifically look for statements about case folding, punctuation stripping, duplicate token handling, and how 'num_tokens_to_divergence' is computed when runs have unequal lengths or early mismatches.",
+      "weight": 2,
+      "hedge": true
+    },
+    {
+      "id": "dim_7",
+      "name": "Test Coverage of Metric Invariants",
+      "description": "Whether unit tests verify mathematical invariants expected of convergence metrics (e.g., exact_match_rate \u2208 [0,1], Jaccard \u2208 [0,1], convergence_score \u2208 [0,1], divergence_point.token_position \u2264 min run length).",
+      "evidence_instructions": "Scan test files for assertions checking bounds: e.g., 'assert 0 <= result[\"exact_match_rate\"] <= 1', 'assert result[\"divergence_point\"][\"token_position\"] <= min_len'; confirm tests include boundary cases (all identical runs \u2192 exact_match_rate == 1.0, all disjoint \u2192 avg_overlap == 0.0).",
+      "weight": 2,
+      "hedge": true
+    }
+  ]
+}

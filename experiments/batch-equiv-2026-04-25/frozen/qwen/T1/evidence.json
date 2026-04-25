@@ -1,0 +1,200 @@
+[
+  {
+    "dim_id": "dim_1",
+    "evidence_found": true,
+    "confidence": "high",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "from __future__ import annotations\nimport argparse\nimport json\nimport sys\nfrom typing import Any",
+        "location": "agent_convergence_scorer/cli.py:10-14",
+        "source_class": "code"
+      },
+      {
+        "quote": "from __future__ import annotations\nfrom typing import Any",
+        "location": "agent_convergence_scorer/scorer.py:1-2",
+        "source_class": "code"
+      },
+      {
+        "quote": "def tokenize(text: str) -> list[str]:\n    \"\"\"Whitespace tokenizer, lowercased. Intentionally simple.\"\"\"\n    return text.lower().split()",
+        "location": "agent_convergence_scorer/scorer.py:10-12",
+        "source_class": "code"
+      },
+      {
+        "quote": "tokenized = [set(tokenize(r)) for r in runs]",
+        "location": "agent_convergence_scorer/scorer.py:34",
+        "source_class": "code"
+      }
+    ],
+    "evidence_summary": "All imports in cli.py and scorer.py are from Python stdlib (argparse, json, sys, typing); tokenization uses only str.lower() and str.split(); set operations and arithmetic are stdlib-only; no third-party imports or hidden dependencies observed in the provided source files.",
+    "source_class_mix": {
+      "code": 4,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Zero-Dependency Correctness"
+  },
+  {
+    "dim_id": "dim_2",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [],
+    "evidence_summary": "No test suite content (e.g., tests/test_core.py) is present in the provided target content, and the code excerpts show no explicit edge-case test assertions, no verification of exact numeric outputs for tokenizer/metric edge cases, and no evidence of purity/statelessness checks for tokenize().",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Deterministic Tokenization & Edge-Case Robustness"
+  },
+  {
+    "dim_id": "dim_3",
+    "evidence_found": true,
+    "confidence": "high",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "if path == \"-\": return json.load(sys.stdin)",
+        "location": "agent_convergence_scorer/cli.py:_load",
+        "source_class": "code"
+      },
+      {
+        "quote": "print(json.dumps(result, indent=indent))",
+        "location": "agent_convergence_scorer/cli.py:main",
+        "source_class": "code"
+      },
+      {
+        "quote": "Exit codes:\\n    0 \u2014 scoring succeeded\\n    1 \u2014 input parse error (file missing, invalid JSON, wrong shape)\\n    2 \u2014 usage error (no input argument)",
+        "location": "agent_convergence_scorer/cli.py:docstring",
+        "source_class": "code"
+      },
+      {
+        "quote": "except json.JSONDecodeError as e:\\n        print(f\"error: invalid JSON in {args.input}: {e}\", file=sys.stderr)\\n        return 1",
+        "location": "agent_convergence_scorer/cli.py:main",
+        "source_class": "code"
+      },
+      {
+        "quote": "if not isinstance(runs, list) or len(runs) == 0:\\n        raise ValueError(\"input must be a non-empty list of strings (or {'runs': [...]})\")\\n    if not all(isinstance(r, str) for r in runs):\\n        raise ValueError(\"all run entries must be strings\")",
+        "location": "agent_convergence_scorer/cli.py:_extract_runs",
+        "source_class": "code"
+      }
+    ],
+    "evidence_summary": "The CLI reads from sys.stdin when '-' is passed, writes valid JSON to stdout, uses exit code 0 on success and 1 on parse/validation errors, and explicitly validates input structure (non-empty list of strings, top-level 'runs' dict support, type checks).",
+    "source_class_mix": {
+      "code": 5,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "CLI Input/Output Contract Fidelity"
+  },
+  {
+    "dim_id": "dim_4",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [],
+    "evidence_summary": "No implementation of convergence_score is present in the provided target content; scorer.py defines exact_match_rate, token_overlap, and divergence_point, but omits convergence_score entirely. The formula weights (0.5 * exact_match + 0.3 * avg_overlap + 0.2 * div_distance_norm) and any docstring or decoupled component computation for a composite score are absent.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Composite Score Transparency & Auditability"
+  },
+  {
+    "dim_id": "dim_5",
+    "evidence_found": true,
+    "confidence": "high",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "except ValueError as e:\n        print(f\"error: {e}\", file=sys.stderr)\n        return 1",
+        "location": "agent_convergence_scorer/cli.py:84-86",
+        "source_class": "code"
+      },
+      {
+        "quote": "if not isinstance(runs, list) or len(runs) == 0:\n        raise ValueError(\"input must be a non-empty list of strings (or {'runs': [...]})\")\n    if not all(isinstance(r, str) for r in runs):\n        raise ValueError(\"all run entries must be strings\")",
+        "location": "agent_convergence_scorer/cli.py:52-55",
+        "source_class": "code"
+      },
+      {
+        "quote": "Exit codes:\n    0 \u2014 scoring succeeded\n    1 \u2014 input parse error (file missing, invalid JSON, wrong shape)\n    2 \u2014 usage error (no input argument)",
+        "location": "agent_convergence_scorer/cli.py:17-20",
+        "source_class": "code"
+      }
+    ],
+    "evidence_summary": "The CLI catches ValueError from _extract_runs and renders it cleanly to stderr with 'error: ' prefix and exit code 1; _extract_runs raises distinct, descriptive ValueError messages for zero-length input and non-string runs\u2014enabling user correction\u2014but does not use typed subclasses or structured payloads.",
+    "source_class_mix": {
+      "code": 3,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Error Handling Granularity"
+  },
+  {
+    "dim_id": "dim_6",
+    "evidence_found": true,
+    "confidence": "high",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "Whitespace tokenizer, lowercased. Intentionally simple.",
+        "location": "agent_convergence_scorer/scorer.py:12",
+        "source_class": "code"
+      },
+      {
+        "quote": "def tokenize(text: str) -> list[str]:\n    \"\"\"Whitespace tokenizer, lowercased. Intentionally simple.\"\"\"\n    return text.lower().split()",
+        "location": "agent_convergence_scorer/scorer.py:15-17",
+        "source_class": "code"
+      },
+      {
+        "quote": "diverges_at_token: the token at the divergence position from run[0], or None if all runs are identical up to min length.\n        token_position: 0-indexed position. Equals min_len if no divergence.\n        num_tokens_to_divergence: alias for token_position, kept for readability.",
+        "location": "agent_convergence_scorer/scorer.py:84-87",
+        "source_class": "code"
+      }
+    ],
+    "evidence_summary": "The docstring for tokenize() explicitly states case folding ('lowercased') and whitespace-only tokenization (no punctuation stripping mentioned, implying no punctuation normalization); divergence_point() docstring unambiguously defines tie-breaking logic for unequal lengths ('Equals min_len if no divergence') and clarifies that num_tokens_to_divergence is an alias for token_position, resolving how it's computed when runs differ in length or diverge early.",
+    "source_class_mix": {
+      "code": 3,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Metric Documentation Precision"
+  },
+  {
+    "dim_id": "dim_7",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [],
+    "evidence_summary": "No test files or assertions verifying metric invariants (e.g., bounds checks for exact_match_rate \u2208 [0,1], divergence_point.token_position \u2264 min run length) are present in the provided content. The excerpt includes only implementation code (scorer.py) and CLI logic, with no test files (e.g., tests/ or *_test.py) visible.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Test Coverage of Metric Invariants"
+  }
+]

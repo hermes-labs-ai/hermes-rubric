@@ -1,0 +1,70 @@
+{
+  "rubric_intent": "Score quickbox repo on engineering qualities: tests, code quality, and error handling.",
+  "target_type": "repo",
+  "dimensions": [
+    {
+      "id": "dim_1",
+      "name": "Test Suite Depth",
+      "description": "Measures whether tests actually exercise the core API across normal, edge, and error paths \u2014 not just smoke tests.",
+      "evidence_instructions": "Look in tests/ or test_*.py. Count test files and test functions. Check whether tests cover edge cases (empty inputs, type mismatches, attribute errors on Box) vs. only happy-path. Run `pytest --collect-only` to enumerate. Compare README's '100% coverage' claim against actual test count and assertion density.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_2",
+      "name": "Coverage Verifiability",
+      "description": "Measures whether the '100% test coverage' claim is substantiated by configuration and reproducible measurement.",
+      "evidence_instructions": "Look for coverage config in pyproject.toml, setup.cfg, .coveragerc, or tox.ini. Check for a coverage CI step or badge. Run `pytest --cov` if available. If the claim is asserted in README but no coverage tooling exists, that is a strong negative signal.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_3",
+      "name": "Type Safety Rigor",
+      "description": "Measures whether mypy coverage is real: type annotations on public API, py.typed marker, and mypy configuration in strict mode.",
+      "evidence_instructions": "Check for `py.typed` file in the package directory. Inspect pyproject.toml/mypy.ini for `[tool.mypy]` strict settings. Read the Box class definition \u2014 are parameters and returns annotated? Run `mypy --strict <pkg>` if possible.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_4",
+      "name": "Error Handling Quality",
+      "description": "Measures whether error paths raise specific, structured exceptions with context \u2014 vs. bare exceptions, silent failures, or unhandled paths.",
+      "evidence_instructions": "Grep the source for `raise`, `except`, custom exception classes. Check whether errors include structured context (the 'structured context' README claim). Look for bare `except:` or `except Exception: pass`. Verify error paths have corresponding tests (test_*error*, pytest.raises).",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_5",
+      "name": "Public API Documentation",
+      "description": "Measures whether every public function/class has a docstring as claimed, and whether docstrings describe args, returns, and raised exceptions.",
+      "evidence_instructions": "Inspect each public symbol in the package's __init__.py exports. Check for docstrings on Box and any public methods. Look for Args/Returns/Raises sections or a consistent docstring style (Google, NumPy, Sphinx).",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_6",
+      "name": "Dependency Discipline",
+      "description": "Measures whether the 'zero dependencies' claim holds and whether dev dependencies are pinned and minimal.",
+      "evidence_instructions": "Inspect pyproject.toml/setup.py `dependencies` and `install_requires`. Check for `requirements.txt`. Verify the runtime dep list is empty. Note whether dev/test deps are scoped under an extras_require or [tool.poetry.dev-dependencies] block.",
+      "weight": 1,
+      "hedge": false
+    },
+    {
+      "id": "dim_7",
+      "name": "CI and Quality Gates",
+      "description": "Measures whether tests, type checks, and lints actually run on every commit via CI configuration.",
+      "evidence_instructions": "Look for .github/workflows/, .circleci/, .gitlab-ci.yml, or tox.ini. Check that CI runs pytest, mypy, and a linter (ruff/flake8/black). Absence of CI in a repo claiming 'production-ready' is a strong negative signal.",
+      "weight": 2,
+      "hedge": true
+    },
+    {
+      "id": "dim_8",
+      "name": "Code Cleanliness and Linting",
+      "description": "Measures adherence to a consistent style via configured linters/formatters and absence of dead code or TODOs in core paths.",
+      "evidence_instructions": "Check pyproject.toml for ruff/black/isort/flake8 config. Run the configured linter. Grep source for TODO/FIXME/XXX. Inspect for unused imports or commented-out code blocks.",
+      "weight": 1,
+      "hedge": true
+    }
+  ]
+}

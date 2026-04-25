@@ -1,0 +1,104 @@
+[
+  {
+    "dim_id": "dim_1",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [],
+    "evidence_summary": "No concrete, observable engineering signals (e.g., latency percentiles, queue depth, drift metrics) are named; only generic abstractions like 'visibility', 'performance', 'cost', and 'reliability' appear.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Technical Specificity of Observability Scope"
+  },
+  {
+    "dim_id": "dim_2",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [],
+    "evidence_summary": "No architectural terms, implementation constructs, or engineering-specific observability mechanisms (e.g., sidecar, eBPF, batching, tracing) appear in the excerpt. Only generic phrases like 'cloud-native stack' are present, which lack technical specificity for Architecture-Exposed Differentiation.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Architecture-Exposed Differentiation"
+  },
+  {
+    "dim_id": "dim_3",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [],
+    "evidence_summary": "No AI/ML-specific challenges, failure modes, or lifecycle-stage terms (e.g., prompt degradation, embedding drift, RAG latency, logit collapse) are present; 'model performance' is generic and unqualified.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "AI-Workload Specificity"
+  },
+  {
+    "dim_id": "dim_4",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [],
+    "evidence_summary": "No engineering constraints (e.g., latency bounds, sampling rates, fidelity metrics) qualify the value claim 'instant visibility'; the term 'instant' is an unqualified superlative.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Operational Precision of Value Claims"
+  },
+  {
+    "dim_id": "dim_5",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [],
+    "evidence_summary": "No observable evidence for Instrumentation Transparency is present; the excerpt contains only marketing language and high-level claims (e.g., 'Built on a cloud-native stack') with no verbs or nouns indicating instrumentation mechanics, tools, or measurement methods.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Instrumentation Transparency"
+  },
+  {
+    "dim_id": "dim_6",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [],
+    "evidence_summary": "No named AI-specific failure modes (e.g., hallucination, context overflow, tokenizer mismatch) or detection mechanisms are mentioned; terms like 'reliability' are generic and lack failure semantics.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Failure Mode Coverage"
+  }
+]

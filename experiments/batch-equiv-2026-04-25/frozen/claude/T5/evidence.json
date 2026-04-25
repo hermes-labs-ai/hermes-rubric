@@ -1,0 +1,178 @@
+[
+  {
+    "dim_id": "dim_1",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [
+      {
+        "quote": "todo: write this up later",
+        "location": "notes:line 3",
+        "source_class": "other"
+      }
+    ],
+    "evidence_summary": "The target content contains only a title and a placeholder TODO. No APIs, data structures, file paths, version numbers, or other concrete technical identifiers are present.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 1
+    },
+    "dim_name": "Technical Specificity"
+  },
+  {
+    "dim_id": "dim_2",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [
+      {
+        "quote": "todo: write this up later",
+        "location": "notes:line 3",
+        "source_class": "other"
+      },
+      {
+        "quote": "# notes",
+        "location": "notes:line 1",
+        "source_class": "other"
+      }
+    ],
+    "evidence_summary": "The target contains only a placeholder heading and a 'todo' note. There is no problem statement, no constraints, no inputs/outputs, and no success criteria \u2014 nothing for a reader to restate.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 2
+    },
+    "dim_name": "Problem Framing"
+  },
+  {
+    "dim_id": "dim_3",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [
+      {
+        "quote": "todo: write this up later",
+        "location": "notes:3",
+        "source_class": "other"
+      }
+    ],
+    "evidence_summary": "Target content is a stub note with no design discussion, trade-offs, alternatives, or rationale present.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 1
+    },
+    "dim_name": "Design Reasoning"
+  },
+  {
+    "dim_id": "dim_4",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [
+      {
+        "quote": "todo: write this up later",
+        "location": "notes:line 3",
+        "source_class": "other"
+      }
+    ],
+    "evidence_summary": "The target content is a stub note with no benchmarks, citations, measurements, code references, or reproducible procedures. No evidence of validation is present.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 1
+    },
+    "dim_name": "Evidence and Validation"
+  },
+  {
+    "dim_id": "dim_5",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [
+      {
+        "quote": "todo: write this up later",
+        "location": "notes:line 3",
+        "source_class": "other"
+      }
+    ],
+    "evidence_summary": "The document contains no code, commands, procedures, or specific actionable steps \u2014 only a vague unnamed TODO ('write this up later') with no detail an engineer could execute on.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 1
+    },
+    "dim_name": "Actionability"
+  },
+  {
+    "dim_id": "dim_6",
+    "evidence_found": true,
+    "confidence": "high",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "todo: write this up later",
+        "location": "notes:line 3",
+        "source_class": "doc"
+      },
+      {
+        "quote": "# notes",
+        "location": "notes:line 1 (title)",
+        "source_class": "doc"
+      }
+    ],
+    "evidence_summary": "The document consists solely of a generic title ('# notes') and a single placeholder line ('todo: write this up later'), with zero substantive paragraphs. Placeholder-to-content ratio is effectively 1:0, indicating a stub rather than a finished artifact.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 2,
+      "other": 0
+    },
+    "dim_name": "Completion State"
+  },
+  {
+    "dim_id": "dim_7",
+    "evidence_found": true,
+    "confidence": "high",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "# notes",
+        "location": "notes:1",
+        "source_class": "doc"
+      },
+      {
+        "quote": "todo: write this up later",
+        "location": "notes:3",
+        "source_class": "doc"
+      }
+    ],
+    "evidence_summary": "Document has a generic title ('notes') with no defined engineering topic and a single placeholder line deferring content. There is no body to develop any topic, making scope too thin to evaluate coherence.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 2,
+      "other": 0
+    },
+    "dim_name": "Scope Coherence"
+  }
+]

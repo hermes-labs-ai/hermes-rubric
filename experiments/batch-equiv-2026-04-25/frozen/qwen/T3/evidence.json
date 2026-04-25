@@ -1,0 +1,110 @@
+[
+  {
+    "dim_id": "dim_1",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [],
+    "evidence_summary": "No test files, source code, or documentation excerpts are provided in the target content; only marketing claims about test coverage exist in README.md without observable test cases, function signatures, or docstring-test alignment evidence.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Test Coverage Completeness"
+  },
+  {
+    "dim_id": "dim_2",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [],
+    "evidence_summary": "No source code, test files, or technical documentation excerpts are provided in the target content; only README.md is included, which contains only marketing claims (e.g., 'Comprehensive error handling', 'Errors are caught and re-raised with structured context') without observable implementation details.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Error Handling Structure"
+  },
+  {
+    "dim_id": "dim_3",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [],
+    "evidence_summary": "No observable evidence for Type Safety Rigor is present in the provided excerpt: no configuration files (pyproject.toml/mypy.ini), no code snippets showing type annotations or mypy output, no mention of mypy configuration or error checking, and README statements like 'full mypy coverage' are self-descriptive marketing claims without verifiable implementation details.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Type Safety Rigor"
+  },
+  {
+    "dim_id": "dim_4",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [],
+    "evidence_summary": "No docstrings, function implementations, or test assertions are present in the provided excerpt; only marketing and usage information is given.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Docstring Behavioral Fidelity"
+  },
+  {
+    "dim_id": "dim_5",
+    "evidence_found": true,
+    "confidence": "medium",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "- Zero dependencies",
+        "location": "README.md: Features",
+        "source_class": "readme"
+      }
+    ],
+    "evidence_summary": "The README explicitly states 'Zero dependencies' in the Features section, providing direct but self-descriptive (marketing) evidence for Zero-Dependency Enforcement.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 1,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Zero-Dependency Enforcement"
+  },
+  {
+    "dim_id": "dim_6",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [],
+    "evidence_summary": "No test code, docstrings, or error documentation is present in the provided excerpt; only marketing claims about error handling and testing appear in the README.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Production Error Path Exercise"
+  }
+]

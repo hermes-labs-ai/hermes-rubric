@@ -1,0 +1,54 @@
+{
+  "rubric_intent": "Score this Python repository on engineering qualities related to testing rigor, code correctness, and error handling maturity.",
+  "target_type": "repo",
+  "dimensions": [
+    {
+      "id": "dim_1",
+      "name": "Test Coverage Completeness",
+      "description": "Whether test coverage includes all public API functions, edge cases, and error paths\u2014not just statement coverage but behavioral completeness.",
+      "evidence_instructions": "Examine the test suite (e.g., tests/ or pytest files) for explicit test cases covering invalid inputs, empty/None values, type mismatches, and documented error conditions; cross-reference with docstrings and source function signatures to verify every public function and its documented edge behaviors has at least one corresponding test.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_2",
+      "name": "Error Handling Structure",
+      "description": "Whether errors are raised with enriched, structured context (e.g., custom exceptions with fields, nested cause tracking, or contextual metadata) rather than generic or bare re-raises.",
+      "evidence_instructions": "Search source files for 'raise' statements inside try/except blocks; inspect exception types raised (e.g., custom vs. built-in), presence of additional context (e.g., .field_name, .original_error, f-strings with input values), and whether exceptions inherit from a project-specific base class.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_3",
+      "name": "Type Safety Rigor",
+      "description": "Whether type annotations are complete, precise, and validated via mypy with no ignored errors or unsafe constructs (e.g., 'Any', 'cast', '# type: ignore').",
+      "evidence_instructions": "Check for pyproject.toml or mypy.ini configuration; run 'mypy --show-error-codes .' (or inspect CI logs if available); verify absence of 'ignore' comments, use of 'Any', or unchecked 'isinstance' guards in type-annotated functions; confirm all public functions have full signature annotations including return types.",
+      "weight": 2,
+      "hedge": true
+    },
+    {
+      "id": "dim_4",
+      "name": "Docstring Behavioral Fidelity",
+      "description": "Whether docstrings accurately and completely specify preconditions, postconditions, side effects, and error-raising behavior for every public function.",
+      "evidence_instructions": "For each public function in __init__.py or main module, compare its docstring against actual implementation: check for stated parameter constraints, documented exceptions (with names and triggers), return guarantees, and whether edge-case behavior (e.g., 'raises ValueError if key is missing') matches both code and tests.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_5",
+      "name": "Zero-Dependency Enforcement",
+      "description": "Whether the library truly introduces no runtime dependencies beyond Python\u2019s standard library, verified by import analysis and packaging metadata.",
+      "evidence_instructions": "Inspect setup.py, pyproject.toml, or setup.cfg for 'install_requires'; verify no non-stdlib imports in source files (e.g., 'import numpy' or 'from requests import'); confirm 'pip show quickbox' shows no dependencies listed and 'pipdeptree --packages quickbox' returns no transitive deps.",
+      "weight": 1,
+      "hedge": false
+    },
+    {
+      "id": "dim_6",
+      "name": "Production Error Path Exercise",
+      "description": "Whether tests explicitly trigger and assert on *all* documented error-raising code paths under realistic production-like conditions (e.g., concurrent access, malformed inputs from external sources).",
+      "evidence_instructions": "Search tests for assertions on raised exceptions (e.g., 'pytest.raises(QuickBoxKeyError)'); verify each distinct error class or message documented in docstrings appears in at least one test's expected-exception assertion; check for tests simulating I/O-adjacent failure modes (if applicable) or real-world data corruption patterns.",
+      "weight": 2,
+      "hedge": true
+    }
+  ]
+}

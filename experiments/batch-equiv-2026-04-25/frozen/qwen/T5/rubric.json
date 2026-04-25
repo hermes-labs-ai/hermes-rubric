@@ -1,0 +1,54 @@
+{
+  "rubric_intent": "Score the document on depth, rigor, and applicability of engineering reasoning and technical content.",
+  "target_type": "document",
+  "dimensions": [
+    {
+      "id": "dim_1",
+      "name": "Technical Specificity",
+      "description": "Measures whether engineering concepts, components, or processes are named and described with precise, domain-appropriate terminology rather than vague or generic language.",
+      "evidence_instructions": "Scan for named technologies (e.g., 'Kubernetes StatefulSet', 'I\u00b2C bus timing constraints', 'finite-state machine with three defined transitions'), and assess whether abstractions (e.g., 'the system', 'a service') are consistently grounded in concrete implementation details. Avoid scoring based on jargon density alone\u2014only count terms that carry unambiguous engineering meaning in context.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_2",
+      "name": "Design Rationale Traceability",
+      "description": "Measures whether key engineering decisions are explicitly justified with trade-off analysis, quantitative constraints, or failure-mode considerations\u2014not just stated as facts or preferences.",
+      "evidence_instructions": "Identify claims about architecture, selection, or configuration (e.g., 'we chose Redis over PostgreSQL for session storage'); then verify whether each is accompanied by at least one observable justification referencing performance, consistency, latency, scalability, operational complexity, or similar engineering criteria.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_3",
+      "name": "Constraint Articulation",
+      "description": "Measures whether real-world engineering constraints (e.g., latency budgets, memory limits, compliance requirements, hardware interfaces) are explicitly identified and referenced in design or analysis.",
+      "evidence_instructions": "Look for numeric or categorical bounds tied to engineering outcomes (e.g., 'sub-50ms P95 latency', 'must operate within 256MB RAM footprint', 'requires ISO 26262 ASIL-B compliance')\u2014not abstract goals like 'high performance' or 'secure'. Count only constraints that directly inform technical choices in the document.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_4",
+      "name": "Failure Mode Engagement",
+      "description": "Measures whether the document acknowledges, analyzes, or mitigates plausible engineering failure modes (e.g., race conditions, thermal throttling, network partitioning, sensor drift) rather than assuming ideal behavior.",
+      "evidence_instructions": "Search for explicit discussion of what could go wrong under non-ideal conditions: keywords like 'if X fails', 'during transient Y', 'under load Z', 'in the presence of noise', or structured sections like 'error handling', 'recovery strategy', 'robustness testing'. Exclude hypotheticals without engineering grounding (e.g., 'if the server catches fire').",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_5",
+      "name": "Implementation Fidelity",
+      "description": "Measures whether descriptions of systems or components align with how they are actually implemented or behave in practice\u2014not just how they are intended or documented elsewhere.",
+      "evidence_instructions": "Cross-check stated behaviors or interfaces against evidence of real implementation: e.g., code snippets showing actual API signatures, config files revealing true defaults, diagrams matching observed data flow, or references to versioned artifacts (e.g., 'as of Linux kernel v6.1, the TCP stack enforces...'). If no such anchors exist, score lower.",
+      "weight": 2,
+      "hedge": true
+    },
+    {
+      "id": "dim_6",
+      "name": "Quantitative Anchoring",
+      "description": "Measures whether engineering claims or comparisons are supported by measurable data, benchmarks, or derivable calculations\u2014not only qualitative assertions.",
+      "evidence_instructions": "Identify claims about performance, capacity, or efficiency (e.g., 'faster', 'scales to N users', 'reduces latency') and verify presence of numbers, units, measurement context (e.g., 'on AWS m5.2xlarge, 10k RPS'), or derivable formulas (e.g., 'O(log n) search time'). Exclude placeholder values (e.g., 'X ms', 'N nodes') unless qualified as estimates with error bounds.",
+      "weight": 2,
+      "hedge": false
+    }
+  ]
+}

@@ -1,0 +1,241 @@
+[
+  {
+    "dim_id": "Test Coverage Depth",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [],
+    "evidence_summary": "The provided content does not include the `tests/` directory or any CI configuration files, making it impossible to assess test coverage depth.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Test Coverage Depth"
+  },
+  {
+    "dim_id": "dim_2",
+    "evidence_found": true,
+    "confidence": "high",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "if len(runs) < 2: return 1.0",
+        "location": "agent_convergence_scorer/scorer.py:17",
+        "source_class": "code"
+      },
+      {
+        "quote": "if len(runs) < 2: return {\"avg_overlap\": 1.0, \"jaccard\": 1.0}",
+        "location": "agent_convergence_scorer/scorer.py:45",
+        "source_class": "code"
+      },
+      {
+        "quote": "if len(runs) < 2: return {\"diverges_at_token\": None, \"token_position\": 0, \"num_tokens_to_divergence\": 0}",
+        "location": "agent_convergence_scorer/scorer.py:69",
+        "source_class": "code"
+      },
+      {
+        "quote": "if not isinstance(runs, list) or len(runs) == 0: raise ValueError(\"input must be a non-empty list of strings (or {'runs': [...]})\")",
+        "location": "agent_convergence_scorer/cli.py:33",
+        "source_class": "code"
+      }
+    ],
+    "evidence_summary": "The code explicitly handles cases where the input list of runs has fewer than two elements for `exact_match_rate`, `token_overlap`, and `divergence_point` functions, returning default values. The CLI also validates that the input is a non-empty list.",
+    "source_class_mix": {
+      "code": 4,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Test Robustness to Input Variations"
+  },
+  {
+    "dim_id": "Clarity and Completeness of README Documentation",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [],
+    "evidence_summary": "The provided target content does not include a README.md file, making it impossible to assess the clarity and completeness of its documentation.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Clarity and Completeness of README Documentation"
+  },
+  {
+    "dim_id": "dim_4",
+    "evidence_found": true,
+    "confidence": "high",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "Whitespace tokenizer, lowercased. Intentionally simple.",
+        "location": "agent_convergence_scorer/scorer.py:13",
+        "source_class": "code"
+      },
+      {
+        "quote": "Fraction of runs identical to run[0]. Range [0, 1]. 1.0 if len(runs) < 2.",
+        "location": "agent_convergence_scorer/scorer.py:20",
+        "source_class": "code"
+      },
+      {
+        "quote": "Pairwise token set overlap across all run pairs.\n\n    Returns:\n        avg_overlap: mean pairwise Jaccard across all C(N,2) pairs. Range [0, 1].\n        jaccard: Jaccard of the first two runs only (kept for quick eyeballing).\n\n    If len(runs) < 2, returns {\"avg_overlap\": 1.0, \"jaccard\": 1.0} by convention.",
+        "location": "agent_convergence_scorer/scorer.py:33",
+        "source_class": "code"
+      },
+      {
+        "quote": "Token position where outputs first differ.\n\n    Returns:\n        diverges_at_token: the token at the divergence position from run[0], or\n            None if all runs are identical up to min length.\n        token_position: 0-indexed position. Equals min_len if no divergence.\n        num_tokens_to_divergence: alias for token_position, kept for readability.",
+        "location": "agent_convergence_scorer/scorer.py:63",
+        "source_class": "code"
+      },
+      {
+        "quote": "Score how similar N agent outputs are. Produces exact-match rate, Jaccard token overlap, divergence point, and a composite convergence score in [0, 1].",
+        "location": "agent_convergence_scorer/cli.py:49",
+        "source_class": "code"
+      },
+      {
+        "quote": "measure how similar N agent outputs are.",
+        "location": "agent_convergence_scorer/__init__.py:1",
+        "source_class": "code"
+      }
+    ],
+    "evidence_summary": "Docstrings are present for the main module, CLI, and core scoring functions, explaining their purpose, arguments, and return values.",
+    "source_class_mix": {
+      "code": 6,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Inline Code Documentation (Docstrings)"
+  },
+  {
+    "dim_id": "dim_5",
+    "evidence_found": true,
+    "confidence": "high",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "Exit codes:\n    0 \u2014 scoring succeeded\n    1 \u2014 input parse error (file missing, invalid JSON, wrong shape)\n    2 \u2014 usage error (no input argument)",
+        "location": "agent_convergence_scorer/cli.py:19",
+        "source_class": "code"
+      },
+      {
+        "quote": "except FileNotFoundError:\n        print(f\"error: file not found: {args.input}\", file=sys.stderr)\n        return 1",
+        "location": "agent_convergence_scorer/cli.py:50",
+        "source_class": "code"
+      },
+      {
+        "quote": "except json.JSONDecodeError as e:\n        print(f\"error: invalid JSON in {args.input}: {e}\", file=sys.stderr)\n        return 1",
+        "location": "agent_convergence_scorer/cli.py:53",
+        "source_class": "code"
+      },
+      {
+        "quote": "except ValueError as e:\n        print(f\"error: {e}\", file=sys.stderr)\n        return 1",
+        "location": "agent_convergence_scorer/cli.py:61",
+        "source_class": "code"
+      }
+    ],
+    "evidence_summary": "The CLI defines specific exit codes for input parse errors (1) and usage errors (2). The code explicitly handles `FileNotFoundError`, `json.JSONDecodeError`, and `ValueError` with informative error messages printed to stderr and returns exit code 1 for these input-related issues.",
+    "source_class_mix": {
+      "code": 4,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Command-Line Interface (CLI) Error Handling"
+  },
+  {
+    "dim_id": "Library Function Error Handling",
+    "evidence_found": true,
+    "confidence": "medium",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "if not isinstance(runs, list) or len(runs) == 0:\n        raise ValueError(\"input must be a non-empty list of strings (or {'runs': [...]})\")",
+        "location": "agent_convergence_scorer/cli.py:33",
+        "source_class": "code"
+      },
+      {
+        "quote": "if not all(isinstance(r, str) for r in runs):\n        raise ValueError(\"all run entries must be strings\")",
+        "location": "agent_convergence_scorer/cli.py:35",
+        "source_class": "code"
+      },
+      {
+        "quote": "if len(runs) < 2:\n        return 1.0",
+        "location": "agent_convergence_scorer/scorer.py:23",
+        "source_class": "code"
+      },
+      {
+        "quote": "if len(runs) < 2:\n        return {\"avg_overlap\": 1.0, \"jaccard\": 1.0}",
+        "location": "agent_convergence_scorer/scorer.py:45",
+        "source_class": "code"
+      },
+      {
+        "quote": "if len(runs) < 2:\n        return {\"diverges_at_token\": None, \"token_position\": 0, \"num_tokens_to_divergence\": 0}",
+        "location": "agent_convergence_scorer/scorer.py:73",
+        "source_class": "code"
+      }
+    ],
+    "evidence_summary": "The `_extract_runs` function in `cli.py` explicitly checks if the input is a non-empty list and if all its elements are strings, raising `ValueError` otherwise. Several functions in `scorer.py` also include checks for the length of the `runs` list, returning default values or handling edge cases when the list has fewer than two elements.",
+    "source_class_mix": {
+      "code": 5,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Library Function Error Handling"
+  },
+  {
+    "dim_id": "dim_7",
+    "evidence_found": true,
+    "confidence": "high",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "Fraction of runs identical to run[0]. Range [0, 1]. 1.0 if len(runs) < 2.",
+        "location": "agent_convergence_scorer/scorer.py:20",
+        "source_class": "code"
+      },
+      {
+        "quote": "Pairwise token set overlap across all run pairs. Returns: avg_overlap: mean pairwise Jaccard across all C(N,2) pairs. Range [0, 1]. jaccard: Jaccard of the first two runs only (kept for quick eyeballing).",
+        "location": "agent_convergence_scorer/scorer.py:36",
+        "source_class": "code"
+      },
+      {
+        "quote": "Token position where outputs first differ. Returns: diverges_at_token: the token at the divergence position from run[0], or None if all runs are identical up to min length. token_position: 0-indexed position. Equals min_len if no divergence.",
+        "location": "agent_convergence_scorer/scorer.py:60",
+        "source_class": "code"
+      },
+      {
+        "quote": "Produces exact-match rate, Jaccard token overlap, divergence point, and a composite convergence score in [0, 1].",
+        "location": "agent_convergence_scorer/cli.py:49",
+        "source_class": "code"
+      }
+    ],
+    "evidence_summary": "The code provides clear, concise, and accurate descriptions for `exact_match_rate`, `token_overlap`, and `divergence_point` within their respective docstrings, explaining their purpose, return values, and ranges. The CLI also summarizes these metrics.",
+    "source_class_mix": {
+      "code": 4,
+      "test": 0,
+      "config": 0,
+      "readme": 0,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Metric Interpretation Guidance"
+  }
+]
