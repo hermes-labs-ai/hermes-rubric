@@ -26,6 +26,9 @@ def main() -> None:
     parser.add_argument("--backend", choices=["claude-cli", "ollama-local"], default=None,
                         help="Force a specific backend (default: auto-detect)")
     parser.add_argument("--verbose", action="store_true", help="Print stage progress to stderr")
+    parser.add_argument("--batch", action="store_true",
+                        help="Batch evidence + score into one LLM call per stage. "
+                             "Falls back to per-dim on parse failure or oversize prompt.")
 
     args = parser.parse_args()
 
@@ -74,6 +77,7 @@ def main() -> None:
             target_content=target_content,
             target_path=resolved_target,
             backend=backend,
+            batch=args.batch,
         )
     except Exception as e:
         print(f"ERROR in Stage 2 (evidence collection): {e}", file=sys.stderr)
@@ -84,7 +88,7 @@ def main() -> None:
     # Stage 3: Score
     log("Stage 3: scoring dimensions...")
     try:
-        scores = score_dimensions(rubric=rubric, evidence_list=evidence_list, backend=backend)
+        scores = score_dimensions(rubric=rubric, evidence_list=evidence_list, backend=backend, batch=args.batch)
         aggregate_data = compute_aggregate(rubric=rubric, scores=scores)
     except Exception as e:
         print(f"ERROR in Stage 3 (scoring): {e}", file=sys.stderr)
@@ -96,6 +100,8 @@ def main() -> None:
     backend_label = backend
     if backend == "claude-cli":
         backend_label = backends.claude_cli_mode()
+    if args.batch:
+        backend_label = f"{backend_label}+batch"
     receipt = build_receipt(
         intent=args.intent,
         context_path=args.context,

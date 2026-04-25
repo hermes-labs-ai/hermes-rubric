@@ -2,10 +2,23 @@
 
 import json
 import re
+import sys
 from pathlib import Path
 from typing import Any
 
 from . import backends
+
+
+class BatchParseError(ValueError):
+    """Raised when a batched LLM response cannot be parsed into a dim_id-keyed array."""
+
+
+class BatchTooLarge(ValueError):
+    """Raised when a batched prompt would exceed the safe context ceiling."""
+
+
+# Conservative input-side ceiling. Per-backend tuning lives in backends.py future work.
+_BATCH_PROMPT_CEILING_CHARS = 100_000
 
 # Source-class taxonomy. Higher-authority classes should outweigh marketing prose.
 SOURCE_CLASSES = ("code", "test", "config", "readme", "doc", "other")
@@ -97,21 +110,183 @@ Format:
 """
 
 
+_BATCHED_EVIDENCE_PROMPT_TEMPLATE = """\
+You are an evidence collector. For EACH dimension below, find observable evidence in the target content.
+
+Treat each <DIM> block as ISOLATED. Evidence relevant to one dimension must NOT influence another.
+Process all dimensions in one pass.
+
+TARGET CONTENT (excerpt, may be truncated):
+---
+{target_content}
+---
+
+DIMENSIONS:
+{dim_blocks}
+
+Instructions:
+- For each <DIM>, cite specific, observable evidence. Quote short passages (<=30 words) or reference a specific section.
+- If you cannot find clear evidence for a given dimension, say so explicitly for THAT dimension — do NOT invent.
+- Mark confidence per dimension: "high" (clear direct evidence), "medium" (indirect/partial), "low" (little/none).
+- If confidence is "low", set hedge=true.
+- Do NOT score yet. Evidence collection only.
+
+Each citation MUST include source_class: "code"|"test"|"config"|"readme"|"doc"|"other".
+Code/test/config are ground-truth; README/doc may be marketing.
+
+Output a JSON ARRAY. One element per <DIM>. Order is irrelevant — dim_id is the key.
+Each element MUST include "dim_id" matching exactly one <DIM id="..."> above.
+Do not invent dim_ids. Do not omit any dim_id.
+
+Output valid JSON only. No prose before or after.
+
+Each element format:
+{{
+  "dim_id": "<id matching a <DIM id='...'>>",
+  "evidence_found": true or false,
+  "confidence": "high" | "medium" | "low",
+  "hedge": false,
+  "citations": [
+    {{"quote": "<short quote or section reference>", "location": "<file:line or section>", "source_class": "code|test|config|readme|doc|other"}}
+  ],
+  "evidence_summary": "<1-2 sentence summary>"
+}}
+"""
+
+
 def collect_evidence(
     rubric: dict[str, Any],
     target_content: str,
     target_path: str,
     backend: str | None = None,
+    batch: bool = False,
 ) -> list[dict[str, Any]]:
-    """Collect evidence for each rubric dimension. Returns list of evidence dicts."""
-    evidence_list = []
+    """Collect evidence for each rubric dimension. Returns list of evidence dicts.
+
+    If batch=True, attempt one LLM call for all dimensions; fall back to per-dim
+    on parse failure or oversize prompt. Result order matches rubric dim order
+    via dim_id-keyed reassembly regardless of mode.
+    """
     dims = rubric.get("dimensions", [])
 
+    if batch and len(dims) > 1:
+        try:
+            return _collect_batched(dims, target_content, target_path, backend)
+        except (BatchParseError, BatchTooLarge) as e:
+            print(f"[hermes-rubric] batched evidence failed ({e.__class__.__name__}); "
+                  f"falling back to per-dim", file=sys.stderr)
+
+    evidence_list = []
     for dim in dims:
         ev = _collect_one(dim, target_content, target_path, backend)
         evidence_list.append(ev)
-
     return evidence_list
+
+
+def _collect_batched(
+    dims: list[dict[str, Any]],
+    target_content: str,
+    target_path: str,
+    backend: str | None,
+) -> list[dict[str, Any]]:
+    max_chars = 6000
+    excerpt = target_content[:max_chars]
+    if len(target_content) > max_chars:
+        excerpt += f"\n[... truncated at {max_chars} chars of {len(target_content)} total ...]"
+
+    dim_blocks = "\n".join(
+        f'<DIM id="{d["id"]}">\n'
+        f'NAME: {d["name"]}\n'
+        f'DESCRIPTION: {d["description"]}\n'
+        f'EVIDENCE INSTRUCTIONS: {d["evidence_instructions"]}\n'
+        f'</DIM>'
+        for d in dims
+    )
+
+    prompt = _BATCHED_EVIDENCE_PROMPT_TEMPLATE.format(
+        target_content=excerpt,
+        dim_blocks=dim_blocks,
+    )
+    if len(prompt) > _BATCH_PROMPT_CEILING_CHARS:
+        raise BatchTooLarge(
+            f"batched evidence prompt {len(prompt)} chars exceeds ceiling {_BATCH_PROMPT_CEILING_CHARS}"
+        )
+
+    raw = backends.call(prompt, backend=backend)
+    expected_ids = {d["id"] for d in dims}
+    parsed = _extract_json_array(raw, expected_ids)
+    by_id = {item["dim_id"]: item for item in parsed if isinstance(item, dict) and "dim_id" in item}
+
+    evidence_list = []
+    for dim in dims:
+        ev = by_id.get(dim["id"])
+        if ev is None:
+            ev = {
+                "dim_id": dim["id"],
+                "evidence_found": False,
+                "confidence": "low",
+                "hedge": True,
+                "citations": [],
+                "evidence_summary": f"Evidence missing from batched response for {dim['id']}.",
+            }
+        ev = _normalize_evidence(ev, dim)
+        evidence_list.append(ev)
+    return evidence_list
+
+
+def _normalize_evidence(ev: dict[str, Any], dim: dict[str, Any]) -> dict[str, Any]:
+    """Apply hedge rule, source-class safety net, and dim_name pinning to one evidence dict."""
+    if ev.get("confidence") == "low":
+        ev["hedge"] = True
+
+    citations = ev.get("citations") or []
+    for c in citations:
+        if isinstance(c, dict):
+            suggested = c.get("source_class")
+            fallback = classify_source(c.get("location", ""))
+            if fallback != "other":
+                c["source_class"] = fallback
+            elif suggested in SOURCE_CLASSES:
+                c["source_class"] = suggested
+            else:
+                c["source_class"] = "other"
+    ev["citations"] = citations
+    ev["source_class_mix"] = _source_class_mix(citations)
+    ev["dim_name"] = dim["name"]
+    return ev
+
+
+def _extract_json_array(text: str, expected_dim_ids: set[str]) -> list[dict[str, Any]]:
+    """Parse a JSON array response. Validates that returned dim_ids overlap expected set.
+
+    Missing dim_ids are tolerated (caller routes to fallback). Extra dim_ids are dropped.
+    Raises BatchParseError if the response is not a JSON array or contains zero
+    matching dim_ids.
+    """
+    text = text.strip()
+    arr = None
+    try:
+        arr = json.loads(text)
+    except json.JSONDecodeError:
+        start = text.find("[")
+        end = text.rfind("]")
+        if start != -1 and end != -1 and end > start:
+            try:
+                arr = json.loads(text[start:end + 1])
+            except json.JSONDecodeError:
+                pass
+    if not isinstance(arr, list):
+        raise BatchParseError(f"batched response is not a JSON array: {text[:200]}")
+
+    matched = [
+        item for item in arr
+        if isinstance(item, dict) and item.get("dim_id") in expected_dim_ids
+    ]
+    if not matched:
+        raise BatchParseError(
+            f"batched response contains zero matching dim_ids (expected {sorted(expected_dim_ids)})"
+        )
+    return matched
 
 
 def _collect_one(
@@ -138,7 +313,6 @@ def _collect_one(
     try:
         ev = _extract_json(raw)
     except ValueError:
-        # Fallback: low-confidence placeholder
         ev = {
             "dim_id": dim["id"],
             "evidence_found": False,
@@ -147,30 +321,7 @@ def _collect_one(
             "citations": [],
             "evidence_summary": f"Evidence collection failed (JSON parse error). Raw: {raw[:200]}",
         }
-
-    # Enforce hedge rule: low confidence always sets hedge=true
-    if ev.get("confidence") == "low":
-        ev["hedge"] = True
-
-    # Source-class safety net: always reclassify via deterministic regex,
-    # don't trust the LLM tag alone. README prose must not masquerade as code.
-    citations = ev.get("citations") or []
-    for c in citations:
-        if isinstance(c, dict):
-            suggested = c.get("source_class")
-            fallback = classify_source(c.get("location", ""))
-            # If regex detected a specific class, prefer it over a generic LLM guess.
-            if fallback != "other":
-                c["source_class"] = fallback
-            elif suggested in SOURCE_CLASSES:
-                c["source_class"] = suggested
-            else:
-                c["source_class"] = "other"
-    ev["citations"] = citations
-    ev["source_class_mix"] = _source_class_mix(citations)
-
-    ev["dim_name"] = dim["name"]
-    return ev
+    return _normalize_evidence(ev, dim)
 
 
 def _source_class_mix(citations: list[dict[str, Any]]) -> dict[str, int]:

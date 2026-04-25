@@ -1,10 +1,18 @@
 """Stage 3: score each dimension against evidence, produce aggregate."""
 
 import json
+import sys
 from typing import Any
 
 from . import backends
-from .evidence import SOURCE_CLASS_WEIGHT
+from .evidence import (
+    SOURCE_CLASS_WEIGHT,
+    BatchParseError,
+    BatchTooLarge,
+    _extract_json_array,
+)
+
+_BATCH_PROMPT_CEILING_CHARS = 100_000
 
 _SCORE_PROMPT_TEMPLATE = """\
 You are a structured scorer. Score ONE rubric dimension based ONLY on the evidence provided. Do not infer beyond what the evidence shows.
@@ -41,36 +49,151 @@ Format:
 """
 
 
+_BATCHED_SCORE_PROMPT_TEMPLATE = """\
+You are a structured scorer. Score EACH rubric dimension below based ONLY on the evidence inside its <DIM> block.
+
+Treat each <DIM> block as ISOLATED. Do not let evidence from one <DIM> influence another.
+Process all dimensions in one pass.
+
+DIMENSIONS:
+{dim_blocks}
+
+Scoring rules (apply per <DIM>):
+- Score 0-10. 0=not present/completely absent, 10=exemplary.
+- If hedge=true (low-confidence evidence), the score must be in [3, 7] — you cannot give 0 or 10 on thin evidence.
+- Cite which piece of evidence drove the score, drawn ONLY from that <DIM>'s citations block.
+- If evidence_found=false, score must be 1-3 at most. Never give 8+ when evidence_found=false.
+- Do NOT reward surface fluency. A well-written piece with no substance scores no higher than an awkward piece with real substance.
+
+Output a JSON ARRAY. One element per <DIM>. Order is irrelevant — dim_id is the key.
+Each element MUST include "dim_id" matching exactly one <DIM id="..."> above.
+Do not invent dim_ids. Do not omit any dim_id.
+
+Output valid JSON only. No prose before or after.
+
+Each element format:
+{{
+  "dim_id": "<id matching a <DIM id='...'>>",
+  "dim_name": "<name>",
+  "score": <0-10 integer>,
+  "score_rationale": "<1-2 sentences citing specific evidence from THIS dim's block>",
+  "evidence_drove_score": "<quote or citation from THIS dim's block>",
+  "hedge_applied": true or false
+}}
+"""
+
+
+def _missing_dim_fallback(ev: dict[str, Any], dim: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "dim_id": ev["dim_id"],
+        "dim_name": dim.get("name", ev.get("dim_name", ev["dim_id"])),
+        "score": 3,
+        "score_rationale": "Scoring failed: dim missing from batched response. Defaulted to 3.",
+        "evidence_drove_score": "(missing from batched response)",
+        "hedge_applied": True,
+    }
+
+
+def _apply_clamps(s: dict[str, Any], ev: dict[str, Any]) -> dict[str, Any]:
+    """Apply hedge / no-evidence / self-marketing clamps. Mirrors original loop body."""
+    if ev.get("hedge") and (s["score"] < 3 or s["score"] > 7):
+        s["score"] = max(3, min(7, s["score"]))
+        s["hedge_applied"] = True
+        s["score_rationale"] += " [Score clamped to [3,7] due to low-confidence evidence.]"
+    if not ev.get("evidence_found") and s["score"] > 3:
+        s["score"] = 3
+        s["score_rationale"] += " [Score capped at 3: no evidence found.]"
+    if _only_self_marketing(ev) and s["score"] > 6:
+        s["score"] = 6
+        s["score_rationale"] += " [Score capped at 6: all citations are README/doc (self-marketing); no code/test evidence.]"
+    s["citation_source_weight"] = _citation_source_weight(ev)
+    s["score"] = max(0, min(10, int(s.get("score", 3))))
+    return s
+
+
 def score_dimensions(
     rubric: dict[str, Any],
     evidence_list: list[dict[str, Any]],
     backend: str | None = None,
+    batch: bool = False,
 ) -> list[dict[str, Any]]:
-    """Score each dimension. Returns list of score dicts."""
-    dims_by_id = {d["id"]: d for d in rubric["dimensions"]}
-    scores = []
+    """Score each dimension. Returns list of score dicts.
 
+    If batch=True, attempt one LLM call for all dimensions; fall back to per-dim
+    on parse failure or oversize prompt. dim_id-keyed reassembly preserves
+    rubric dim order regardless of mode.
+    """
+    dims_by_id = {d["id"]: d for d in rubric["dimensions"]}
+
+    if batch and len(evidence_list) > 1:
+        try:
+            return _score_batched(dims_by_id, evidence_list, backend)
+        except (BatchParseError, BatchTooLarge) as e:
+            print(f"[hermes-rubric] batched score failed ({e.__class__.__name__}); "
+                  f"falling back to per-dim", file=sys.stderr)
+
+    scores = []
     for ev in evidence_list:
         dim_id = ev["dim_id"]
         dim = dims_by_id.get(dim_id, {})
         s = _score_one(dim, ev, backend)
-        # Enforce hedge score constraint
-        if ev.get("hedge") and (s["score"] < 3 or s["score"] > 7):
-            s["score"] = max(3, min(7, s["score"]))
-            s["hedge_applied"] = True
-            s["score_rationale"] += " [Score clamped to [3,7] due to low-confidence evidence.]"
-        # Enforce no-evidence constraint
-        if not ev.get("evidence_found") and s["score"] > 3:
-            s["score"] = 3
-            s["score_rationale"] += " [Score capped at 3: no evidence found.]"
-        # Source-class down-weight: if all citations are self-marketing (readme/doc),
-        # cap the score so README prose can't outrank tests/code.
-        if _only_self_marketing(ev) and s["score"] > 6:
-            s["score"] = 6
-            s["score_rationale"] += " [Score capped at 6: all citations are README/doc (self-marketing); no code/test evidence.]"
-        s["citation_source_weight"] = _citation_source_weight(ev)
-        scores.append(s)
+        scores.append(_apply_clamps(s, ev))
 
+    return scores
+
+
+def _score_batched(
+    dims_by_id: dict[str, dict[str, Any]],
+    evidence_list: list[dict[str, Any]],
+    backend: str | None,
+) -> list[dict[str, Any]]:
+    dim_blocks = []
+    for ev in evidence_list:
+        dim = dims_by_id.get(ev["dim_id"], {})
+        citations_text = "\n".join(
+            f"  - \"{c.get('quote', '')}\" [{c.get('location', '')}] ({c.get('source_class','other')})"
+            for c in ev.get("citations", [])
+        ) or "  (none)"
+        dim_blocks.append(
+            f'<DIM id="{ev["dim_id"]}">\n'
+            f'NAME: {dim.get("name", ev.get("dim_name", ev["dim_id"]))}\n'
+            f'DESCRIPTION: {dim.get("description", "")}\n'
+            f'WEIGHT: {dim.get("weight", 1)} (1-3, higher = more important)\n'
+            f'EVIDENCE_SUMMARY: {ev.get("evidence_summary", "(not available)")}\n'
+            f'CONFIDENCE: {ev.get("confidence", "low")}\n'
+            f'HEDGE: {ev.get("hedge", False)}\n'
+            f'CITATIONS:\n{citations_text}\n'
+            f'</DIM>'
+        )
+    prompt = _BATCHED_SCORE_PROMPT_TEMPLATE.format(dim_blocks="\n".join(dim_blocks))
+    if len(prompt) > _BATCH_PROMPT_CEILING_CHARS:
+        raise BatchTooLarge(
+            f"batched score prompt {len(prompt)} chars exceeds ceiling {_BATCH_PROMPT_CEILING_CHARS}"
+        )
+
+    raw = backends.call(prompt, backend=backend)
+    expected_ids = {ev["dim_id"] for ev in evidence_list}
+    parsed = _extract_json_array(raw, expected_ids)
+    by_id = {item["dim_id"]: item for item in parsed if isinstance(item, dict) and "dim_id" in item}
+
+    scores = []
+    for ev in evidence_list:
+        dim = dims_by_id.get(ev["dim_id"], {})
+        s = by_id.get(ev["dim_id"])
+        if s is None:
+            s = _missing_dim_fallback(ev, dim)
+        else:
+            # Pin contract — fill any missing keys from defaults
+            s.setdefault("dim_name", dim.get("name", ev.get("dim_name", ev["dim_id"])))
+            s.setdefault("score_rationale", "")
+            s.setdefault("evidence_drove_score", "")
+            s.setdefault("hedge_applied", False)
+            try:
+                s["score"] = int(s.get("score", 3))
+            except (TypeError, ValueError):
+                s["score"] = 3
+                s["hedge_applied"] = True
+        scores.append(_apply_clamps(s, ev))
     return scores
 
 
