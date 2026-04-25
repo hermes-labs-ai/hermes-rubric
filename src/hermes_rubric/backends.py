@@ -24,7 +24,7 @@ import urllib.request
 import urllib.error
 from typing import Literal
 
-Backend = Literal["claude-cli", "ollama-local", "dashscope-qwen", "google-gemini"]
+Backend = Literal["claude-cli", "ollama-local", "dashscope-qwen", "google-gemini", "openai"]
 
 _DASHSCOPE_DEFAULT_MODEL = "qwen-plus"
 _DASHSCOPE_URL = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions"
@@ -34,6 +34,9 @@ _GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/comp
 # Free-tier rate-limit throttle: ~15 RPM means >=4s between calls. Add slack.
 _GEMINI_MIN_INTERVAL_S = 4.5
 _gemini_last_call_t: list[float] = [0.0]
+
+_OPENAI_DEFAULT_MODEL = "gpt-4o-mini"
+_OPENAI_URL = "https://api.openai.com/v1/chat/completions"
 
 _OLLAMA_DEFAULT_MODEL = "qwen3.5:14b"
 # Prefer non-reasoning models for structured JSON output. qwen3.5 reasoning
@@ -97,6 +100,8 @@ def call(prompt: str, backend: Backend | None = None, max_tokens: int = 2048) ->
         return _call_dashscope(prompt, max_tokens)
     elif backend == "google-gemini":
         return _call_gemini(prompt, max_tokens)
+    elif backend == "openai":
+        return _call_openai(prompt, max_tokens)
     else:
         raise ValueError(f"Unknown backend: {backend}")
 
@@ -252,6 +257,62 @@ def _call_gemini(prompt: str, max_tokens: int) -> str:
 def gemini_model() -> str:
     """Return the resolved Gemini model name for receipts."""
     return os.environ.get("HERMES_RUBRIC_GEMINI_MODEL", _GEMINI_DEFAULT_MODEL)
+
+
+def _call_openai(prompt: str, max_tokens: int) -> str:
+    """Invoke OpenAI Chat Completions API.
+
+    Uses temperature=0 and seed=42 for determinism. Model defaults to
+    gpt-4o-mini; override via HERMES_RUBRIC_OPENAI_MODEL. Requires
+    OPENAI_API_KEY in env. Retries on 429/502/503/504 with exponential
+    backoff (5s/15s/30s/60s, max 4 attempts).
+    """
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY not set; cannot use openai backend")
+    model = os.environ.get("HERMES_RUBRIC_OPENAI_MODEL", _OPENAI_DEFAULT_MODEL)
+
+    payload = json.dumps({
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0,
+        "seed": 42,
+        "max_tokens": max_tokens,
+    }).encode()
+    req = urllib.request.Request(
+        _OPENAI_URL,
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}",
+        },
+        method="POST",
+    )
+    last_err: Exception | None = None
+    for attempt, backoff in enumerate([5, 15, 30, 60]):
+        try:
+            with urllib.request.urlopen(req, timeout=300) as resp:
+                data = json.loads(resp.read())
+                return data["choices"][0]["message"]["content"].strip()
+        except urllib.error.HTTPError as e:
+            body = e.read().decode("utf-8", errors="replace")[:400]
+            if e.code in (429, 502, 503, 504) and attempt < 3:
+                last_err = e
+                time.sleep(backoff)
+                continue
+            raise RuntimeError(f"OpenAI call failed (HTTP {e.code}): {body}") from e
+        except urllib.error.URLError as e:
+            if attempt < 3:
+                last_err = e
+                time.sleep(backoff)
+                continue
+            raise RuntimeError(f"OpenAI call failed: {e}") from e
+    raise RuntimeError(f"OpenAI call failed after retries: {last_err}")
+
+
+def openai_model() -> str:
+    """Return the resolved OpenAI model name for receipts."""
+    return os.environ.get("HERMES_RUBRIC_OPENAI_MODEL", _OPENAI_DEFAULT_MODEL)
 
 
 def _call_ollama(prompt: str, max_tokens: int) -> str:
