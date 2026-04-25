@@ -1,0 +1,261 @@
+[
+  {
+    "dim_id": "dim_1",
+    "evidence_found": true,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [
+      {
+        "quote": "Built on a cloud-native stack",
+        "location": "Hyperflow README, intro paragraph",
+        "source_class": "readme"
+      },
+      {
+        "quote": "instant visibility into model performance, cost, and reliability",
+        "location": "Hyperflow README, intro paragraph",
+        "source_class": "readme"
+      },
+      {
+        "quote": "Speed. Reliability. Confidence.",
+        "location": "Hyperflow README, 'Why teams choose Hyperflow' section",
+        "source_class": "readme"
+      }
+    ],
+    "evidence_summary": "The doc contains no named subsystems, protocols, runtime details, or deployment topology. The only architectural reference is the vague phrase 'cloud-native stack' with no elaboration, alongside abstract value claims.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 3,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Architecture Specificity"
+  },
+  {
+    "dim_id": "dim_2",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [
+      {
+        "quote": "Speed. Reliability. Confidence.",
+        "location": "Why teams choose Hyperflow section",
+        "source_class": "readme"
+      },
+      {
+        "quote": "instant visibility into model performance, cost, and reliability",
+        "location": "intro paragraph",
+        "source_class": "readme"
+      }
+    ],
+    "evidence_summary": "The target content contains only qualitative adjectives (Speed, Reliability, instant visibility) with no concrete numbers, units, or quantitative performance metrics such as latency, throughput, or retention figures.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 2,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Quantitative Performance Claims"
+  },
+  {
+    "dim_id": "dim_3",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [
+      {
+        "quote": "The next-generation observability platform for AI workloads.",
+        "location": "Hyperflow README, tagline",
+        "source_class": "readme"
+      },
+      {
+        "quote": "instant visibility into model performance, cost, and reliability",
+        "location": "Hyperflow README, 'Why teams choose Hyperflow' intro",
+        "source_class": "readme"
+      }
+    ],
+    "evidence_summary": "The content uses generic 'AI workloads' and 'model performance' framing without referencing any AI-specific concepts (tokens, traces, embeddings, evals, GPU telemetry, RAG). No domain depth demonstrated.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 2,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "AI-Workload Domain Depth"
+  },
+  {
+    "dim_id": "dim_4",
+    "evidence_found": true,
+    "confidence": "high",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "instant visibility into model performance, cost, and reliability",
+        "location": "Hyperflow README, intro paragraph",
+        "source_class": "readme"
+      },
+      {
+        "quote": "Built on a cloud-native stack and trusted by leading AI-first companies",
+        "location": "Hyperflow README, intro paragraph",
+        "source_class": "readme"
+      },
+      {
+        "quote": "Speed. Reliability. Confidence.",
+        "location": "Hyperflow README, 'Why teams choose Hyperflow' section",
+        "source_class": "readme"
+      }
+    ],
+    "evidence_summary": "Cost and reliability are named as benefits but no mechanism is described \u2014 no mention of sampling, tiered storage, anomaly detection, retry logic, or any technical approach. Claims are bare assertions backed only by adjectives ('Speed. Reliability. Confidence.') and a generic 'cloud-native stack' reference.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 3,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Mechanism of Cost & Reliability Claims"
+  },
+  {
+    "dim_id": "dim_5",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [
+      {
+        "quote": "The next-generation observability platform for AI workloads.",
+        "location": "Hyperflow heading section",
+        "source_class": "readme"
+      },
+      {
+        "quote": "Built on a cloud-native stack and trusted by leading AI-first companies.",
+        "location": "Why teams choose Hyperflow section",
+        "source_class": "readme"
+      }
+    ],
+    "evidence_summary": "The target content contains no integration details \u2014 no named SDKs, supported languages, frameworks (e.g., LangChain/LlamaIndex), OTel compatibility, sample code, or API endpoints are mentioned. Only generic marketing claims about being an 'observability platform for AI workloads' on a 'cloud-native stack'.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 2,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Integration & Interface Concreteness"
+  },
+  {
+    "dim_id": "dim_6",
+    "evidence_found": true,
+    "confidence": "high",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "trusted by leading AI-first companies",
+        "location": "Hyperflow README, intro paragraph",
+        "source_class": "readme"
+      },
+      {
+        "quote": "Speed. Reliability. Confidence.",
+        "location": "Hyperflow README, 'Why teams choose Hyperflow' section",
+        "source_class": "readme"
+      },
+      {
+        "quote": "instant visibility into model performance, cost, and reliability",
+        "location": "Hyperflow README, intro paragraph",
+        "source_class": "readme"
+      }
+    ],
+    "evidence_summary": "The content makes anonymous social-proof claims ('trusted by leading AI-first companies') with no named customers, logos, case studies, benchmarks, methodology, or documentation links. All assertions are unsupported marketing prose with no verifiable artifacts.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 3,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Evidence & Verifiability"
+  },
+  {
+    "dim_id": "dim_7",
+    "evidence_found": false,
+    "confidence": "low",
+    "hedge": true,
+    "citations": [
+      {
+        "quote": "The next-generation observability platform for AI workloads.",
+        "location": "Hyperflow README header",
+        "source_class": "readme"
+      },
+      {
+        "quote": "Built on a cloud-native stack and trusted by leading AI-first companies.",
+        "location": "Hyperflow README intro",
+        "source_class": "readme"
+      },
+      {
+        "quote": "Speed. Reliability. Confidence.",
+        "location": "Why teams choose Hyperflow section",
+        "source_class": "readme"
+      }
+    ],
+    "evidence_summary": "The document contains only generic superlatives ('next-generation', 'cloud-native', 'Speed. Reliability. Confidence.') with no named competitors (Datadog, Arize, LangSmith, Honeycomb), no comparisons, and no specific technical capabilities that distinguish Hyperflow from alternatives.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 3,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Differentiation Substance"
+  },
+  {
+    "dim_id": "dim_8",
+    "evidence_found": true,
+    "confidence": "high",
+    "hedge": false,
+    "citations": [
+      {
+        "quote": "The next-generation observability platform for AI workloads.",
+        "location": "Hyperflow README, tagline",
+        "source_class": "readme"
+      },
+      {
+        "quote": "instant visibility into model performance, cost, and reliability",
+        "location": "Hyperflow README, intro paragraph",
+        "source_class": "readme"
+      },
+      {
+        "quote": "Built on a cloud-native stack and trusted by leading AI-first companies.",
+        "location": "Hyperflow README, intro paragraph",
+        "source_class": "readme"
+      },
+      {
+        "quote": "Speed. Reliability. Confidence.",
+        "location": "Hyperflow README, 'Why teams choose Hyperflow' section",
+        "source_class": "readme"
+      },
+      {
+        "quote": "Get started today.",
+        "location": "Hyperflow README, closing line",
+        "source_class": "readme"
+      }
+    ],
+    "evidence_summary": "The content is dense with buzzwords ('next-generation', 'instant', 'cloud-native', 'trusted', 'AI-first', 'Speed. Reliability. Confidence.') and contains zero concrete technical nouns, numbers, metrics, architectures, or specifics. No substantive technical content is present to balance the marketing terms.",
+    "source_class_mix": {
+      "code": 0,
+      "test": 0,
+      "config": 0,
+      "readme": 5,
+      "doc": 0,
+      "other": 0
+    },
+    "dim_name": "Buzzword-to-Substance Ratio"
+  }
+]

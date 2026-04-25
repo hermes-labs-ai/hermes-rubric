@@ -1,0 +1,70 @@
+{
+  "rubric_intent": "Score a research report on rigor of method and strength of evidence",
+  "target_type": "research-report",
+  "dimensions": [
+    {
+      "id": "dim_1",
+      "name": "Claim\u2013Evidence Linkage",
+      "description": "Whether each substantive claim in the report is tied to a specific, locatable piece of evidence (figure, table, citation, dataset row, or experiment ID).",
+      "evidence_instructions": "Sample 5\u201310 declarative claims from the abstract, results, and conclusion. For each, check whether an inline reference, footnote, or figure/table pointer accompanies it. Flag claims with no traceable backing as unsupported.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_2",
+      "name": "Method Reproducibility",
+      "description": "Whether the methods section gives sufficient detail (data sources, sample sizes, model/tool versions, parameters, code/commit refs) for an independent reader to reproduce the work.",
+      "evidence_instructions": "Read the methods/experimental setup section. Check for: dataset identifiers and versions, n per condition, model names + versions, hyperparameters/seeds, code or repo links. Score down for missing items that block replication.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_3",
+      "name": "Statistical Soundness",
+      "description": "Whether quantitative results report appropriate uncertainty (CIs, p-values with effect sizes, or equivalent), use defensible tests, and avoid common errors (no n, single seed, p-hacking, mis-applied tests).",
+      "evidence_instructions": "Locate every quantitative comparison or aggregate metric. Verify presence of n, dispersion (SD/CI/SE), and a stated test where claims of difference are made. Note any bare point estimates presented as conclusions.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_4",
+      "name": "Counter-Evidence and Limitations",
+      "description": "Whether the report acknowledges disconfirming results, alternative explanations, scope limits, and threats to validity rather than presenting only confirming evidence.",
+      "evidence_instructions": "Search for sections or passages labeled limitations, threats to validity, alternative explanations, negative results, or failure modes. Check if known confounds for the method are addressed. Absence or token treatment scores low.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_5",
+      "name": "Citation Quality and Currency",
+      "description": "Whether external claims rest on primary, peer-reviewed or otherwise authoritative sources of appropriate recency, rather than secondary summaries, blog posts, or self-citations.",
+      "evidence_instructions": "Inspect the bibliography. Sample 8\u201312 citations: classify each as primary/secondary, peer-reviewed/preprint/grey, and note publication year. Flag over-reliance on self-citation, single venue, or stale sources where the field has moved.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_6",
+      "name": "Causal vs. Correlational Discipline",
+      "description": "Whether the report distinguishes correlation from causation in its language and design, and only makes causal claims where the design (RCT, ablation, intervention) supports them.",
+      "evidence_instructions": "Identify causal verbs (causes, leads to, drives, because of) in the results/conclusion. For each, check whether the underlying design is interventional or merely observational. Flag mismatches.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_7",
+      "name": "Data and Artifact Availability",
+      "description": "Whether raw data, processed data, code, prompts, or artifacts needed to verify the findings are linked and accessible (or a credible reason for non-release is given).",
+      "evidence_instructions": "Look for a Data Availability / Code Availability statement, repo URLs, DOIs, or supplementary material pointers. Try to confirm at least one link resolves and contains usable artifacts.",
+      "weight": 2,
+      "hedge": true
+    },
+    {
+      "id": "dim_8",
+      "name": "Internal Consistency",
+      "description": "Whether numbers, sample sizes, and conclusions are consistent across abstract, results, tables, and discussion.",
+      "evidence_instructions": "Cross-check: headline numbers in abstract vs. results tables; n reported in methods vs. results; conclusion language vs. effect sizes. Note any contradictions or unexplained discrepancies.",
+      "weight": 2,
+      "hedge": false
+    }
+  ]
+}

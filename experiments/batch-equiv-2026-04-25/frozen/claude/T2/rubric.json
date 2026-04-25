@@ -1,0 +1,70 @@
+{
+  "rubric_intent": "Score a marketing doc for Hyperflow on the depth and credibility of its engineering substance.",
+  "target_type": "marketing-doc",
+  "dimensions": [
+    {
+      "id": "dim_1",
+      "name": "Architecture Specificity",
+      "description": "Measures whether the doc names concrete architectural components, data paths, or system design choices rather than abstract category labels.",
+      "evidence_instructions": "Scan for named subsystems, ingestion/storage/query layers, protocols (OTel, gRPC), runtime details, or deployment topology. Penalize vague phrases like 'cloud-native stack' with no elaboration.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_2",
+      "name": "Quantitative Performance Claims",
+      "description": "Measures presence of concrete numbers (latency, throughput, ingestion rate, cardinality, retention) that characterize the system's behavior.",
+      "evidence_instructions": "Search for figures with units (ms, p99, events/sec, GB, %). Adjectives like 'fast' or 'reliable' without numbers count as absent.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_3",
+      "name": "AI-Workload Domain Depth",
+      "description": "Measures whether the doc demonstrates real understanding of AI/ML observability problems (token usage, prompt/response tracing, eval drift, GPU utilization, model versioning) versus generic observability framing.",
+      "evidence_instructions": "Look for AI-specific concepts: tokens, embeddings, traces of LLM calls, hallucination/eval metrics, GPU/accelerator telemetry, RAG pipelines. Generic 'model performance' counts as shallow.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_4",
+      "name": "Mechanism of Cost & Reliability Claims",
+      "description": "Measures whether claims about cost savings or reliability are explained mechanistically (how the system achieves them) rather than asserted.",
+      "evidence_instructions": "For each cost/reliability claim, check whether the doc describes the underlying mechanism (sampling, tiered storage, anomaly detection, retry logic). Bare assertions score low.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_5",
+      "name": "Integration & Interface Concreteness",
+      "description": "Measures specificity about how engineers actually integrate (SDKs, languages, OTel compatibility, frameworks like LangChain/LlamaIndex, query API).",
+      "evidence_instructions": "Look for named SDKs, supported languages/frameworks, sample code, API endpoints, or instrumentation libraries. Absence of any integration detail scores low.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_6",
+      "name": "Evidence & Verifiability",
+      "description": "Measures whether assertions are backed by verifiable artifacts (benchmarks, case studies with named customers, docs links, postmortems) versus unsupported claims.",
+      "evidence_instructions": "Identify claims like 'trusted by leading AI-first companies' and check for named customers, logos, benchmark methodology, or links. Anonymous social proof scores low.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_7",
+      "name": "Differentiation Substance",
+      "description": "Measures whether the doc explains what makes Hyperflow technically different from alternatives (Datadog, Arize, LangSmith, Honeycomb) at an engineering level.",
+      "evidence_instructions": "Look for comparisons, named alternatives, or specific capabilities competitors lack. Pure superlatives ('next-generation') without contrast score low.",
+      "weight": 2,
+      "hedge": true
+    },
+    {
+      "id": "dim_8",
+      "name": "Buzzword-to-Substance Ratio",
+      "description": "Measures the density of unbacked marketing terms ('next-generation', 'cloud-native', 'instant', 'trusted') relative to substantive technical content.",
+      "evidence_instructions": "Count buzzwords and compare against count of concrete technical nouns/numbers. High buzzword ratio with low substance scores low; technical terms used precisely score high.",
+      "weight": 2,
+      "hedge": false
+    }
+  ]
+}

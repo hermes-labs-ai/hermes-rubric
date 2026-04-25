@@ -282,3 +282,7 @@ T1,batched,main_b,1,5.2,False,2,9.22,0.1.2,gemini-gemini-2.5-flash-lite+batch,20
 T1,per_dim,main_b,1,8.2,False,14,60.85,0.1.2,gemini-gemini-2.5-flash-lite,2026-04-25T19:20:38.740250+00:00,runs/main_b/T1_per_dim_rep1_20260425T192038.json
 T1,per_dim,main_b,2,8.2,False,14,63.01,0.1.2,gemini-gemini-2.5-flash-lite,2026-04-25T19:21:39.596207+00:00,runs/main_b/T1_per_dim_rep2_20260425T192139.json
 T1,batched,main_b,2,5.2,False,2,11.05,0.1.2,gemini-gemini-2.5-flash-lite+batch,2026-04-25T19:22:42.610043+00:00,runs/main_b/T1_batched_rep2_20260425T192242.json
+T4,per_dim,main_a,0,4.9,False,8,541.52,0.1.2,claude-cli-contextual,2026-04-25T21:13:25.752387+00:00,runs/main_a/T4_per_dim_rep0_20260425T211325.json
+T4,batched,main_a,0,5.3,False,1,82.91,0.1.2,claude-cli-contextual+batch,2026-04-25T21:22:27.274533+00:00,runs/main_a/T4_batched_rep0_20260425T212227.json
+T4,batched,main_a,1,5.3,False,1,87.01,0.1.2,claude-cli-contextual+batch,2026-04-25T21:24:26.406335+00:00,runs/main_a/T4_batched_rep1_20260425T212426.json
+T4,per_dim,main_a,1,5.1,False,8,328.74,0.1.2,claude-cli-contextual,2026-04-25T21:25:53.418552+00:00,runs/main_a/T4_per_dim_rep1_20260425T212553.json
