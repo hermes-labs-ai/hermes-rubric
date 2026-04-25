@@ -179,6 +179,33 @@ Across our 230 paired runs (100 Qwen Sub-A + 100 Gemini Sub-A + 30 Qwen Sub-B), 
 
 This is the source of T4's +5.8 swing in Gemini Sub-B. **The aggregate margin "passes" but the underlying mechanism is that batched-mode evidence collection found things per-dim mode missed.** Whether that's a feature (batched sees cross-dim relationships) or a confound (batched scoring inflates evidence presence) is unresolvable from this experiment.
 
+## Cohen's κ (computed 2026-04-25 from 94 paired runs)
+
+Per-pair κ between per_dim and batched modes, paired by (backend, target, rep), dims matched by `dim_id` within frozen rubric, scores binned to integer 0-10. Computed via `experiments/batch-equiv-2026-04-25/compute_kappa.py` using `hermes_rubric.agreement._pairwise_kappa`.
+
+| backend | n pairs | mean κ | pct κ ≥ 0.6 |
+|---|---|---|---|
+| Gemini | 47 | 0.642 | 66.0% |
+| Qwen | 47 | 0.621 | 44.7% |
+| **Overall** | **94** | **0.632** | **55.3%** |
+
+**Pre-registered gate:** mean κ ≥ 0.6 across all paired comparisons. **✓ PASS** at 0.632.
+
+Per-target breakdown (Sub-A only shown for cleanliness):
+
+| target | Gemini κ | Qwen κ |
+|---|---|---|
+| T1 (high-evidence repo) | 0.100 | 0.466 |
+| T2 (thin blurb) | 0.700 | 1.000 |
+| T3 (all-README) | 0.700 | 0.455 |
+| T4 (research report) | 0.737 | 0.000 |
+| T5 (empty target) | **1.000** | **1.000** |
+
+**Reading:**
+- T5 (empty target) shows perfect agreement (κ=1.0) on both backends — the no-evidence cap fires identically in both modes, scores are categorically identical.
+- T1 on Gemini (κ=0.100) is the outlier — confirms numerically what the per-target +1.8 Δ already showed: batched mode systematically scores higher on this complex target. Real signal, not noise.
+- Qwen T4 κ=0.000 is a quirk: both modes returned identical scores (all floored at 3 by the no-evidence cap), but Cohen's κ on a single category degenerates to chance. Aggregate Δ was 0.000 — agreement is real, the metric just can't represent it. Worth flagging in the paper as a measurement limitation.
+
 ## Cross-model comparison
 
 T4 / dim_evidence on both backends (same target, structurally same dim concept):
