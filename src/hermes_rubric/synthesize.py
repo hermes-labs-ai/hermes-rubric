@@ -3,8 +3,9 @@
 import json
 from typing import Any
 
+from hermes_blind import wrap_intent_for_rubric
+
 from . import backends
-from .preambles import compose_intent
 
 _SYNTH_PROMPT_TEMPLATE = """\
 You are a rubric generator. Your job: produce a structured evaluation rubric for the given intent and context.
@@ -56,10 +57,10 @@ def synthesize(
     the intent before formatting. When both are unset the call is identical
     to the v0.1.x behavior.
     """
-    composed_intent = compose_intent(
+    composed_intent = wrap_intent_for_rubric(
         intent,
         scope_class=scope_class,
-        intent_debias=intent_debias,
+        debias=intent_debias,
     )
     prompt = _SYNTH_PROMPT_TEMPLATE.format(
         intent=composed_intent,

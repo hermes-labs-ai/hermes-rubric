@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.1.3 — 2026-04-25
+
+- **Refactor:** Bias-compensation preambles (intent-debias, scope-class)
+  moved out of `hermes_rubric.preambles` and into the upstream
+  `hermes-blind` package (which is the bias-compensation domain).
+- New runtime dependency: `hermes-blind>=0.1.1`.
+- `hermes_rubric.preambles` is now a thin re-export shim for the
+  `hermes_blind.preambles` module. External callers importing from the
+  old path keep working for one migration cycle. Will be removed in
+  v0.2.0.
+- CLI surface is unchanged: `hermes-rubric --scope-class
+  {gate-plan,sweep-plan,results-bundle} --intent-debias` parses and
+  behaves identically to v0.1.2.
+- Behavior byte-identical to v0.1.2 — verified by 6-combo
+  frozen-prompt regression test in `tests/test_preambles_shim.py`.
+- 73 tests green (was 62 + 11 new shim/byte-identity tests).
+
 ## 0.1.2 — 2026-04-25
 
 - `--batch` flag: one LLM call per stage (evidence + score), reducing 2N+1 calls per run to 3
