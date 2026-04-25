@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 — 2026-04-25
+## 0.1.2 — 2026-04-25
 
 - `--batch` flag: one LLM call per stage (evidence + score), reducing 2N+1 calls per run to 3
 - Prompt-layer isolation via per-`<DIM>` blocks with explicit "score only within your block" invariant

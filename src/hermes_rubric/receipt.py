@@ -23,7 +23,7 @@ def build_receipt(
     return {
         "receipt_version": "1.1",
         "timestamp_utc": datetime.now(timezone.utc).isoformat(),
-        "tool_version": "hermes-rubric 0.2.0",
+        "tool_version": "hermes-rubric 0.1.2",
         "python_version": sys.version.split()[0],
         "platform": platform.platform(),
         "backend": backend,
