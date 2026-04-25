@@ -15,6 +15,12 @@ from .synthesize import synthesize
 
 
 def main() -> None:
+    # Subcommand routing. The default ("score" — no subcommand) preserves
+    # the v0.1.x argv shape exactly. Today only `kappa` is dispatched out.
+    if len(sys.argv) > 1 and sys.argv[1] == "kappa":
+        from . import agreement
+        sys.exit(agreement.main(sys.argv[2:]))
+
     parser = argparse.ArgumentParser(
         prog="hermes-rubric",
         description="Evidence-first structured scoring. Synthesizes rubric, collects evidence, then scores.",
