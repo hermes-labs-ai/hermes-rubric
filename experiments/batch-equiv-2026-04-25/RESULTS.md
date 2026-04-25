@@ -179,6 +179,18 @@ Across our 230 paired runs (100 Qwen Sub-A + 100 Gemini Sub-A + 30 Qwen Sub-B), 
 
 This is the source of T4's +5.8 swing in Gemini Sub-B. **The aggregate margin "passes" but the underlying mechanism is that batched-mode evidence collection found things per-dim mode missed.** Whether that's a feature (batched sees cross-dim relationships) or a confound (batched scoring inflates evidence presence) is unresolvable from this experiment.
 
+## Preliminary claude-cli (Anthropic) signal — partial data only
+
+Attempted claude-cli (OAuth contextual, no `--bare`) main_a on 2026-04-25. The runner randomized to start on T4 and completed 2 paired reps before claude-cli exited with HTTP-level exit 1 (transient; reproduces OK in single-call test post-mortem). 4 successful runs on T4 only:
+
+| target | per_dim agg (n=2) | batched agg (n=2) | Δ |
+|---|---|---|---|
+| T4 | 4.9, 5.1 | 5.3, 5.3 | +0.30 |
+
+Aggregate Δ ≈ +0.30 — within ±1.0 margin, consistent with Qwen Sub-A T4 (Δ=0.000) and Gemini Sub-A T4 (Δ=0.000) at the aggregate level. Single-target N=2 is far too thin to claim "Anthropic equivalence" — this is signal, not proof.
+
+The full Anthropic paper-grade run is deferred to a P1 follow-up using the direct `anthropic` SDK (pinned model + temp=0 instead of OAuth contextual). Cost estimate ~$15.
+
 ## Cohen's κ (computed 2026-04-25 from 94 paired runs)
 
 Per-pair κ between per_dim and batched modes, paired by (backend, target, rep), dims matched by `dim_id` within frozen rubric, scores binned to integer 0-10. Computed via `experiments/batch-equiv-2026-04-25/compute_kappa.py` using `hermes_rubric.agreement._pairwise_kappa`.

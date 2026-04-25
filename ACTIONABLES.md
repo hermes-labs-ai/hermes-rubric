@@ -12,10 +12,11 @@ Last updated: 2026-04-25 by session a36290a2
 The Qwen + Gemini + claude-cli runs already give cross-model evidence sufficient for the publishable engineering claim. These are nice-to-haves that strengthen specific claims.
 
 - [ ] **Anthropic SDK paper-grade run.** Add direct `anthropic` SDK backend to `backends.py` (parallel to dashscope/gemini/openai patterns), pinned model `claude-sonnet-4-6` or `claude-opus-4-7`, temp=0. Re-run `main_a` N=11 + `main_b` N=5 across T1-T5. Cost ~$15. Removes the "claude-cli session contamination" caveat from the paper. Follows pattern in `experiments/batch-equiv-2026-04-25/HANDOFF.md`.
+  - *Tried claude-cli OAuth contextual mode 2026-04-25; transient exit-1 mid-run after 4 successful runs on T4 only. Signal Δ +0.30, within margin, but N=2 too thin to claim equivalence. SDK route is cleaner.*
 
 - [ ] **GPT paper-grade run.** OpenAI backend already wired (commit `<this-session>`). Re-run `main_a` N=10 across T1-T5 once OpenAI quota is restored. Cost ~$5 on `gpt-4o-mini`. Adds 4th model family to cross-model evidence.
 
-- [ ] **Cohen's κ on existing 260 paired runs.** `hermes-rubric kappa --run1 <per_dim_run.json> --run2 <batched_run.json>` subcommand exists from session 478d8591. Compute the κ gate value (pre-registered ≥0.6) numerically rather than the eyeball-passes-by-deltas check that's currently in RESULTS.md. ~5 min.
+- [x] **Cohen's κ on existing 260 paired runs.** ✓ Done 2026-04-25 (commit `133fda9`). Overall mean κ = 0.632, passes pre-registered ≥0.6 gate. Gemini 0.642, Qwen 0.621. Per-target table in RESULTS.md.
 
 - [ ] **Re-grade RESULTS.md with `--scope-class results-bundle`.** Was graded 5.7 capped earlier; with the right scope-class flag the structural cap shifts. Confirms whether the writeup gates the publishable bar at ≥7. ~2 min.
 
