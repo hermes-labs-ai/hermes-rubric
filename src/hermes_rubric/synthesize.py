@@ -3,7 +3,7 @@
 import json
 from typing import Any
 
-from hermes_blind import wrap_intent_for_rubric
+from .preambles import wrap_intent_for_rubric
 
 from . import backends
 

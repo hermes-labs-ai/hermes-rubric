@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from hermes_blind import SCOPE_CHOICES
+from .preambles import SCOPE_CHOICES
 
 from . import backends
 from .evidence import collect_evidence, read_context, read_target
