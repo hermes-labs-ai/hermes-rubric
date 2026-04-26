@@ -1,0 +1,84 @@
+artifact_class: linkedin-post
+description: LinkedIn launch / announcement posts. Procurement-voice and defensibility dominate.
+target_window_bytes: 6000
+dimensions:
+  - id: procurement_voice
+    name: Procurement voice match
+    description: Reads as serious-professional, not casual-shitpost.
+    evidence_instructions: |
+      Confirm: full sentences, no excessive lowercase, professional but not stiff.
+      Confirm: no shitpost-tier slang, no irony-driven punchlines, no Twitter-native shorthand.
+      Direct first-person OK; royal-we acceptable for company announcements.
+    weight: 3
+    hedge: false
+  - id: substance
+    name: Substance
+    description: Concrete claim with mechanism and verifiable evidence.
+    evidence_instructions: |
+      Identify the central claim. Identify the mechanism. Verify the audience can act on it
+      (install / try / contact / share). Vague "we're transforming X" fails.
+    weight: 3
+    hedge: false
+  - id: defensibility
+    name: Defensibility framing
+    description: Frames the value prop as defensible (compliance / risk / audit / reproducibility).
+    evidence_instructions: |
+      Look for defensibility language: "audit trail", "reproducible", "evidence", "argue with",
+      "reconstruct". LI audience reads these as credibility markers; absence is OK but bonus when present.
+    weight: 2
+    hedge: true
+  - id: fab_block
+    name: Fab block
+    description: All specific numbers / claims / case studies must be verifiable.
+    evidence_instructions: |
+      Enumerate specifics. Mark verified or unverified. LI fabrications get screenshotted.
+    weight: 3
+    hedge: false
+  - id: llm_fool
+    name: LLM-fool (anti-AI-slop)
+    description: Would a stylometric detector flag this?
+    evidence_instructions: |
+      Check slop list. LI is HIGHEST RISK for AI-slop because the platform encourages it.
+      Triple-check for "I'm thrilled / excited / honored to share / announce."
+      "leverages" / "robust" / "comprehensive" / "cutting-edge" all fail this dim hard.
+    weight: 3
+    hedge: false
+  - id: length_fit
+    name: Length fit
+    description: Long-form 150-300 words; short 50-100.
+    evidence_instructions: |
+      Word count. Long form > 400 fails (audience scrolls past). Short form < 30 reads as filler.
+    weight: 2
+    hedge: false
+  - id: hashtags
+    name: Hashtag discipline
+    description: Hashtags either absent or very few + on-topic.
+    evidence_instructions: |
+      Count hashtags. 0-3 OK; 4+ reads as marketing-template. Off-topic hashtags fail
+      (#AI #Innovation #Future on a technical post).
+    weight: 1
+    hedge: false
+slop_signatures:
+  - I'm thrilled to share
+  - I'm excited to announce
+  - I'm honored to
+  - delighted to
+  - proud to announce
+  - We're transforming
+  - the future of
+  - cutting-edge
+  - revolutionary
+  - paradigm shift
+  - leverages
+  - robust
+  - comprehensive
+  - seamlessly
+  - elevate
+  - empower
+  - unlock
+  - synergy
+voice_priors:
+  - serious-professional but not stiff
+  - direct first-person "we" or "I" depending on context
+  - defensibility framing for compliance audiences
+  - concrete > abstract

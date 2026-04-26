@@ -1,0 +1,94 @@
+artifact_class: outreach-email
+description: Cold sales outreach emails. Quote-first opener + voice-match + ask-clarity dominate.
+target_window_bytes: 4000
+dimensions:
+  - id: quote_first_opener
+    name: Quote-first opener
+    description: Opens with a real quoted phrase from the recipient's public record.
+    evidence_instructions: |
+      Identify the first body sentence. Confirm it contains a quoted phrase (in quotes) attributed
+      to the recipient or their company, with a public-record source (article, post, talk, byline).
+      Recitation openers ("As X deploys Y across Z...") FAIL this dim.
+    weight: 3
+    hedge: false
+  - id: voice_match
+    name: Voice match
+    description: Sounds like Roli — observer, not consultant.
+    evidence_instructions: |
+      Confirm: ≤1 internal-state claim ("I think", "We help"). Confirm: humble framing
+      ("small audit outfit", "narrow question"). Confirm: NO consultant-pitch boilerplate
+      ("One session. Fixed fee. No retainer."). NO fabricated activity ("I audited", "ran compliance reads").
+    weight: 3
+    hedge: false
+  - id: evidence_of_research
+    name: Evidence of research
+    description: Specific, factually-correct details about the recipient.
+    evidence_instructions: |
+      List every recipient-specific fact mentioned (deployment, partnership, location, public quote,
+      product feature). For each, mark verifiable (with source) or unverifiable.
+      Generic facts ("you're a leader in AI") fail; specific facts with quotes pass.
+    weight: 3
+    hedge: false
+  - id: ask_clarity
+    name: Ask clarity
+    description: One clear narrow ask, easy to triage.
+    evidence_instructions: |
+      Identify the CTA. Verify it's narrow (e.g., "is this read sitting with you or X?")
+      not generic ("worth a quick chat?"). Multi-question CTAs reduce clarity.
+    weight: 2
+    hedge: false
+  - id: fab_block
+    name: Fab block
+    description: All specific numbers / names / quoted phrases must be verifiable.
+    evidence_instructions: |
+      Enumerate every specific. Mark verified (with source) or unverified.
+      Misattributed quotes are catastrophic; fabricated facts are fail-immediate.
+    weight: 3
+    hedge: false
+  - id: llm_fool
+    name: LLM-fool (anti-AI-slop)
+    description: Doesn't read as 6slot template-fill.
+    evidence_instructions: |
+      Check for "deploys X for Y across Z including W" recitation patterns. Check for "may ask a simple
+      question" template phrasing. Check for em-dash density. Check for procurement-voice cliches.
+    weight: 2
+    hedge: false
+  - id: length_fit
+    name: Length fit
+    description: Under 150 words; aggressive about cutting.
+    evidence_instructions: |
+      Word count. Cold outreach over 150 words rarely gets read. Under 50 reads as low-effort.
+      Sweet spot 80-130.
+    weight: 2
+    hedge: false
+  - id: subject_neutrality
+    name: Subject neutrality
+    description: Subject is observation/question, not regulatory hook or feature pitch.
+    evidence_instructions: |
+      Read the subject line. Banned: "AI Act", "GDPR", "deadline", "August 2", "compliance" as
+      a category, "evidence layer" jargon. Acceptable: quoted phrase + observation.
+    weight: 2
+    hedge: false
+slop_signatures:
+  - "deploys"  # As X deploys Y... pattern when used as opener
+  - may ask a simple question
+  - "Open to a brief 20-minute call"  # template phrasing if used outside canonical CTA
+  - I audited
+  - ran compliance reads
+  - evidence-layer lineage
+  - audit-ready reconstruction package
+  - decision-record scaffold
+  - One session. Fixed fee. No retainer.
+voice_priors:
+  - quote-first opener (real quote from recipient's public record)
+  - "Hermes Labs is a small audit outfit"
+  - narrow ask, observer-not-consultant
+  - em dashes in narrative OK
+  - <150 words
+banned_subject_patterns:
+  - AI Act
+  - GDPR
+  - deadline
+  - August 2
+  - compliance
+  - evidence layer

@@ -26,8 +26,8 @@ def main() -> None:
         prog="hermes-rubric",
         description="Evidence-first structured scoring. Synthesizes rubric, collects evidence, then scores.",
     )
-    parser.add_argument("--intent", required=True, help="One-sentence goal for the scoring")
-    parser.add_argument("--context", required=True, help="Path to context file(s) used for rubric synthesis")
+    parser.add_argument("--intent", default=None, help="One-sentence goal for the scoring (optional when --artifact-class is set)")
+    parser.add_argument("--context", default=None, help="Path to context file(s) used for rubric synthesis (optional when --artifact-class is set)")
     parser.add_argument("--target", required=True, help="Path to file or directory to score")
     parser.add_argument("--target-type", default="document", help="Type label for the target (e.g. paper, tool, repo)")
     parser.add_argument("--out", default=None, help="Output JSON file path. Defaults to stdout.")
@@ -55,8 +55,25 @@ def main() -> None:
     parser.add_argument("--intent-debias", action="store_true",
                         help="Prepend a debias preamble that neutralizes valence-loaded "
                              "framing in the intent (e.g. 'sound', 'ready', 'rigorous').")
+    parser.add_argument("--artifact-class", default=None,
+                        help="Use a deterministic class template for the rubric instead of "
+                             "LLM synthesis. Available: social-post, show-hn-post, linkedin-post, "
+                             "outreach-email. Stage 1 is bypassed; dim set is fixed across runs.")
 
     args = parser.parse_args()
+
+    # Validate: --intent and --context are required unless --artifact-class is set
+    if not args.artifact_class:
+        if not args.intent:
+            parser.error("--intent is required when --artifact-class is not set")
+        if not args.context:
+            parser.error("--context is required when --artifact-class is not set")
+    else:
+        # When using a class template, default the missing fields so downstream code is unchanged
+        if not args.intent:
+            args.intent = f"Score against the {args.artifact_class} class template."
+        if not args.context:
+            args.context = args.target  # use target as its own context for evidence collection
 
     def log(msg: str) -> None:
         if args.verbose:
@@ -81,21 +98,31 @@ def main() -> None:
     log(f"target: {resolved_target} ({len(target_content)} chars)")
     log(f"context: {args.context} ({len(context_content)} chars)")
 
-    # Stage 1: Synthesize rubric
-    log("Stage 1: synthesizing rubric...")
-    try:
-        rubric = synthesize(
-            intent=args.intent,
-            context_summary=context_content,
-            target_type=args.target_type,
-            backend=backend,
-            scope_class=args.scope_class,
-            intent_debias=args.intent_debias,
-            target_excerpt=target_content,
-        )
-    except Exception as e:
-        print(f"ERROR in Stage 1 (rubric synthesis): {e}", file=sys.stderr)
-        sys.exit(2)
+    # Stage 1: Synthesize rubric (or load deterministic class template)
+    if args.artifact_class:
+        log(f"Stage 1: loading class template {args.artifact_class!r} (synthesis bypassed)...")
+        try:
+            from . import classes as classes_mod
+            class_data = classes_mod.load_class(args.artifact_class)
+            rubric = classes_mod.to_rubric(class_data)
+        except Exception as e:
+            print(f"ERROR in Stage 1 (class template load): {e}", file=sys.stderr)
+            sys.exit(2)
+    else:
+        log("Stage 1: synthesizing rubric...")
+        try:
+            rubric = synthesize(
+                intent=args.intent,
+                context_summary=context_content,
+                target_type=args.target_type,
+                backend=backend,
+                scope_class=args.scope_class,
+                intent_debias=args.intent_debias,
+                target_excerpt=target_content,
+            )
+        except Exception as e:
+            print(f"ERROR in Stage 1 (rubric synthesis): {e}", file=sys.stderr)
+            sys.exit(2)
     log(f"  rubric: {len(rubric['dimensions'])} dimensions")
 
     # Stage 2: Collect evidence

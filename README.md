@@ -1,6 +1,6 @@
 # hermes-rubric
 
-**Evidence-first structured scoring.** Synthesizes a rubric for your domain, collects citations before scoring, then scores against evidence — not fluency.
+**Language scaffolds hold state. LLM scores don't — unless you force them to.**
 
 [![PyPI](https://img.shields.io/pypi/v/hermes-rubric.svg)](https://pypi.org/project/hermes-rubric/)
 [![Python](https://img.shields.io/pypi/pyversions/hermes-rubric.svg)](https://pypi.org/project/hermes-rubric/)
@@ -8,7 +8,33 @@
 [![CI](https://github.com/hermes-labs-ai/hermes-rubric/actions/workflows/ci.yml/badge.svg)](https://github.com/hermes-labs-ai/hermes-rubric/actions/workflows/ci.yml)
 [![Hermes Seal](https://img.shields.io/badge/hermes--seal-verified-blue)](https://github.com/hermes-labs-ai/hermes-rubric)
 
-If you've ever asked an LLM to "rate this out of 10" and quietly wondered whether the number meant anything — this is the tool that forces it to mean something.
+The LPCI thesis (proved March 2026) showed that a stateless LLM maintains coherent state through language scaffolding alone — the artifact is the memory, not the model. hermes-rubric applies the same insight to scoring: the rubric and evidence citations are the audit trail. The number at the end means something only because the scaffold forced evidence collection before scoring.
+
+Without a scaffold, LLMs reward fluency. Well-written garbage outscores substantive-but-rough work. Re-run and the number shifts. No way to argue with it.
+
+hermes-rubric fixes that. One-line value prop: **evidence-first structured scoring that synthesizes a domain rubric, collects citations per dimension, then scores against evidence — not surface quality**.
+
+**30-second pitch:** LLM scoring is fluency-biased by default. hermes-rubric imposes a three-stage scaffold (rubric synthesis → evidence collection → evidence-only scoring) that breaks the bias. Each score has a citation trail. Hedge flags mark thin-evidence dimensions. Same input → scores within ±1. The result is a score you can reproduce and defend.
+
+**5-minute install:**
+```bash
+pip install hermes-rubric
+hermes-rubric \
+    --intent "rate this as a publication-ready research artifact" \
+    --context paper.md \
+    --target paper.md \
+    --out result.json
+# aggregate, hedge_dims, evidence_citations, receipt — all in result.json
+```
+
+**Class-aware mode (v0.2)** — when you score the same kind of artifact repeatedly, use a class template to skip Stage-1 LLM synthesis entirely. The dim set is fixed across runs, scores are diff-able, and class-specific slop signatures + voice priors are pre-injected:
+
+```bash
+hermes-rubric --artifact-class social-post --target post.md --out result.json
+# Available classes: social-post, show-hn-post, linkedin-post, outreach-email
+```
+
+Each class template lives at `hermes_rubric/classes/<name>.yaml` — open them to see exactly which dims, weights, and slop signatures are applied. Custom classes can be added by dropping a YAML in the same directory.
 
 ## Pain
 

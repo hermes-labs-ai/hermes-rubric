@@ -23,7 +23,7 @@ def build_receipt(
     return {
         "receipt_version": "1.1",
         "timestamp_utc": datetime.now(timezone.utc).isoformat(),
-        "tool_version": "hermes-rubric 0.1.2",
+        "tool_version": "hermes-rubric 0.2.0",
         "python_version": sys.version.split()[0],
         "platform": platform.platform(),
         "backend": backend,
@@ -39,6 +39,7 @@ def build_receipt(
         "pipeline": {
             "stage_1_rubric_dimensions": len(rubric.get("dimensions", [])),
             "stage_1_rubric_hash_sha256": rubric_hash(rubric),
+            "stage_1_rubric_source": rubric.get("rubric_source", "synthesized"),
             "stage_2_evidence_items": len(evidence_list),
             "stage_3_scores": len(scores),
             "hedge_dimensions": [

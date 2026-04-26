@@ -1,0 +1,99 @@
+artifact_class: social-post
+description: Short-form social posts (X / Twitter / Bluesky / Threads). Voice and platform-fit dominate.
+target_window_bytes: 4000
+dimensions:
+  - id: voice_match
+    name: Voice match
+    description: Does the post sound like the author's established voice?
+    evidence_instructions: |
+      Cite specific Roli-voice patterns present (lowercase sentence starts, declarative-short sentences,
+      direct first-person, em-dash narrative, no royal-we, no "I'm excited to announce") OR specific
+      anti-patterns absent (no "Furthermore", no "leverages", no "robust", no tricolon body).
+      Pull at least 2 concrete quotes from the target as evidence.
+    weight: 3
+    hedge: false
+  - id: hook_strength
+    name: Hook strength
+    description: Does the opening sentence earn attention without recitation?
+    evidence_instructions: |
+      Quote the first sentence. Classify: observation-first / question-first / verb-first / recitation /
+      feature-first. Recitation and feature-first openers fail this dim. Cite the quote.
+    weight: 3
+    hedge: false
+  - id: substance
+    name: Substance
+    description: Is there a verifiable claim or a real demonstration?
+    evidence_instructions: |
+      List every claim in the post. For each, mark verifiable (point to repo/test/memory) or unverifiable.
+      Posts with zero verifiable claims fail. Posts with claims the author cannot reproduce are flagged.
+    weight: 3
+    hedge: false
+  - id: readability
+    name: Readability
+    description: Word count, sentence length, jargon density.
+    evidence_instructions: |
+      Count words. Count sentences. Compute avg words/sentence. Flag jargon-stack
+      (3+ technical compounds in a row).
+    weight: 2
+    hedge: false
+  - id: persuasion_rationale
+    name: Persuasion rationale
+    description: Can the author justify each word/order choice vs alternatives?
+    evidence_instructions: |
+      For the hook, body, CTA — name one rejected alternative for each AND why this one was chosen.
+      If no alternatives can be named, score is hedged (the choice was unconscious).
+    weight: 2
+    hedge: true
+  - id: framing_rationale
+    name: Framing rationale
+    description: Why this angle vs other defensible angles?
+    evidence_instructions: |
+      Name 2-3 alternative angles for the same content + why this one was chosen (audience-fit,
+      platform-fit, position-in-sequence). If no alternatives can be named, hedge.
+    weight: 2
+    hedge: true
+  - id: fab_block
+    name: Fab block
+    description: Every specific number / name / claim must be verifiable.
+    evidence_instructions: |
+      Enumerate all specific numbers, named entities, and quoted phrases. Mark each verified
+      (with source) or unverified. Any unverified specific = HEDGE; any fabricated specific = FAIL.
+    weight: 3
+    hedge: false
+  - id: llm_fool
+    name: LLM-fool (anti-AI-slop)
+    description: Would a stylometric detector flag this as machine-written?
+    evidence_instructions: |
+      Check for slop signatures: "Furthermore", "Moreover", "Additionally", "leverages", "robust",
+      "comprehensive", "cutting-edge", "seamlessly", "elevate", "in conclusion". Check for tricolon
+      body paragraphs (3-item lists in prose). Check for em-dash overuse (>2 per paragraph).
+      Em dash in narrative is ALLOWED — it's a Roli pattern. Royal-we when no team referenced FAILS.
+    weight: 2
+    hedge: false
+  - id: platform_fit
+    name: Platform fit
+    description: Length and structure appropriate for the platform.
+    evidence_instructions: |
+      X / Twitter: <= 280 chars OR threaded with REPLY_TWEET. Bluesky: <= 300. Each link counts.
+      Compute exact char count. If single-tweet target exceeds 280 without REPLY_TWEET fail.
+    weight: 2
+    hedge: false
+slop_signatures:
+  - Furthermore,
+  - Moreover,
+  - Additionally,
+  - In conclusion,
+  - leverages
+  - robust
+  - comprehensive
+  - cutting-edge
+  - seamlessly
+  - elevate
+  - I'm excited to announce
+  - thrilled to share
+voice_priors:
+  - lowercase sentence starts in informal posts
+  - direct first-person, no royal-we
+  - observation-first openers
+  - em dashes ARE used in narrative (context-dependent, not slop)
+  - short declarative > complex compound

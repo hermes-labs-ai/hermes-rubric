@@ -1,0 +1,91 @@
+artifact_class: show-hn-post
+description: Hacker News Show HN launch posts. Substance and voice dominate; comments will pressure-test claims.
+target_window_bytes: 8000
+dimensions:
+  - id: substance
+    name: Substance
+    description: Concrete mechanism, claim, or demonstration HN audience can debate.
+    evidence_instructions: |
+      Identify the central claim. Identify the mechanism that supports it. Mark whether the post
+      makes that mechanism clear without requiring readers to install first. Posts that hand-wave
+      ("revolutionary", "the right way") fail.
+    weight: 3
+    hedge: false
+  - id: hook_strength
+    name: Hook strength
+    description: Opening earns the click without overclaiming.
+    evidence_instructions: |
+      Quote the first 2 sentences. Verify they are observation-first or pain-first, not feature-first
+      and not "we're excited to announce." A specific number or specific failure mode in the hook is bonus.
+    weight: 3
+    hedge: false
+  - id: voice_match
+    name: Voice match
+    description: Direct, first-person, no slop signatures.
+    evidence_instructions: |
+      Confirm direct first-person. No royal-we when no team. No "Furthermore" / "leverages" / "robust".
+      Em dashes in narrative are OK. Code blocks are OK. Tricolon body acceptable in technical exposition only.
+    weight: 2
+    hedge: false
+  - id: fab_block
+    name: Fab block
+    description: All specific numbers and claims must be verifiable; HN commenters WILL check.
+    evidence_instructions: |
+      Enumerate every specific number (test counts, benchmark scores, dataset sizes, version numbers,
+      runtime metrics). For each, mark verified (with file path or repo line) or unverified.
+      Any unverified specific that a commenter could disprove FAILS.
+    weight: 3
+    hedge: false
+  - id: hedge_discipline
+    name: Hedge discipline
+    description: Uncertain claims explicitly hedged; certain claims not over-hedged.
+    evidence_instructions: |
+      Flag any "we believe", "in our view", "preliminary" — appropriate for unverified claims.
+      Flag confident claims that aren't actually supported by evidence in the repo.
+    weight: 2
+    hedge: false
+  - id: llm_fool
+    name: LLM-fool (anti-AI-slop)
+    description: Would a stylometric detector flag this as machine-written?
+    evidence_instructions: |
+      Check slop signatures (see slop_signatures). Check rhetorical-parallel patterns
+      ("X is not Y, X is Z" in chains). Check generic conclusion ("In summary..." / "We're excited about...").
+    weight: 2
+    hedge: false
+  - id: length_fit
+    name: Length fit
+    description: HN sweet spot 300-700 words including code blocks.
+    evidence_instructions: |
+      Word count. Posts under 200 words read as thin; over 1000 words read as essays.
+      Code blocks count as ~50 words equivalent.
+    weight: 1
+    hedge: false
+  - id: cta_clarity
+    name: CTA clarity
+    description: One clear next-action; install/repo/docs.
+    evidence_instructions: |
+      Identify the CTA. Verify it's specific (pip install / repo URL) not vague ("learn more").
+      Multiple competing CTAs reduce score.
+    weight: 1
+    hedge: false
+slop_signatures:
+  - Furthermore,
+  - Moreover,
+  - Additionally,
+  - In conclusion,
+  - In summary,
+  - leverages
+  - robust
+  - comprehensive
+  - cutting-edge
+  - seamlessly
+  - elevate
+  - revolutionary
+  - We're thrilled
+  - I'm excited to announce
+voice_priors:
+  - direct first-person (I, me, my)
+  - declarative short sentences > complex compound
+  - em dashes in narrative are acceptable
+  - code blocks for install/usage
+  - no "we" when only one author

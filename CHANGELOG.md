@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.2.0 — 2026-04-26 — class-aware rubric templates
+
+Added `--artifact-class <name>` flag. When set, Stage-1 LLM rubric synthesis is bypassed and a deterministic dim set is loaded from a YAML template. The same input + same class produces the same dim set across runs — addressing the non-determinism observed in v0.1.x where Stage-1 synthesized different dims on every run.
+
+### New classes (4)
+
+- `social-post` — X / Twitter / Bluesky. Voice + platform-fit dominate.
+- `show-hn-post` — Hacker News launch posts. Substance + fab-block dominate.
+- `linkedin-post` — LinkedIn announcements. Procurement-voice + defensibility dominate.
+- `outreach-email` — Cold sales emails. Quote-first opener + voice-match dominate.
+
+Each class template includes 7-9 fixed dimensions with weights and evidence instructions, a class-specific slop-signature list (injected into `llm_fool` dim), and voice priors (injected into `voice_match` dim). `outreach-email` adds `banned_subject_patterns` for the `subject_neutrality` dim.
+
+### CLI
+
+- `--artifact-class` flag added; back-compat preserved (omitted = v0.1 behavior)
+- `--intent` and `--context` optional when `--artifact-class` is set
+
+### Internal
+
+- New `hermes_rubric.classes` module
+- 9 new tests in `tests/test_classes.py`; full suite 109 passed, 2 skipped
+- pyyaml added as runtime dependency
+
+### Why
+
+Observed in v0.1.x: scoring the same artifact 3 times produced 3 different rubric hashes because the LLM invented dims fresh each run. Aggregate scores varied 5.4–6.2 across runs, with no way to compare them dim-by-dim. Class-aware preloading determinizes Stage-1: the dim set comes from YAML, not from the LLM.
+
+### Back-compat
+
+All existing CLI calls work unchanged. Receipts include a new `rubric.rubric_source` field (`"class-template"` when applicable; absent otherwise).
+
 ## 0.1.3 — 2026-04-25
 
 - **Refactor:** Bias-compensation preambles (intent-debias, scope-class)
