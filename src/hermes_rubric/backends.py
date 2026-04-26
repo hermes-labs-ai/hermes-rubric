@@ -126,6 +126,13 @@ def _call_claude_cli(prompt: str, max_tokens: int) -> str:
     initialization.
     """
     cmd = ["claude", "--print"]
+    # Default to Haiku for rubric calls. Rubric stages (synthesize +
+    # per-dim evidence + score) are high-volume + bounded-output; Haiku
+    # finishes a typical run in ~30-90s vs ~10-30 min on Opus/Sonnet.
+    # Override via HERMES_RUBRIC_CLAUDE_MODEL. Caught 2026-04-26 when
+    # background rubrics took 30+ min each under shared session throttle.
+    model = os.environ.get("HERMES_RUBRIC_CLAUDE_MODEL", "claude-haiku-4-5")
+    cmd += ["--model", model]
     if _claude_cli_uses_bare():
         cmd.append("--bare")
     else:
