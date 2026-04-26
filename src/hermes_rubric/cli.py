@@ -31,8 +31,16 @@ def main() -> None:
     parser.add_argument("--target", required=True, help="Path to file or directory to score")
     parser.add_argument("--target-type", default="document", help="Type label for the target (e.g. paper, tool, repo)")
     parser.add_argument("--out", default=None, help="Output JSON file path. Defaults to stdout.")
-    parser.add_argument("--backend", choices=["claude-cli", "ollama-local", "dashscope-qwen", "google-gemini", "openai"], default=None,
-                        help="Force a specific backend (default: auto-detect)")
+    parser.add_argument(
+        "--backend",
+        choices=[
+            "claude-cli", "ollama-local", "dashscope-qwen",
+            "google-gemini", "openai", "openai-sdk", "google-genai",
+        ],
+        default=None,
+        help="Force a specific backend (default: auto-detect). Plugins registered "
+             "via the `hermes_rubric.backends` entry-point group can also be used.",
+    )
     parser.add_argument("--verbose", action="store_true", help="Print stage progress to stderr")
     parser.add_argument("--batch", action="store_true",
                         help="Batch evidence + score into one LLM call per stage. "
