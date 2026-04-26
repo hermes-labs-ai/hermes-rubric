@@ -64,7 +64,6 @@ def test_call_ollama_backend():
 def test_call_openai_basic(monkeypatch):
     """OpenAI backend posts JSON with model+temperature+seed and returns content."""
     import json as _json
-    from unittest.mock import MagicMock
     from hermes_rubric import backends
 
     monkeypatch.setenv("OPENAI_API_KEY", "test-key")

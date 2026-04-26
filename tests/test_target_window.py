@@ -1,6 +1,5 @@
 """Tests for --target-window-bytes truncation warning (G8)."""
 
-from pathlib import Path
 
 
 def test_warning_fires_on_oversize_input(tmp_path, capsys):

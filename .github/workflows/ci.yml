@@ -21,6 +21,13 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install hermes-blind from source
+        # hermes-blind is a runtime dep but not yet on PyPI (alpha gated
+        # on pilot completion). Install from the public GitHub repo so the
+        # editable install of hermes-rubric below resolves its dependency.
+        # Once hermes-blind ships on PyPI, drop this step.
+        run: pip install "hermes-blind @ git+https://github.com/hermes-labs-ai/hermes-blind.git@main"
+
       - name: Install dependencies
         run: |
           pip install -e .
