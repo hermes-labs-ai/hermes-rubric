@@ -6,3 +6,7 @@ dist/
 build/
 .pytest_cache/
 *.json.bak
+# mkdocs build output
+site/
+# internal-only docs (not for public README)
+internal/

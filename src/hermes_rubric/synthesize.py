@@ -15,6 +15,9 @@ TARGET TYPE: {target_type}
 CONTEXT SUMMARY:
 {context_summary}
 
+TARGET EXCERPT (the artifact whose dimensions you are designing — first {target_excerpt_max} chars; the full target will be evaluated in a later stage, you do NOT need to score it now):
+{target_excerpt}
+
 Requirements:
 - Produce 5-8 dimensions that are SPECIFIC to this intent and domain. Do not produce generic dimensions that apply to everything.
 - Each dimension must have a NAME, a one-sentence DESCRIPTION of what it measures, and EVIDENCE INSTRUCTIONS (how to find observable evidence for this dimension in the target).
@@ -22,7 +25,7 @@ Requirements:
 - Do NOT invent dimensions for things you cannot observe in the target.
 - Hedge where evidence may be thin: mark optional dimensions with "hedge: true".
 
-Output valid JSON only. No prose before or after.
+Output valid JSON only. No prose before or after. Do NOT ask for additional input — the target excerpt above is sufficient context to design the rubric.
 
 Format:
 {{
@@ -42,6 +45,9 @@ Format:
 """
 
 
+_TARGET_EXCERPT_CHARS = 2000
+
+
 def synthesize(
     intent: str,
     context_summary: str,
@@ -50,12 +56,18 @@ def synthesize(
     *,
     scope_class: str | None = None,
     intent_debias: bool = False,
+    target_excerpt: str = "",
 ) -> dict[str, Any]:
     """Produce a rubric dict from intent + context summary + target type.
 
     ``scope_class`` and ``intent_debias`` (G7) prepend optional preambles to
-    the intent before formatting. When both are unset the call is identical
-    to the v0.1.x behavior.
+    the intent before formatting. ``target_excerpt`` (added 2026-04-26) passes
+    the first ~2000 chars of the target to the synthesizer so models that
+    refuse-to-generate-without-target (Haiku) can produce a rubric. When both
+    scope/debias unset and target_excerpt empty, the call is identical to
+    v0.1.x behavior except for the new prompt section labeled
+    "TARGET EXCERPT (...)" which most non-pedantic models will treat as
+    additional context.
     """
     composed_intent = wrap_intent_for_rubric(
         intent,
@@ -66,6 +78,8 @@ def synthesize(
         intent=composed_intent,
         target_type=target_type,
         context_summary=context_summary[:4000],
+        target_excerpt=target_excerpt[:_TARGET_EXCERPT_CHARS] if target_excerpt else "(target excerpt not provided — design dimensions from intent + context + target_type alone; do not request additional input)",
+        target_excerpt_max=_TARGET_EXCERPT_CHARS,
     )
     raw = backends.call(prompt, backend=backend)
     # Extract JSON from response (may have leading/trailing prose from some backends)

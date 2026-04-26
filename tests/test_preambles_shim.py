@@ -64,7 +64,7 @@ def _build_expected_prompt(scope_class: str | None, debias: bool) -> str:
     preambles or the template will still fail the test below.
     """
     from hermes_blind import wrap_intent_for_rubric
-    from hermes_rubric.synthesize import _SYNTH_PROMPT_TEMPLATE
+    from hermes_rubric.synthesize import _SYNTH_PROMPT_TEMPLATE, _TARGET_EXCERPT_CHARS
 
     composed = wrap_intent_for_rubric(
         _FROZEN_INTENT, scope_class=scope_class, debias=debias
@@ -73,6 +73,8 @@ def _build_expected_prompt(scope_class: str | None, debias: bool) -> str:
         intent=composed,
         target_type=_FROZEN_TARGET_TYPE,
         context_summary=_FROZEN_CONTEXT[:4000],
+        target_excerpt="(target excerpt not provided — design dimensions from intent + context + target_type alone; do not request additional input)",
+        target_excerpt_max=_TARGET_EXCERPT_CHARS,
     )
 
 

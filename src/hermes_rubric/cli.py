@@ -91,6 +91,7 @@ def main() -> None:
             backend=backend,
             scope_class=args.scope_class,
             intent_debias=args.intent_debias,
+            target_excerpt=target_content,
         )
     except Exception as e:
         print(f"ERROR in Stage 1 (rubric synthesis): {e}", file=sys.stderr)
