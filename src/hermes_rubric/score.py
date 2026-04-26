@@ -229,18 +229,44 @@ def compute_aggregate(
     rubric: dict[str, Any],
     scores: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    """Compute weighted aggregate score and identify hedge dimensions."""
-    scores_by_id = {s["dim_id"]: s for s in scores}
+    """Compute weighted aggregate score and identify hedge dimensions.
+
+    Robustness: stage-3 LLMs sometimes drift and return the dim NAME in the
+    `dim_id` field instead of the synthesized `dim_N` id (caught 2026-04-26
+    when an aggregate=0.0 was reported despite per-dim scores in [2,6]).
+    Falls back to dim-name lookup, then case+whitespace-normalized lookup.
+    Mismatches are surfaced via `id_mismatch_count` in the return dict
+    rather than silently zeroing the aggregate.
+    """
+    scores_by_id = {s["dim_id"]: s for s in scores if s.get("dim_id")}
+    scores_by_name = {s["dim_name"]: s for s in scores if s.get("dim_name")}
+    scores_by_norm_name = {
+        s.get("dim_name", "").lower().replace(" ", "_").replace("-", "_"): s
+        for s in scores if s.get("dim_name")
+    }
 
     total_weight = 0
     weighted_sum = 0.0
     hedge_dims = []
     dim_summaries = []
+    id_mismatch_count = 0
 
     for dim in rubric["dimensions"]:
         dim_id = dim["id"]
+        dim_name = dim.get("name", "")
         weight = dim.get("weight", 1)
         s = scores_by_id.get(dim_id)
+        if s is None:
+            # Fallback 1: LLM put dim NAME in dim_id field
+            s = scores_by_id.get(dim_name) or scores_by_name.get(dim_name)
+            if s is not None:
+                id_mismatch_count += 1
+        if s is None:
+            # Fallback 2: case + whitespace + dash normalization
+            norm = dim_name.lower().replace(" ", "_").replace("-", "_")
+            s = scores_by_id.get(norm) or scores_by_norm_name.get(norm)
+            if s is not None:
+                id_mismatch_count += 1
         if s is None:
             continue
         score = s["score"]
@@ -266,6 +292,7 @@ def compute_aggregate(
             + ", ".join(hedge_dims)
         ) if hedge_dims else "All dimensions had sufficient evidence.",
         "dim_summaries": dim_summaries,
+        "id_mismatch_count": id_mismatch_count,
     }
 
 
