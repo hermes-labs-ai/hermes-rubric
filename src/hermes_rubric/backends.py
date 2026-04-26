@@ -1,18 +1,24 @@
 """Backend auto-detection and invocation. Priority: claude-cli > ollama-local.
 
-Context-compensation: when the claude-cli backend is available and
-ANTHROPIC_API_KEY is set, we invoke it in `--bare` mode. Bare mode strips
-hooks, LSP, plugin sync, auto-memory, CLAUDE.md discovery, and keychain
-reads, which prevents the scoring subprocess from inheriting session
-context that would bias its judgment (e.g. knowledge that the scored
-target was authored by the caller, or access to the caller's preferences
-via CLAUDE.md / memory files). This upholds the rubric's evidence-first
-invariant even when the scorer and the target share an owner.
+Pluggability: backends are registered into a module-level registry. Built-ins
+(claude-cli, ollama-local, dashscope-qwen, google-gemini, openai, openai-sdk,
+google-genai) register at import. Third-party packages can register additional
+backends via either an explicit `register()` call or a Python entry-point in
+the `hermes_rubric.backends` group:
 
-If ANTHROPIC_API_KEY is not set, --bare cannot be used (OAuth and
-keychain auth are blocked in bare mode); we fall back to non-bare
---print, accepting the context-contamination risk and surfacing it
-in the receipt.
+    [project.entry-points."hermes_rubric.backends"]
+    azure-openai = "hermes_rubric_azure:AzureBackend"
+
+Auto-detection is unchanged: only built-ins participate in `detect()` priority,
+which preserves INTENT.md's invariant that backend selection cannot be
+overridden via env vars or third-party plugins.
+
+Context-compensation: when the claude-cli backend is available and
+ANTHROPIC_API_KEY is set, we invoke it in `--bare` mode to strip hooks, LSP,
+plugin sync, auto-memory, CLAUDE.md discovery, and keychain reads, preventing
+the scoring subprocess from inheriting session context that would bias its
+judgment. If ANTHROPIC_API_KEY is not set, --bare cannot be used; we fall
+back to non-bare --print and surface that in the receipt.
 """
 
 import json
@@ -22,9 +28,25 @@ import subprocess
 import time
 import urllib.request
 import urllib.error
-from typing import Literal
+import warnings
+from typing import Literal, Protocol, runtime_checkable
 
-Backend = Literal["claude-cli", "ollama-local", "dashscope-qwen", "google-gemini", "openai"]
+# BackendName: the canonical identifier for a backend in CLI args, receipts,
+# and tests. Kept as a Literal of the built-in names so type-checkers in
+# call sites continue to validate. Third-party backends loaded via entry-points
+# are addressed by string only.
+BackendName = Literal[
+    "claude-cli",
+    "ollama-local",
+    "dashscope-qwen",
+    "google-gemini",
+    "openai",
+    "openai-sdk",
+    "google-genai",
+]
+# Backwards-compat alias: pre-pluggability, the type was named `Backend`.
+# External callers (and pre-existing tests) may still import this name.
+Backend = BackendName
 
 _DASHSCOPE_DEFAULT_MODEL = "qwen-plus"
 _DASHSCOPE_URL = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions"
@@ -38,14 +60,117 @@ _gemini_last_call_t: list[float] = [0.0]
 _OPENAI_DEFAULT_MODEL = "gpt-4o-mini"
 _OPENAI_URL = "https://api.openai.com/v1/chat/completions"
 
+_OPENAI_SDK_DEFAULT_MODEL = "gpt-4o-mini"
+_GOOGLE_GENAI_DEFAULT_MODEL = "gemini-2.0-flash"
+
 _OLLAMA_DEFAULT_MODEL = "qwen3.5:14b"
 # Prefer non-reasoning models for structured JSON output. qwen3.5 reasoning
 # models emit into `thinking` and often wrap the requested JSON in prose.
 _OLLAMA_FALLBACK_MODELS = ["gemma3:12b", "gemma3:4b", "mistral:7b", "qwen3.5:9b", "qwen3.5:4b"]
 
 
-def detect() -> Backend:
-    """Return the first available backend."""
+# ---------------------------------------------------------------------------
+# Protocol + registry
+# ---------------------------------------------------------------------------
+
+
+@runtime_checkable
+class BackendProtocol(Protocol):
+    """The plug-point. A backend must expose a stable name, a call() method
+    that maps (prompt, max_tokens) -> str, a model_id() for receipts, and
+    an availability() probe used by detect()-style priority lookups."""
+
+    name: str
+
+    def call(self, prompt: str, max_tokens: int) -> str: ...
+
+    def model_id(self) -> str: ...
+
+    def availability(self) -> bool: ...
+
+
+_REGISTRY: dict[str, BackendProtocol] = {}
+_ENTRY_POINTS_LOADED = False
+
+
+def register(backend: BackendProtocol, *, replace: bool = False) -> None:
+    """Register a backend instance.
+
+    Validates Protocol shape (must have callable `call`, `model_id`,
+    `availability`, and a `name` attribute). Raises TypeError on shape
+    violations. Raises ValueError on duplicate name unless replace=True.
+    """
+    name = getattr(backend, "name", None)
+    if not isinstance(name, str) or not name:
+        raise TypeError(f"backend {backend!r} missing string `name` attribute")
+    for method in ("call", "model_id", "availability"):
+        fn = getattr(backend, method, None)
+        if fn is None or not callable(fn):
+            raise TypeError(f"backend {name!r} missing callable `{method}`")
+    if name in _REGISTRY and not replace:
+        raise ValueError(f"backend {name!r} already registered (use replace=True to override)")
+    _REGISTRY[name] = backend
+
+
+def _load_entry_points() -> None:
+    """Scan the `hermes_rubric.backends` entry-point group once.
+
+    Failures during plugin load become warnings, never crashes — a broken
+    third-party plugin must not break the host CLI.
+    """
+    global _ENTRY_POINTS_LOADED
+    if _ENTRY_POINTS_LOADED:
+        return
+    _ENTRY_POINTS_LOADED = True
+    try:
+        from importlib.metadata import entry_points
+    except ImportError:  # pragma: no cover
+        return
+    try:
+        eps = entry_points(group="hermes_rubric.backends")
+    except TypeError:
+        # Python <3.10 compat fallback (we require 3.10+ anyway)
+        eps = entry_points().get("hermes_rubric.backends", [])  # type: ignore[attr-defined]
+    for ep in eps:
+        try:
+            obj = ep.load()
+            # Accept either an already-constructed Backend instance or a
+            # zero-arg class/factory. Heuristic: if `obj` is a `type`, call
+            # it; otherwise assume it's an instance.
+            instance = obj() if isinstance(obj, type) else obj
+            register(instance, replace=False)
+        except Exception as exc:
+            warnings.warn(
+                f"hermes-rubric: failed to load backend entry-point {ep.name!r}: {exc}"
+            )
+
+
+def list_backends() -> list[str]:
+    """Return registered backend names (built-ins + entry-points)."""
+    _load_entry_points()
+    return sorted(_REGISTRY.keys())
+
+
+def get_backend(name: str) -> BackendProtocol:
+    """Look up a backend by name. Raises KeyError if not registered."""
+    _load_entry_points()
+    if name not in _REGISTRY:
+        raise KeyError(f"backend {name!r} not registered; available: {sorted(_REGISTRY)}")
+    return _REGISTRY[name]
+
+
+# ---------------------------------------------------------------------------
+# Detect (priority order, built-ins only)
+# ---------------------------------------------------------------------------
+
+
+def detect() -> BackendName:
+    """Return the first available built-in backend.
+
+    Only auto-detects claude-cli and ollama-local; this preserves the
+    INTENT.md invariant that backend selection priority cannot be perturbed
+    by env vars or third-party plugins.
+    """
     if shutil.which("claude"):
         try:
             r = subprocess.run(
@@ -87,23 +212,21 @@ def _ollama_model() -> str:
         return _OLLAMA_DEFAULT_MODEL
 
 
-def call(prompt: str, backend: Backend | None = None, max_tokens: int = 2048) -> str:
-    """Run a prompt against the selected backend and return the response text."""
+def call(prompt: str, backend: str | None = None, max_tokens: int = 2048) -> str:
+    """Run a prompt against the selected backend and return the response text.
+
+    Backwards-compat: signature unchanged. Dispatch is now via the registry
+    rather than a chain of conditionals.
+    """
     if backend is None:
         backend = detect()
+    return get_backend(backend).call(prompt, max_tokens)
 
-    if backend == "claude-cli":
-        return _call_claude_cli(prompt, max_tokens)
-    elif backend == "ollama-local":
-        return _call_ollama(prompt, max_tokens)
-    elif backend == "dashscope-qwen":
-        return _call_dashscope(prompt, max_tokens)
-    elif backend == "google-gemini":
-        return _call_gemini(prompt, max_tokens)
-    elif backend == "openai":
-        return _call_openai(prompt, max_tokens)
-    else:
-        raise ValueError(f"Unknown backend: {backend}")
+
+# ---------------------------------------------------------------------------
+# Built-in backend implementations (private functions retained for test
+# patching; adapter classes below delegate to them).
+# ---------------------------------------------------------------------------
 
 
 def _claude_cli_uses_bare() -> bool:
@@ -112,32 +235,13 @@ def _claude_cli_uses_bare() -> bool:
 
 
 def _call_claude_cli(prompt: str, max_tokens: int) -> str:
-    """Invoke `claude --print` with context compensation when possible.
-
-    Prefers --bare mode (requires ANTHROPIC_API_KEY) to isolate the
-    subprocess from the caller's session context, hooks, memory, and
-    CLAUDE.md. Falls back to non-bare mode if no API key is available,
-    in which case the receipt will note 'claude-cli-contextual' instead
-    of 'claude-cli-bare' so downstream consumers know the score may have
-    been influenced by caller-side context.
-
-    Timeout is set to 300s — bare mode is fast (no bootstrap), but
-    non-bare mode can take 60-180s on first call due to hook + memory
-    initialization.
-    """
+    """Invoke `claude --print` with context compensation when possible."""
     cmd = ["claude", "--print"]
-    # Default to Haiku for rubric calls. Rubric stages (synthesize +
-    # per-dim evidence + score) are high-volume + bounded-output; Haiku
-    # finishes a typical run in ~30-90s vs ~10-30 min on Opus/Sonnet.
-    # Override via HERMES_RUBRIC_CLAUDE_MODEL. Caught 2026-04-26 when
-    # background rubrics took 30+ min each under shared session throttle.
     model = os.environ.get("HERMES_RUBRIC_CLAUDE_MODEL", "claude-haiku-4-5")
     cmd += ["--model", model]
     if _claude_cli_uses_bare():
         cmd.append("--bare")
     else:
-        # Even without --bare, strip per-machine sections to reduce
-        # context bleed (cwd, env info, memory paths, git status).
         cmd.append("--exclude-dynamic-system-prompt-sections")
     cmd.append(prompt)
 
@@ -160,12 +264,6 @@ def claude_cli_mode() -> str:
 
 
 def _call_dashscope(prompt: str, max_tokens: int) -> str:
-    """Invoke Alibaba DashScope (Qwen) via OpenAI-compatible endpoint.
-
-    Uses temperature=0 and a fixed seed for determinism. Model is qwen-plus
-    by default; override via HERMES_RUBRIC_QWEN_MODEL env var (e.g. qwen-max,
-    qwen-turbo). Requires DASHSCOPE_API_KEY in env.
-    """
     api_key = os.environ.get("DASHSCOPE_API_KEY")
     if not api_key:
         raise RuntimeError("DASHSCOPE_API_KEY not set; cannot use dashscope-qwen backend")
@@ -199,29 +297,21 @@ def _call_dashscope(prompt: str, max_tokens: int) -> str:
 
 
 def dashscope_model() -> str:
-    """Return the resolved Qwen model name for receipts."""
     return os.environ.get("HERMES_RUBRIC_QWEN_MODEL", _DASHSCOPE_DEFAULT_MODEL)
 
 
 def _call_gemini(prompt: str, max_tokens: int) -> str:
-    """Invoke Google Gemini via OpenAI-compatible endpoint.
-
-    temperature=0 + seed=42 for determinism. Model defaults to gemini-2.0-flash;
-    override via HERMES_RUBRIC_GEMINI_MODEL env var. Requires GEMINI_API_KEY.
-    """
     api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
     if not api_key:
         raise RuntimeError("GEMINI_API_KEY / GOOGLE_API_KEY not set")
     model = os.environ.get("HERMES_RUBRIC_GEMINI_MODEL", _GEMINI_DEFAULT_MODEL)
 
-    # Free-tier RPM throttle. Sleep until >=_GEMINI_MIN_INTERVAL_S since last call.
     now = time.monotonic()
     elapsed = now - _gemini_last_call_t[0]
     if elapsed < _GEMINI_MIN_INTERVAL_S:
         time.sleep(_GEMINI_MIN_INTERVAL_S - elapsed)
     _gemini_last_call_t[0] = time.monotonic()
 
-    # Gemini OpenAI-compat does not accept "seed".
     payload = json.dumps({
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
@@ -237,8 +327,6 @@ def _call_gemini(prompt: str, max_tokens: int) -> str:
         },
         method="POST",
     )
-    # Retry on transient errors (429 rate-limit, 503 unavailable, 502/504 gateway).
-    # Max 4 attempts with exponential backoff: 5s, 15s, 30s, 60s.
     last_err: Exception | None = None
     for attempt, backoff in enumerate([5, 15, 30, 60]):
         try:
@@ -262,18 +350,10 @@ def _call_gemini(prompt: str, max_tokens: int) -> str:
 
 
 def gemini_model() -> str:
-    """Return the resolved Gemini model name for receipts."""
     return os.environ.get("HERMES_RUBRIC_GEMINI_MODEL", _GEMINI_DEFAULT_MODEL)
 
 
 def _call_openai(prompt: str, max_tokens: int) -> str:
-    """Invoke OpenAI Chat Completions API.
-
-    Uses temperature=0 and seed=42 for determinism. Model defaults to
-    gpt-4o-mini; override via HERMES_RUBRIC_OPENAI_MODEL. Requires
-    OPENAI_API_KEY in env. Retries on 429/502/503/504 with exponential
-    backoff (5s/15s/30s/60s, max 4 attempts).
-    """
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY not set; cannot use openai backend")
@@ -318,7 +398,6 @@ def _call_openai(prompt: str, max_tokens: int) -> str:
 
 
 def openai_model() -> str:
-    """Return the resolved OpenAI model name for receipts."""
     return os.environ.get("HERMES_RUBRIC_OPENAI_MODEL", _OPENAI_DEFAULT_MODEL)
 
 
@@ -339,9 +418,231 @@ def _call_ollama(prompt: str, max_tokens: int) -> str:
     try:
         with urllib.request.urlopen(req, timeout=300) as resp:
             data = json.loads(resp.read())
-            # Reasoning models (qwen3.5) emit into `thinking` and leave `response` empty.
-            # Prefer response; fall back to thinking so the pipeline works with either.
             out = data.get("response", "") or data.get("thinking", "")
             return out.strip()
     except urllib.error.URLError as e:
         raise RuntimeError(f"Ollama call failed: {e}") from e
+
+
+# ---------------------------------------------------------------------------
+# SDK-based backends (lazy import — `import hermes_rubric.backends` must NOT
+# transitively import openai or google.generativeai).
+# ---------------------------------------------------------------------------
+
+
+def openai_sdk_model() -> str:
+    return os.environ.get("HERMES_RUBRIC_OPENAI_SDK_MODEL", _OPENAI_SDK_DEFAULT_MODEL)
+
+
+def _call_openai_sdk(prompt: str, max_tokens: int) -> str:
+    """Invoke OpenAI via the official `openai` Python SDK.
+
+    Lazy-imports the SDK so `import hermes_rubric.backends` does not pull
+    in `openai`. Raises an informative RuntimeError if the SDK is missing.
+    """
+    try:
+        import openai  # noqa: F401
+        from openai import OpenAI
+    except ModuleNotFoundError as e:
+        raise RuntimeError(
+            "openai SDK not installed; run `pip install hermes-rubric[openai]` "
+            "or `pip install openai`."
+        ) from e
+
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENAI_API_KEY not set; cannot use openai-sdk backend")
+    model = openai_sdk_model()
+    client = OpenAI(api_key=api_key)
+    resp = client.chat.completions.create(
+        model=model,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0,
+        seed=42,
+        max_tokens=max_tokens,
+    )
+    return (resp.choices[0].message.content or "").strip()
+
+
+def google_genai_model() -> str:
+    return os.environ.get("HERMES_RUBRIC_GOOGLE_GENAI_MODEL", _GOOGLE_GENAI_DEFAULT_MODEL)
+
+
+def _call_google_genai(prompt: str, max_tokens: int) -> str:
+    """Invoke Google Gemini via the `google-generativeai` SDK.
+
+    Lazy-imported. Distinct from the existing `google-gemini` backend
+    (which uses the OpenAI-compatible HTTP endpoint) — this one exercises
+    the SDK code path so users with `pip install google-generativeai`
+    can plug in directly.
+    """
+    try:
+        import google.generativeai as genai  # type: ignore[import-not-found]
+    except ModuleNotFoundError as e:
+        raise RuntimeError(
+            "google-generativeai SDK not installed; run "
+            "`pip install hermes-rubric[google]` or "
+            "`pip install google-generativeai`."
+        ) from e
+
+    api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+    if not api_key:
+        raise RuntimeError("GEMINI_API_KEY / GOOGLE_API_KEY not set")
+    genai.configure(api_key=api_key)
+    model_name = google_genai_model()
+    model = genai.GenerativeModel(model_name)
+    resp = model.generate_content(
+        prompt,
+        generation_config={
+            "temperature": 0,
+            "max_output_tokens": max_tokens,
+        },
+    )
+    text = getattr(resp, "text", None)
+    if text is None:
+        # Fallback for response shapes without `.text` accessor.
+        candidates = getattr(resp, "candidates", []) or []
+        if candidates:
+            parts = getattr(candidates[0].content, "parts", []) or []
+            text = "".join(getattr(p, "text", "") for p in parts)
+    return (text or "").strip()
+
+
+# ---------------------------------------------------------------------------
+# Adapter classes — thin wrappers that delegate to the private functions
+# above. Kept thin so the existing test surface (which patches `_call_X`)
+# continues to work unchanged.
+# ---------------------------------------------------------------------------
+
+
+class _ClaudeCLIBackend:
+    name = "claude-cli"
+
+    def call(self, prompt: str, max_tokens: int) -> str:
+        return _call_claude_cli(prompt, max_tokens)
+
+    def model_id(self) -> str:
+        return os.environ.get("HERMES_RUBRIC_CLAUDE_MODEL", "claude-haiku-4-5")
+
+    def availability(self) -> bool:
+        if not shutil.which("claude"):
+            return False
+        try:
+            r = subprocess.run(
+                ["claude", "--print", "ping"],
+                capture_output=True, text=True, timeout=10,
+            )
+            return r.returncode == 0
+        except Exception:
+            return False
+
+
+class _OllamaBackend:
+    name = "ollama-local"
+
+    def call(self, prompt: str, max_tokens: int) -> str:
+        return _call_ollama(prompt, max_tokens)
+
+    def model_id(self) -> str:
+        return _ollama_model()
+
+    def availability(self) -> bool:
+        if not shutil.which("ollama"):
+            return False
+        try:
+            r = urllib.request.urlopen("http://localhost:11434/api/tags", timeout=5)
+            return r.status == 200
+        except Exception:
+            return False
+
+
+class _DashScopeBackend:
+    name = "dashscope-qwen"
+
+    def call(self, prompt: str, max_tokens: int) -> str:
+        return _call_dashscope(prompt, max_tokens)
+
+    def model_id(self) -> str:
+        return dashscope_model()
+
+    def availability(self) -> bool:
+        return bool(os.environ.get("DASHSCOPE_API_KEY"))
+
+
+class _GeminiHTTPBackend:
+    name = "google-gemini"
+
+    def call(self, prompt: str, max_tokens: int) -> str:
+        return _call_gemini(prompt, max_tokens)
+
+    def model_id(self) -> str:
+        return gemini_model()
+
+    def availability(self) -> bool:
+        return bool(os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"))
+
+
+class _OpenAIHTTPBackend:
+    name = "openai"
+
+    def call(self, prompt: str, max_tokens: int) -> str:
+        return _call_openai(prompt, max_tokens)
+
+    def model_id(self) -> str:
+        return openai_model()
+
+    def availability(self) -> bool:
+        return bool(os.environ.get("OPENAI_API_KEY"))
+
+
+class _OpenAISDKBackend:
+    name = "openai-sdk"
+
+    def call(self, prompt: str, max_tokens: int) -> str:
+        return _call_openai_sdk(prompt, max_tokens)
+
+    def model_id(self) -> str:
+        return openai_sdk_model()
+
+    def availability(self) -> bool:
+        if not os.environ.get("OPENAI_API_KEY"):
+            return False
+        try:
+            import openai  # noqa: F401
+            return True
+        except ModuleNotFoundError:
+            return False
+
+
+class _GoogleGenAIBackend:
+    name = "google-genai"
+
+    def call(self, prompt: str, max_tokens: int) -> str:
+        return _call_google_genai(prompt, max_tokens)
+
+    def model_id(self) -> str:
+        return google_genai_model()
+
+    def availability(self) -> bool:
+        if not (os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")):
+            return False
+        try:
+            import google.generativeai  # noqa: F401
+            return True
+        except ModuleNotFoundError:
+            return False
+
+
+# Register built-ins at import. Order is presentation-only; detect() has its
+# own priority logic and does not consult registration order.
+for _b in (
+    _ClaudeCLIBackend(),
+    _OllamaBackend(),
+    _DashScopeBackend(),
+    _GeminiHTTPBackend(),
+    _OpenAIHTTPBackend(),
+    _OpenAISDKBackend(),
+    _GoogleGenAIBackend(),
+):
+    register(_b)
+del _b
