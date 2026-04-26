@@ -1,0 +1,38 @@
+site_name: hermes-rubric
+site_description: Evidence-first structured scoring. Synthesizes a rubric, collects citations, then scores — not fluency.
+site_url: https://hermes-labs-ai.github.io/hermes-rubric
+repo_url: https://github.com/hermes-labs-ai/hermes-rubric
+repo_name: hermes-labs-ai/hermes-rubric
+
+theme:
+  name: material
+  palette:
+    scheme: default
+    primary: indigo
+    accent: indigo
+  font:
+    text: Inter
+    code: JetBrains Mono
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - content.code.copy
+
+nav:
+  - Home: index.md
+  - Install: install.md
+  - Quickstart: quickstart.md
+  - Pricing: pricing.md
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
