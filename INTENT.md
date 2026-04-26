@@ -10,6 +10,7 @@ Forces evidence collection before producing structured scores. Three-stage pipel
 - scores each dimension against the synthesized rubric, not against generic heuristics
 - emits a reproducibility receipt containing the exact prompts used, data hashes, backend, and timestamp
 - auto-detects the available backend in order: claude-cli, ollama-local, and raises if neither is present
+- exposes a Backend Protocol and registry so third-party packages can plug in additional backends via either an explicit register() call or a `hermes_rubric.backends` entry-point group, without entering the auto-detection priority order
 - writes output as structured JSON with rubric, per_dim_scores, evidence_citations, aggregate, hedge_dims, and receipt fields
 - accepts intent as a CLI string, context as a file or glob, and target as a file or directory
 - runs in three discrete stages that are each independently inspectable
