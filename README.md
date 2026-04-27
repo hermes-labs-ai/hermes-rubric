@@ -1,6 +1,6 @@
 # hermes-rubric
 
-**Evidence-first structured scoring for LLM-judged artifacts. 63.2% cross-backend agreement (Cohen's κ = 0.632, N=260) on the LongMemEval-style judgment benchmark. 112 tests with two adversarial gates.** Forces a three-stage scaffold — synthesize a domain rubric, collect per-dimension citations, then score against the evidence — so the number at the end has an audit trail.
+**Evidence-first structured scoring for LLM-judged artifacts. 62.9% chance-corrected agreement (Cohen's κ = 0.629, N=96 paired runs) across three model families on the v0.1.3 batch-equivalence test set. 112 tests with two adversarial gates.** Forces a three-stage scaffold — synthesize a domain rubric, collect per-dimension citations, then score against the evidence — so the number at the end has an audit trail.
 
 [![PyPI](https://img.shields.io/pypi/v/hermes-rubric.svg)](https://pypi.org/project/hermes-rubric/)
 [![Python](https://img.shields.io/pypi/pyversions/hermes-rubric.svg)](https://pypi.org/project/hermes-rubric/)
@@ -8,7 +8,7 @@
 [![CI](https://github.com/hermes-labs-ai/hermes-rubric/actions/workflows/ci.yml/badge.svg)](https://github.com/hermes-labs-ai/hermes-rubric/actions/workflows/ci.yml)
 [![Hermes Seal](https://img.shields.io/badge/hermes--seal-verified-blue)](https://github.com/hermes-labs-ai/hermes-rubric)
 
-**Cross-backend Cohen's κ = 0.632 (63.2% chance-corrected agreement) across 260 paired runs** on the LongMemEval-style judgment benchmark (Qwen 0.621, Gemini 0.642), passing the pre-registered ≥0.6 reproducibility floor. **112 tests** including two adversarial gates that fail the build if the scaffold breaks. Most LLM-as-judge tools score in one prompt and call it consistent; hermes-rubric forces three stages and capping rules that catch fluency-inflation in tests, every release.
+**Cross-model Cohen's κ = 0.629 (62.9% chance-corrected agreement) across 96 paired runs** on the v0.1.3 batch-equivalence test set — 5 fixture targets (T1–T5) spanning paper-quality, deploy-readiness, and email-quality scoring, full target list at [`experiments/batch-equiv-2026-04-25/RESULTS.md`](experiments/batch-equiv-2026-04-25/RESULTS.md). Per-backend: Gemini 2.5 Flash κ=0.642 (N=47), Qwen-Plus κ=0.621 (N=47); Claude κ=0.527 reported at N=2 — too few pairs for a stable estimate, included for transparency only. Passes the pre-registered ≥0.6 reproducibility floor. Raw runs and aggregation script in [`experiments/batch-equiv-2026-04-25/`](experiments/batch-equiv-2026-04-25/) — clone, run `compute_kappa.py`, get the same number. **112 tests** including two adversarial gates that fail the build if the scaffold breaks. Most LLM-as-judge tools score in one prompt and call it consistent; hermes-rubric forces three stages and capping rules that catch fluency-inflation in tests, every release.
 
 ```bash
 echo "rate this paper" | hermes-rubric --target paper.md  # score with full audit trail
@@ -92,6 +92,25 @@ Each class is a YAML at `hermes_rubric/classes/<name>.yaml` defining a fixed dim
 
 To add your own: in a development checkout (`pip install -e .`), drop a YAML next to the bundled ones. For installed distributions, fork the repo or maintain class YAMLs in your own package and load them via `hermes_rubric.classes.load_class()` — see `src/hermes_rubric/classes/__init__.py` for the loader.
 
+## What changes for you immediately
+
+After `pip install hermes-rubric`, the next time you ask a model to score something:
+
+- Every score comes with a citation list — `file:line` or quoted passage per dimension. No more "8.4/10" with no audit trail.
+- Dimensions where evidence was thin get clamped to [3, 7] and flagged as `hedge_dims`. The model can't bury weak evidence under a confident number.
+- Re-running the same input + backend + rubric source produces the same score (within ±1) — receipts record the input hashes, so drift is detectable.
+- Fluent-but-empty prose stops outscoring substantive-but-rough work — adversarial test in `tests/test_adversarial.py` fails the build if it does.
+- Domain-specific rubrics auto-synthesize from your intent + context, instead of falling back to a generic "academic quality" template.
+
+Most users notice the receipts more than the score. The score is the headline; the audit trail is the product.
+
+## Known limitations (v0.1.3 honest list)
+
+- **The Stage-1 LLM rubric synthesis introduces a generic-rubric tail** when context is sparse. Mitigated by `--artifact-class <name>` for repeated artifact types; not yet auto-suggested.
+- **κ measured on N=96 paired runs across 5 fixture targets (T1–T5)** — that's evidence for batch-vs-per-dim equivalence on this test set, not yet a generalization claim across all artifact domains. Cross-domain κ (paper-quality vs deploy-readiness vs lead-score) is on the roadmap (see `experiments/rubric-quality-PROPOSAL.md`).
+- **Anthropic SDK backend exists but the cross-model κ figure includes only N=2 Claude pairs** — small sample, deferred Claude paper-grade run noted in ACTIONABLES.md.
+- **Stage-2 evidence collection is deterministic given a synthesized rubric, but Stage 1 is not** — same intent + same context can produce slightly different rubric dim sets across runs. Use `--artifact-class` for full reproducibility.
+
 ## Examples
 
 Three real worked examples ship in-repo:
@@ -99,6 +118,18 @@ Three real worked examples ship in-repo:
 - [`evals/wedge-variance/`](evals/wedge-variance/) — variance comparison: hermes-rubric `aggregate` vs raw 0–10 LLM rating, same target × same backend. Demonstrates the variance-reduction wedge with reproducible runner.
 - [`applied/papers-20260423.md`](applied/papers-20260423.md) — two publicly published Zenodo papers scored on publication-readiness as worked examples (Asymmetric Burden of Proof, Taxonomy of Epistemic Failure Modes).
 - [`calibration/dataset.jsonl`](calibration/dataset.jsonl) — 7 labeled cases with human scores, used for cross-backend κ measurement and as a regression fixture.
+
+## Verify the cross-model κ claim yourself
+
+The "Cohen's κ = 0.629" headline is the load-bearing public claim. Reproduce it from the raw artifacts in-repo:
+
+```bash
+git clone https://github.com/hermes-labs-ai/hermes-rubric && cd hermes-rubric
+python experiments/batch-equiv-2026-04-25/compute_kappa.py
+# Per-target κ table, per-backend mean, overall mean. Should match RESULTS.md.
+```
+
+If the script's output doesn't match the README number, file an issue — the chain is broken and we want to know.
 
 ## What the output means
 
