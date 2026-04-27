@@ -104,6 +104,6 @@ print(result["evidence_citations"])  # [{dim_id, citation, quote}, ...]
 ## Calibration dataset
 
 The `calibration/` directory ships with:
-- `dataset.jsonl` — 15 labeled cases across 5 domains (paper-quality, tool-fit, deploy-readiness, email-quality, lead-score)
+- `dataset.jsonl` — 7 labeled cases across paper-quality, tool-fit, and deploy-readiness domains (all targets are publicly available artifacts)
 - `META-RUBRIC.md` — the rubric for evaluating rubric generators; 7 dimensions, each motivated by a specific LLM failure mode
 - `failure-mode-taxonomy.md` — 24 failure modes mined from 1,976+ experiments

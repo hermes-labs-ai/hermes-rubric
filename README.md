@@ -179,19 +179,17 @@ result = compute_aggregate(rubric=rubric, scores=scores)
 
 ## Calibration
 
-- **`calibration/dataset.jsonl`** — 15 labeled cases across 5 domains (paper-quality, tool-fit, deploy-readiness, email-quality, lead-score).
-- **`calibration/META-RUBRIC.md`** — the rubric for evaluating rubric generators. 7 dimensions, each motivated by a specific LLM failure mode.
-- **`calibration/failure-mode-taxonomy.md`** — 24 failure modes mined from the Hermes Labs research corpus.
+- **`calibration/dataset.jsonl`** — 7 labeled cases across paper-quality, tool-fit, and deploy-readiness domains. All targets are publicly available artifacts (Zenodo papers, public OSS tools).
+- **`calibration/META-RUBRIC.md`** — the rubric for evaluating rubric generators. 7 dimensions, each motivated by a specific LLM failure mode from the taxonomy below.
+- **`calibration/failure-mode-taxonomy.md`** — 24 failure modes mined from the Hermes Labs research corpus (1,892 experiment records + named post-mortem incidents). Each FM cites a source artifact.
 
 ## Evals
 
 - **`evals/wedge-variance/`** — variance comparison: hermes-rubric `aggregate` vs raw 0–10 LLM rating, same target × same backend. Demonstrates the variance-reduction wedge.
-- **`applied/papers-20260423.md`** — four research papers scored on publication-readiness:
+- **`applied/papers-20260423.md`** — two publicly published research papers scored on publication-readiness as worked examples:
 
   | Paper                                  | Aggregate |
   |----------------------------------------|-----------|
-  | cogito-ergo LongMemEval                | 9.1       |
-  | LangQuant LPCI                         | 8.7       |
   | Taxonomy of Epistemic Failure Modes    | 6.9       |
   | Asymmetric Burden of Proof             | 6.5       |
 

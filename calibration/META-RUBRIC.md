@@ -4,6 +4,21 @@ The rubric that rubric-generators are scored against. Dimensions derived empiric
 
 Built: 2026-04-23. Frozen for hermes-rubric v0.1.
 
+## Provenance
+
+This is an opinionated framework, not a discovered law. The full chain:
+
+```
+1,892 experiment records (research-corpus/epistemic + ai-behavior + scaffold)
++ named post-mortem incidents (hermes-handbook/)
+        ↓ qualitative coding pass (LLM-assisted, manually validated against cited artifacts)
+24 named failure modes (failure-mode-taxonomy.md — each cites its source artifact)
+        ↓ editorial selection: which FMs map to a defensible meta-eval criterion
+7 META-RUBRIC dimensions (each cites the FMs that motivate it)
+```
+
+Every FM in the taxonomy points to a specific source artifact. Every META-RUBRIC dimension points to the FMs it answers. The taxonomy is internally falsifiable (any cited artifact can be inspected by the maintainer); some artifact paths refer to private research-corpus files, so external readers must trust the citation chain rather than verify it directly. Future versions may release a public subset of the underlying experiment records to make the taxonomy externally verifiable too.
+
 ---
 
 ## How to use this
