@@ -1,6 +1,6 @@
 # hermes-rubric
 
-**Evidence-first structured scoring for LLM-judged artifacts. 62.9% chance-corrected agreement (Cohen's κ = 0.629, N=96 paired runs) across three model families on the v0.1.3 batch-equivalence test set. 112 tests with two adversarial gates.** Forces a three-stage scaffold — synthesize a domain rubric, collect per-dimension citations, then score against the evidence — so the number at the end has an audit trail.
+**Evidence-first structured scoring for LLM-judged artifacts. 62.9% chance-corrected agreement (Cohen's κ = 0.629, N=96 paired runs) across three model families on the v0.1.3 batch-equivalence test set. 115 tests with two adversarial gates.** Forces a three-stage scaffold — synthesize a domain rubric, collect per-dimension citations, then score against the evidence — so the number at the end has an audit trail.
 
 [![PyPI](https://img.shields.io/pypi/v/hermes-rubric.svg)](https://pypi.org/project/hermes-rubric/)
 [![Python](https://img.shields.io/pypi/pyversions/hermes-rubric.svg)](https://pypi.org/project/hermes-rubric/)
@@ -8,7 +8,7 @@
 [![CI](https://github.com/hermes-labs-ai/hermes-rubric/actions/workflows/ci.yml/badge.svg)](https://github.com/hermes-labs-ai/hermes-rubric/actions/workflows/ci.yml)
 [![Hermes Seal](https://img.shields.io/badge/hermes--seal-verified-blue)](https://github.com/hermes-labs-ai/hermes-rubric)
 
-**Cross-model Cohen's κ = 0.629 (62.9% chance-corrected agreement) across 96 paired runs** on the v0.1.3 batch-equivalence test set — 5 fixture targets (T1–T5) spanning paper-quality, deploy-readiness, and email-quality scoring, full target list at [`experiments/batch-equiv-2026-04-25/RESULTS.md`](experiments/batch-equiv-2026-04-25/RESULTS.md). Per-backend: Gemini 2.5 Flash κ=0.642 (N=47), Qwen-Plus κ=0.621 (N=47); Claude κ=0.527 reported at N=2 — too few pairs for a stable estimate, included for transparency only. Passes the pre-registered ≥0.6 reproducibility floor. Raw runs and aggregation script in [`experiments/batch-equiv-2026-04-25/`](experiments/batch-equiv-2026-04-25/) — clone, run `compute_kappa.py`, get the same number. **112 tests** including two adversarial gates that fail the build if the scaffold breaks. Most LLM-as-judge tools score in one prompt and call it consistent; hermes-rubric forces three stages and capping rules that catch fluency-inflation in tests, every release.
+**Cross-model Cohen's κ = 0.629 (62.9% chance-corrected agreement) across 96 paired runs** on the v0.1.3 batch-equivalence test set — 5 fixture targets (T1–T5) spanning paper-quality, deploy-readiness, and email-quality scoring, full target list at [`experiments/batch-equiv-2026-04-25/RESULTS.md`](experiments/batch-equiv-2026-04-25/RESULTS.md). Per-backend: Gemini 2.5 Flash κ=0.642 (N=47), Qwen-Plus κ=0.621 (N=47); Claude κ=0.527 reported at N=2 — too few pairs for a stable estimate, included for transparency only. Passes the pre-registered ≥0.6 reproducibility floor. Raw runs and aggregation script in [`experiments/batch-equiv-2026-04-25/`](experiments/batch-equiv-2026-04-25/) — clone, run `compute_kappa.py`, get the same number. **115 tests** including two adversarial gates that fail the build if the scaffold breaks. Most LLM-as-judge tools score in one prompt and call it consistent; hermes-rubric forces three stages and capping rules that catch fluency-inflation in tests, every release.
 
 ```bash
 echo "rate this paper" | hermes-rubric --target paper.md  # score with full audit trail
@@ -249,7 +249,7 @@ pip install -e ".[dev]"
 pytest
 ```
 
-**112 tests** (110 passing + 2 platform-skipped) across 13 files, including two adversarial gates that fail the build if the scaffold breaks:
+**115 tests** (111 passing + 4 skipped) across 14 files, including two adversarial gates that fail the build if the scaffold breaks plus a mechanical doc-consistency gate (`tests/test_docs_consistency.py`) that fails CI if the README opener / `pytest --collect-only` count drift apart:
 
 - `test_fluency_does_not_inflate_evidence_score` — a fluent rewrite of weak evidence must not outscore a substantive-but-rough version by more than 1 point.
 - `test_fabricated_claim_does_not_outscore_evidenced_claim` — claims without supporting evidence are capped at ≤3.
