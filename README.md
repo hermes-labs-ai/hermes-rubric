@@ -1,6 +1,6 @@
 # hermes-rubric
 
-**Evidence-first structured scoring for LLM-judged artifacts.** Forces a three-stage scaffold — synthesize a domain rubric, collect per-dimension citations, then score against the evidence — so the number at the end has an audit trail.
+**Evidence-first structured scoring for LLM-judged artifacts. 63.2% cross-backend agreement (Cohen's κ = 0.632, N=260) on the LongMemEval-style judgment benchmark. 112 tests with two adversarial gates.** Forces a three-stage scaffold — synthesize a domain rubric, collect per-dimension citations, then score against the evidence — so the number at the end has an audit trail.
 
 [![PyPI](https://img.shields.io/pypi/v/hermes-rubric.svg)](https://pypi.org/project/hermes-rubric/)
 [![Python](https://img.shields.io/pypi/pyversions/hermes-rubric.svg)](https://pypi.org/project/hermes-rubric/)
@@ -8,9 +8,15 @@
 [![CI](https://github.com/hermes-labs-ai/hermes-rubric/actions/workflows/ci.yml/badge.svg)](https://github.com/hermes-labs-ai/hermes-rubric/actions/workflows/ci.yml)
 [![Hermes Seal](https://img.shields.io/badge/hermes--seal-verified-blue)](https://github.com/hermes-labs-ai/hermes-rubric)
 
+**Cross-backend Cohen's κ = 0.632 (63.2% chance-corrected agreement) across 260 paired runs** on the LongMemEval-style judgment benchmark (Qwen 0.621, Gemini 0.642), passing the pre-registered ≥0.6 reproducibility floor. **112 tests** including two adversarial gates that fail the build if the scaffold breaks. Most LLM-as-judge tools score in one prompt and call it consistent; hermes-rubric forces three stages and capping rules that catch fluency-inflation in tests, every release.
+
+```bash
+echo "rate this paper" | hermes-rubric --target paper.md  # score with full audit trail
+```
+
 Without a scaffold, LLM scores reward fluency. Well-written garbage outscores substantive-but-rough work. Re-run the same input — the number shifts. There's no audit trail, and no way to argue with it.
 
-hermes-rubric replaces that with three sequential stages: **(1)** synthesize a domain-specific rubric from your intent + context + target type, **(2)** collect per-dimension evidence citations (`file:line` or quoted passage), explicitly hedging dimensions where evidence is thin, **(3)** score against the rubric and citations only. Fabricated claims can't outscore evidenced ones — enforced by adversarial test.
+hermes-rubric replaces that with three sequential stages: **(1)** synthesize a domain-specific rubric from your intent + context + target type, **(2)** collect per-dimension evidence citations (`file:line` or quoted passage), explicitly hedging dimensions where evidence is thin, **(3)** score against the rubric and citations only. Fabricated claims can't outscore evidenced ones — enforced by adversarial test. See [Examples](#examples) below and [`evals/`](evals/) for the worked-example reproducibility receipts.
 
 ## Install
 
@@ -85,6 +91,14 @@ hermes-rubric --artifact-class social-post --target post.md --out result.json
 Each class is a YAML at `hermes_rubric/classes/<name>.yaml` defining a fixed dim set, weights, voice priors, and class-specific slop signatures. Same input + same class = same rubric across runs, so dim-by-dim diff actually means something. Bundled classes: `social-post`, `show-hn-post`, `linkedin-post`, `outreach-email`.
 
 To add your own: in a development checkout (`pip install -e .`), drop a YAML next to the bundled ones. For installed distributions, fork the repo or maintain class YAMLs in your own package and load them via `hermes_rubric.classes.load_class()` — see `src/hermes_rubric/classes/__init__.py` for the loader.
+
+## Examples
+
+Three real worked examples ship in-repo:
+
+- [`evals/wedge-variance/`](evals/wedge-variance/) — variance comparison: hermes-rubric `aggregate` vs raw 0–10 LLM rating, same target × same backend. Demonstrates the variance-reduction wedge with reproducible runner.
+- [`applied/papers-20260423.md`](applied/papers-20260423.md) — two publicly published Zenodo papers scored on publication-readiness as worked examples (Asymmetric Burden of Proof, Taxonomy of Epistemic Failure Modes).
+- [`calibration/dataset.jsonl`](calibration/dataset.jsonl) — 7 labeled cases with human scores, used for cross-backend κ measurement and as a regression fixture.
 
 ## What the output means
 
@@ -204,7 +218,7 @@ pip install -e ".[dev]"
 pytest
 ```
 
-**111 tests** across 13 files, including two adversarial gates that fail the build if the scaffold breaks:
+**112 tests** (110 passing + 2 platform-skipped) across 13 files, including two adversarial gates that fail the build if the scaffold breaks:
 
 - `test_fluency_does_not_inflate_evidence_score` — a fluent rewrite of weak evidence must not outscore a substantive-but-rough version by more than 1 point.
 - `test_fabricated_claim_does_not_outscore_evidenced_claim` — claims without supporting evidence are capped at ≤3.
