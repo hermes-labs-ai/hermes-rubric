@@ -1,4 +1,4 @@
-"""Tests for v0.2.0 features: rubric hash + citation source-class tagging."""
+"""Tests for receipt rubric_hash + citation source-class tagging."""
 
 import json
 from unittest.mock import patch

@@ -1,5 +1,5 @@
 name: issue-worthiness
-version: 0.1.0
+version: 1.0.0
 description: >
   Decide whether a candidate idea surfaced in a Claude Code transcript warrants
   filing as a GitHub issue. Used by the daily issue-harvester.

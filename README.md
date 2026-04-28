@@ -1,6 +1,6 @@
 # hermes-rubric
 
-**Evidence-first structured scoring for LLM-judged artifacts. 62.9% chance-corrected agreement (Cohen's κ = 0.629, N=96 paired runs) across three model families on the v0.1.3 batch-equivalence test set. 115 tests with two adversarial gates.** Forces a three-stage scaffold — synthesize a domain rubric, collect per-dimension citations, then score against the evidence — so the number at the end has an audit trail.
+**Evidence-first structured scoring for LLM-judged artifacts. 62.9% chance-corrected agreement (Cohen's κ = 0.629, N=96 paired runs) across three model families on the batch-equivalence test set. 115 tests with two adversarial gates.** Forces a three-stage scaffold — synthesize a domain rubric, collect per-dimension citations, then score against the evidence — so the number at the end has an audit trail.
 
 [![PyPI](https://img.shields.io/pypi/v/hermes-rubric.svg)](https://pypi.org/project/hermes-rubric/)
 [![Python](https://img.shields.io/pypi/pyversions/hermes-rubric.svg)](https://pypi.org/project/hermes-rubric/)
@@ -8,7 +8,7 @@
 [![CI](https://github.com/hermes-labs-ai/hermes-rubric/actions/workflows/ci.yml/badge.svg)](https://github.com/hermes-labs-ai/hermes-rubric/actions/workflows/ci.yml)
 [![Hermes Seal](https://img.shields.io/badge/hermes--seal-verified-blue)](https://github.com/hermes-labs-ai/hermes-rubric)
 
-**Cross-model Cohen's κ = 0.629 (62.9% chance-corrected agreement) across 96 paired runs** on the v0.1.3 batch-equivalence test set — 5 fixture targets (T1–T5) spanning paper-quality, deploy-readiness, and email-quality scoring, full target list at [`experiments/batch-equiv-2026-04-25/RESULTS.md`](experiments/batch-equiv-2026-04-25/RESULTS.md). Per-backend: Gemini 2.5 Flash κ=0.642 (N=47), Qwen-Plus κ=0.621 (N=47); Claude κ=0.527 reported at N=2 — too few pairs for a stable estimate, included for transparency only. Passes the pre-registered ≥0.6 reproducibility floor. Raw runs and aggregation script in [`experiments/batch-equiv-2026-04-25/`](experiments/batch-equiv-2026-04-25/) — clone, run `compute_kappa.py`, get the same number. **115 tests** including two adversarial gates that fail the build if the scaffold breaks. Most LLM-as-judge tools score in one prompt and call it consistent; hermes-rubric forces three stages and capping rules that catch fluency-inflation in tests, every release.
+**Cross-model Cohen's κ = 0.629 (62.9% chance-corrected agreement) across 96 paired runs** on the batch-equivalence test set — 5 fixture targets (T1–T5) spanning paper-quality, deploy-readiness, and email-quality scoring, full target list at [`experiments/batch-equiv-2026-04-25/RESULTS.md`](experiments/batch-equiv-2026-04-25/RESULTS.md). Per-backend: Gemini 2.5 Flash κ=0.642 (N=47), Qwen-Plus κ=0.621 (N=47); Claude κ=0.527 reported at N=2 — too few pairs for a stable estimate, included for transparency only. Passes the pre-registered ≥0.6 reproducibility floor. Raw runs and aggregation script in [`experiments/batch-equiv-2026-04-25/`](experiments/batch-equiv-2026-04-25/) — clone, run `compute_kappa.py`, get the same number. **115 tests** including two adversarial gates that fail the build if the scaffold breaks. Most LLM-as-judge tools score in one prompt and call it consistent; hermes-rubric forces three stages and capping rules that catch fluency-inflation in tests, every release.
 
 ```bash
 echo "rate this paper" | hermes-rubric --target paper.md  # score with full audit trail
@@ -80,7 +80,7 @@ hermes-rubric kappa <result_a.json> <result_b.json>     # cross-backend agreemen
 
 Subcommand `kappa`: computes Cohen's κ between two completed runs. See `hermes-rubric kappa --help`.
 
-## Class-aware mode (v0.2)
+## Class-aware mode
 
 When you score the same kind of artifact repeatedly, Stage-1 LLM synthesis re-invents the dim set on every run — same target, three runs, three different rubric hashes. Class templates fix that:
 
@@ -104,7 +104,7 @@ After `pip install hermes-rubric`, the next time you ask a model to score someth
 
 Most users notice the receipts more than the score. The score is the headline; the audit trail is the product.
 
-## Known limitations (v0.1.3 honest list)
+## Known limitations (honest list)
 
 - **The Stage-1 LLM rubric synthesis introduces a generic-rubric tail** when context is sparse. Mitigated by `--artifact-class <name>` for repeated artifact types; not yet auto-suggested.
 - **κ measured on N=96 paired runs across 5 fixture targets (T1–T5)** — that's evidence for batch-vs-per-dim equivalence on this test set, not yet a generalization claim across all artifact domains. Cross-domain κ (paper-quality vs deploy-readiness vs lead-score) is on the roadmap (see `experiments/rubric-quality-PROPOSAL.md`).

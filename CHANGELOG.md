@@ -1,6 +1,12 @@
 # Changelog
 
-## 0.2.0 — 2026-04-26 — class-aware rubric templates
+## 1.0.0 — 2026-04-28 — first official release
+
+The repo has been public since 2026-04-24 as a 0.9-era preview. v1.0.0 is the first tagged release on PyPI + GitHub Releases, headlined by class-aware rubric templates.
+
+The 0.1.x and 0.2.0 entries below were internal-only iterations toward v1.0.
+
+### What v1.0 includes (vs the 0.9-era preview)
 
 Added `--artifact-class <name>` flag. When set, Stage-1 LLM rubric synthesis is bypassed and a deterministic dim set is loaded from a YAML template. The same input + same class produces the same dim set across runs — addressing the non-determinism observed in v0.1.x where Stage-1 synthesized different dims on every run.
 
