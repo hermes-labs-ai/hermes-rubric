@@ -1,0 +1,111 @@
+# Class: repo-readme
+#
+# FAANG / Series-A OSS repo README scoring against 7 fixed axes.
+# Eliminates Stage-1 LLM rubric-synthesis non-determinism for repo-readmes.
+#
+# Citations / evidence sources for axis design:
+# - Stripe Python SDK README (https://github.com/stripe/stripe-python) - reference
+#   FAANG-shape OSS README pattern: tagline, badges, install, code example, deeper
+#   content. Verified via `gh api repos/stripe/stripe-python/readme`, 2026-04-28.
+# - Roli Bosch / Hermes Labs architectural insight (session 7721bc7e, 2026-04-28
+#   ~10:09 PT): "fear with repo-readme.yaml class template is that we might make
+#   it too copy-paste. needs like a meta template that defines the proper template
+#   for each based on context, or something." This YAML resolves the concern by
+#   keeping AXES constant across repos while letting the evidence_instructions
+#   guide synthesis to repo-specific dim phrasing during Stage 2 evidence
+#   collection. Same axes -> comparable scores; per-repo evidence -> measures
+#   what each repo actually needs.
+# - hermes-rubric existing classes (src/hermes_rubric/classes/social-post.yaml,
+#   show-hn-post.yaml, linkedin-post.yaml, outreach-email.yaml) - schema
+#   conformance reference; YAML format derived from these.
+
+artifact_class: repo-readme
+description: OSS repo README on the FAANG / Series-A bar. Conversion + scrutiny + positioning measured across 7 fixed axes. Use --intent-debias to strip valence-loaded framing.
+target_window_bytes: 12000
+
+dimensions:
+  - id: conversion_shape
+    name: Conversion shape (30-second decision)
+    description: Can a developer landing on the GitHub page decide install yes/no within 30 seconds? Measures top-of-fold density - tagline, badges, install, quick example, problem framing must all be reachable above the fold.
+    evidence_instructions: |
+      Quote the first 3 lines (title + tagline + description). Verify install command appears within first 50 lines. Verify a runnable code example appears within first 80 lines. Cite line numbers. Compare against the FAANG reference shape: 1-line tagline, 2-5 badges, 1-paragraph description, install code block, usage example. Flag if install command is below line 80 or absent. Flag if there is no runnable example in the first quarter of the document.
+    weight: 3
+    hedge: false
+
+  - id: scrutiny_readiness
+    name: Scrutiny readiness (claim verifiability)
+    description: Can a skeptical reader verify the load-bearing numerical claims without leaving the repo? Measures the verification path - reproduce script, expected output, raw artifact links.
+    evidence_instructions: |
+      List every numerical claim in the README (percentages, counts, latencies, scores, monetary amounts, "N tests"). For each claim, find the verification path - script to reproduce, link to raw artifact, expected output snippet. Cite the line of each claim and the line of its verification anchor. Flag claims with no in-repo verification path. Flag claims that point to external services without a fallback in-repo proof.
+    weight: 3
+    hedge: false
+
+  - id: evidence_grounding
+    name: Evidence grounding (claims tied to code or output)
+    description: Are feature claims grounded in inline code snippets, sample output, or quoted artifacts? Measures whether the README shows what it claims, not just states it.
+    evidence_instructions: |
+      For each feature claim (e.g. "every score comes with a citation list", "audit trail per dimension", "atomic queue writes"), find the corresponding inline evidence - sample JSON output, code block, screenshot, or file path. Cite line numbers. Flag claims that are only stated, never demonstrated. The README must show, not just tell. Sample output blocks count strongly; bullet-point feature lists without backing evidence do not.
+    weight: 3
+    hedge: false
+
+  - id: anti_academic
+    name: Anti-academic (problem-shaped lede)
+    description: Does the README avoid academic-paper-abstract shape? Lead must be problem-shaped, not abstract-shaped. No dense statistics or jargon in the first paragraph. No dissertation prose.
+    evidence_instructions: |
+      Quote the first paragraph (after the title and badges). Classify as one of - problem-statement / abstract-paragraph / feature-list / mixed. Problem-statement passes; abstract-paragraph and feature-list fail. Count technical jargon terms in the first 50 words. Count hedged academic phrasings ("we present", "this paper introduces", "evidence-first structured scoring"). Flag if the first paragraph reads as a paper abstract.
+    weight: 2
+    hedge: false
+
+  - id: voice_consistency
+    name: Voice consistency (no AI-mediation seams)
+    description: Reads as a single voice, not AI-mediated. No em-dashes (banned per Roli's writing convention). No marketing adjectives. No royal-we when terse-imperative or first-person works. No fluffy transitions.
+    evidence_instructions: |
+      Search the document for em-dashes (Unicode U+2014). Each occurrence is a hard fail evidence point - quote the line. Search for banned marketing adjectives - "powerful", "comprehensive", "leverage", "robust", "seamless", "revolutionary", "first-of-its-kind", "cutting-edge", "next-generation". Each occurrence is a fail evidence point. Search for "I'm excited to announce", "Furthermore", "In conclusion", "Last but not least". Cite every occurrence. Score 10 only if zero em-dashes AND zero banned adjectives.
+    weight: 2
+    hedge: false
+
+  - id: doc_surface_separation
+    name: Doc surface separation (philosophy / etymology offloaded)
+    description: Is philosophy / etymology / company background OFF the main README and in dedicated files (PHILOSOPHY.md, ABOUT.md, BENCHMARKS.md, etc.)? README focus must be what a dev needs to evaluate + install.
+    evidence_instructions: |
+      Find any "About <Company>" section in the README. Find any etymology or naming-history paragraph. Find any philosophical thesis paragraph that is not directly tied to the tool's behavior. If found, cite line numbers and check whether the same content also exists in a dedicated file (ABOUT.md, PHILOSOPHY.md, BENCHMARKS.md). The README should LINK to those files, not contain them inline. Flag inline philosophy paragraphs longer than 3 sentences as a separation violation.
+    weight: 2
+    hedge: false
+
+  - id: link_integrity
+    name: Link integrity (referenced files exist)
+    description: All referenced internal files (docs/*, ABOUT.md, calibration/, experiments/, evals/) must exist in the repo. Broken links are a hard fail signal.
+    evidence_instructions: |
+      List every internal file or directory reference in the README. For each, verify it resolves (the file or directory exists at the path relative to the repo root). Cite the line of each reference. Flag every broken link as a critical fail. Score is bounded above by - 10 if zero broken links, 5 if 1-2 broken, 2 if 3+, 0 if any header link in the first half of the document is broken.
+    weight: 1
+    hedge: false
+
+slop_signatures:
+  - "powerful"
+  - "comprehensive"
+  - "leverage"
+  - "robust"
+  - "seamless"
+  - "revolutionary"
+  - "first-of-its-kind"
+  - "cutting-edge"
+  - "next-generation"
+  - "I'm excited to announce"
+  - "Furthermore"
+  - "In conclusion"
+  - "Last but not least"
+
+voice_priors:
+  - "lowercase casual sentence starts (when register matches)"
+  - "no em-dashes (Unicode U+2014) - hyphens or rephrase only"
+  - "no marketing adjectives"
+  - "first-person or terse-imperative voice, not royal-we"
+  - "numbers up front, jargon below the fold"
+  - "single voice, no AI-mediation transitions"
+
+# Composition note for future synthesis-axes upgrade:
+# When hermes-rubric v0.3 adds first-class synthesis_axes support, this YAML
+# should be re-shaped so each `dimensions` entry becomes an `axis` with
+# `must_reference` slots and a `synthesis_instruction` that lets per-repo
+# Stage-1 LLM produce repo-specific dim phrasing while keeping the axis
+# constant. See session 7721bc7e (2026-04-28) for the architectural sketch.

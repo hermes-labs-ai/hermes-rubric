@@ -4,13 +4,31 @@ import pytest
 from hermes_rubric import classes as classes_mod
 
 
-def test_list_classes_returns_four():
+def test_list_classes_returns_bundled_set():
     available = classes_mod.list_classes()
     assert "social-post" in available
     assert "show-hn-post" in available
     assert "linkedin-post" in available
     assert "outreach-email" in available
-    assert len(available) == 4
+    assert "repo-readme" in available
+    assert len(available) == 5
+
+
+def test_load_repo_readme_class_has_seven_axes():
+    """repo-readme class encodes 7 fixed FAANG-Series-A axes (added 2026-04-28)."""
+    data = classes_mod.load_class("repo-readme")
+    assert data["artifact_class"] == "repo-readme"
+    assert "dimensions" in data
+    assert len(data["dimensions"]) == 7
+    expected_dim_ids = {
+        "conversion_shape", "scrutiny_readiness", "evidence_grounding",
+        "anti_academic", "voice_consistency", "doc_surface_separation",
+        "link_integrity",
+    }
+    actual_dim_ids = {d["id"] for d in data["dimensions"]}
+    assert actual_dim_ids == expected_dim_ids
+    total_weight = sum(d["weight"] for d in data["dimensions"])
+    assert total_weight == 16
 
 
 def test_load_unknown_class_raises():

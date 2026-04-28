@@ -31,6 +31,7 @@ AVAILABLE_CLASSES = {
     "show-hn-post",
     "linkedin-post",
     "outreach-email",
+    "repo-readme",
 }
 
 
