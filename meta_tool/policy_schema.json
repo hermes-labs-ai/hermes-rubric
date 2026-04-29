@@ -1,0 +1,172 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "hermes-meta-rubric policy spec v1",
+  "description": "Declarative policy that synthesizes hermes-rubric scoring behavior per (intent, context, target_type). Replaces the hardcoded source-class cap (score.py:106-108) and window-bytes default (cli.py:48). Opinionated v1, replaceable.",
+  "type": "object",
+  "required": [
+    "policy_id",
+    "policy_version",
+    "target_type_match",
+    "source_class_caps",
+    "window_bytes",
+    "dim_weight_strategy",
+    "prompt_template_id",
+    "no_evidence_floor",
+    "hedge_band",
+    "rationale",
+    "fallback_policy_id"
+  ],
+  "properties": {
+    "policy_id": {
+      "type": "string",
+      "description": "Stable identifier for this policy entry (e.g. preprint-paper-v1)."
+    },
+    "policy_version": {
+      "type": "string",
+      "description": "Semver-like tag for the policy. Bumps when caps or weights change."
+    },
+    "target_type_match": {
+      "type": "array",
+      "description": "List of target_type labels this policy applies to (e.g. preprint-paper, repo, tool, document). First-match-wins in the registry.",
+      "items": {"type": "string"},
+      "minItems": 1
+    },
+    "source_class_caps": {
+      "type": "object",
+      "description": "Per-source-class score ceiling. The original tool hardcodes a cap of 6 when ALL citations are readme/doc (self-marketing). For prose targets like papers, README/doc IS the ground truth and must NOT be capped at 6. A null value means no cap.",
+      "properties": {
+        "code":   {"type": ["integer", "null"], "minimum": 0, "maximum": 10},
+        "test":   {"type": ["integer", "null"], "minimum": 0, "maximum": 10},
+        "config": {"type": ["integer", "null"], "minimum": 0, "maximum": 10},
+        "doc":    {"type": ["integer", "null"], "minimum": 0, "maximum": 10},
+        "readme": {"type": ["integer", "null"], "minimum": 0, "maximum": 10},
+        "other":  {"type": ["integer", "null"], "minimum": 0, "maximum": 10}
+      },
+      "additionalProperties": false
+    },
+    "window_bytes": {
+      "type": "integer",
+      "description": "Adaptive --target-window-bytes. For preprint papers (typically 30k-80k chars) the default 8000 silently truncates body evidence and forces hedge=true on later sections. Recommend 80000 for papers, 8000 for repos.",
+      "minimum": 1000,
+      "maximum": 500000
+    },
+    "dim_weight_strategy": {
+      "type": "string",
+      "description": "How dimension weights are interpreted. 'preserve' = use synthesizer-assigned weights as-is. 'flatten' = all dims weight=1. 'amplify-load-bearing' = boost dims tagged load_bearing=true by +1.",
+      "enum": ["preserve", "flatten", "amplify-load-bearing"]
+    },
+    "prompt_template_id": {
+      "type": "string",
+      "description": "Which synthesis prompt variant to use. 'default' = stock hermes-rubric. 'prose-target' = treats README/doc/prose as ground truth, not self-marketing.",
+      "enum": ["default", "prose-target", "code-artifact", "mixed"]
+    },
+    "no_evidence_floor": {
+      "type": "integer",
+      "description": "Score ceiling when evidence_found=false. Original is 3. Some targets (gate cards, abstracts) may justify a higher floor.",
+      "minimum": 0,
+      "maximum": 10
+    },
+    "hedge_band": {
+      "type": "object",
+      "description": "Score range a hedged dim is clamped into. Original is [3,7].",
+      "required": ["lo", "hi"],
+      "properties": {
+        "lo": {"type": "integer", "minimum": 0, "maximum": 10},
+        "hi": {"type": "integer", "minimum": 0, "maximum": 10}
+      }
+    },
+    "rationale": {
+      "type": "string",
+      "description": "One-paragraph human-readable justification. Why these caps + window for this target_type. Audit trail."
+    },
+    "fallback_policy_id": {
+      "type": "string",
+      "description": "Policy to fall through to if this one cannot be applied (e.g. window too small for target). Terminates at policy_id='default'."
+    },
+    "scope_class": {
+      "type": ["string", "null"],
+      "description": "Optional pass-through to hermes-rubric --scope-class.",
+      "enum": ["gate-plan", "sweep-plan", "results-bundle", null]
+    },
+    "intent_debias": {
+      "type": "boolean",
+      "description": "Pass-through to hermes-rubric --intent-debias. Strips valence-loaded framing from intent."
+    },
+    "batch": {
+      "type": "boolean",
+      "description": "Pass-through to hermes-rubric --batch. Single LLM call per stage; falls back per-dim."
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "policy_id": "preprint-paper-v1",
+      "policy_version": "1.0.0",
+      "target_type_match": ["preprint-paper", "paper", "academic-preprint"],
+      "source_class_caps": {
+        "code": null,
+        "test": null,
+        "config": null,
+        "doc": null,
+        "readme": null,
+        "other": null
+      },
+      "window_bytes": 80000,
+      "dim_weight_strategy": "preserve",
+      "prompt_template_id": "prose-target",
+      "no_evidence_floor": 3,
+      "hedge_band": {"lo": 3, "hi": 7},
+      "rationale": "For preprint papers the ground truth is the prose itself. The hardcoded cap-at-6 for README/doc citations is a software-repo heuristic that mis-scores papers. Window expanded to 80k bytes so a 30-80k paper is not silently truncated.",
+      "fallback_policy_id": "default-v1",
+      "scope_class": null,
+      "intent_debias": false,
+      "batch": true
+    },
+    {
+      "policy_id": "repo-v1",
+      "policy_version": "1.0.0",
+      "target_type_match": ["repo", "tool", "library"],
+      "source_class_caps": {
+        "code": null,
+        "test": null,
+        "config": null,
+        "doc": 6,
+        "readme": 6,
+        "other": null
+      },
+      "window_bytes": 8000,
+      "dim_weight_strategy": "preserve",
+      "prompt_template_id": "code-artifact",
+      "no_evidence_floor": 3,
+      "hedge_band": {"lo": 3, "hi": 7},
+      "rationale": "For repos the original cap-at-6 on README/doc is correct: README is self-marketing and code/test is ground truth. Default window of 8000 bytes preserves v0.1.x behavior.",
+      "fallback_policy_id": "default-v1",
+      "scope_class": null,
+      "intent_debias": false,
+      "batch": true
+    },
+    {
+      "policy_id": "default-v1",
+      "policy_version": "1.0.0",
+      "target_type_match": ["document", "*"],
+      "source_class_caps": {
+        "code": null,
+        "test": null,
+        "config": null,
+        "doc": 6,
+        "readme": 6,
+        "other": null
+      },
+      "window_bytes": 8000,
+      "dim_weight_strategy": "preserve",
+      "prompt_template_id": "default",
+      "no_evidence_floor": 3,
+      "hedge_band": {"lo": 3, "hi": 7},
+      "rationale": "Catch-all. Mirrors original hermes-rubric behavior exactly.",
+      "fallback_policy_id": "default-v1",
+      "scope_class": null,
+      "intent_debias": false,
+      "batch": false
+    }
+  ]
+}
