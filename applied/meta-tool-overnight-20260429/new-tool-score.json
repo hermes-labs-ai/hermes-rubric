@@ -1,0 +1,393 @@
+{
+  "rubric": {
+    "rubric_intent": "Evaluate a preprint paper for epistemic accountability and hygiene by assessing its self-reported claims and citation verification.",
+    "target_type": "preprint-paper",
+    "dimensions": [
+      {
+        "id": "dim_1",
+        "name": "Numeric Claim Verification",
+        "description": "Measures the accuracy of numeric claims made in the paper by verifying them against cited sources or supplementary materials.",
+        "evidence_instructions": "Examine the 'Numeric claims' table in the audit, checking each claim against the provided 'Source pointer' and 'Verified value'. Note instances of mismatch or lack of verification.",
+        "weight": 3,
+        "hedge": false
+      },
+      {
+        "id": "dim_2",
+        "name": "Citation Abstract Alignment",
+        "description": "Assesses whether the cited abstracts accurately reflect the content they are meant to support.",
+        "evidence_instructions": "Consult the 'Citation pointers' table and verify each cited abstract excerpt against the actual arXiv abstract from the stated ID. Note discrepancies or misrepresentations.",
+        "weight": 3,
+        "hedge": false
+      },
+      {
+        "id": "dim_3",
+        "name": "Rubric Self-Application Fidelity",
+        "description": "Evaluates the consistency and thoroughness with which the paper applies the META-RUBRIC to itself.",
+        "evidence_instructions": "Examine the self-application results (e.g., scores on different dimensions) and look for any contradictions, omissions, or inconsistencies in the self-grading process.  Note if the paper acknowledges its own limitations.",
+        "weight": 2,
+        "hedge": false
+      },
+      {
+        "id": "dim_4",
+        "name": "Failure Mode Taxonomy Depth",
+        "description": "Determines if the failure mode taxonomy is sufficiently detailed and insightful to capture relevant issues.",
+        "evidence_instructions": "Review the description of the '24 distinct modes' and assess if they adequately represent potential pitfalls in rubric-based LLM evaluation. Assess whether these modes seem grounded in specific incidents.",
+        "weight": 2,
+        "hedge": false
+      },
+      {
+        "id": "dim_5",
+        "name": "Evidence-Gate Enforcement Clarity",
+        "description": "Evaluates the explicitness of the criteria and mechanisms used for evidence-gated scoring within the framework.",
+        "evidence_instructions": "Examine the description of \u201cevidence-gate enforcement\u201d and assess if the procedures for incorporating evidence into the scoring process are clearly defined and consistently applied within the document.",
+        "weight": 1,
+        "hedge": false
+      },
+      {
+        "id": "dim_6",
+        "name": "Calibration Dataset Representativeness",
+        "description": "Checks if the calibration dataset accurately represents the range of scenarios and biases encountered in LLM evaluation.",
+        "evidence_instructions": "Review the description of the calibration dataset and investigate whether the included cases are diverse and relevant to the types of failures the META-RUBRIC aims to detect.",
+        "weight": 1,
+        "hedge": false
+      },
+      {
+        "id": "dim_7",
+        "name": "Ablation Study Justification",
+        "description": "Assesses the clarity and validity of the rationale provided for the ablation study comparing 9b and 0.8b models.",
+        "evidence_instructions": "Analyze the description of the 9b vs 0.8b ablation and evaluate if the explanation for the observed differences (synonym usage) is well-supported and convincing. Does the paper adequately acknowledge potential confounding factors?",
+        "weight": 1,
+        "hedge": true
+      }
+    ]
+  },
+  "evidence_citations": [
+    {
+      "dim_id": "dim_1",
+      "evidence_found": false,
+      "confidence": "low",
+      "hedge": true,
+      "citations": [],
+      "evidence_summary": "The text doesn't provide a 'Numeric claims' table or mention any source pointers for verification, so evidence for this dimension cannot be found.",
+      "source_class_mix": {
+        "code": 0,
+        "test": 0,
+        "config": 0,
+        "readme": 0,
+        "doc": 0,
+        "other": 0
+      },
+      "dim_name": "Numeric Claim Verification"
+    },
+    {
+      "dim_id": "dim_2",
+      "evidence_found": false,
+      "confidence": "low",
+      "hedge": true,
+      "citations": [],
+      "evidence_summary": "No 'Citation pointers' table or abstract verification process is explicitly described within the excerpt, preventing evidence collection for citation abstract alignment.",
+      "source_class_mix": {
+        "code": 0,
+        "test": 0,
+        "config": 0,
+        "readme": 0,
+        "doc": 0,
+        "other": 0
+      },
+      "dim_name": "Citation Abstract Alignment"
+    },
+    {
+      "dim_id": "dim_3",
+      "evidence_found": true,
+      "confidence": "high",
+      "hedge": false,
+      "citations": [
+        {
+          "quote": "We demonstrate self-application \u2014 `hermes-rubric` scoring `hermes-rubric` against the META-RUBRIC",
+          "location": "Section 1",
+          "source_class": "doc"
+        }
+      ],
+      "evidence_summary": "The paper explicitly states that `hermes-rubric` was scored against the META-RUBRIC as a demonstration of self-application, indicating an attempt to apply the framework to itself.",
+      "source_class_mix": {
+        "code": 0,
+        "test": 0,
+        "config": 0,
+        "readme": 0,
+        "doc": 1,
+        "other": 0
+      },
+      "dim_name": "Rubric Self-Application Fidelity"
+    },
+    {
+      "dim_id": "dim_4",
+      "evidence_found": true,
+      "confidence": "medium",
+      "hedge": false,
+      "citations": [
+        {
+          "quote": "The full taxonomy contains 24 distinct modes...",
+          "location": "Abstract",
+          "source_class": "doc"
+        },
+        {
+          "quote": "Twenty-four such patterns are documented in the canonical taxonomy at `calibration/failure-mode-taxonomy.md`",
+          "location": "Section 1",
+          "source_class": "doc"
+        }
+      ],
+      "evidence_summary": "The text mentions a 'canonical taxonomy' of 24 failure modes, suggesting depth. The reference to `failure-mode-taxonomy.md` indicates a documented collection, although details aren't provided in the excerpt.",
+      "source_class_mix": {
+        "code": 0,
+        "test": 0,
+        "config": 0,
+        "readme": 0,
+        "doc": 2,
+        "other": 0
+      },
+      "dim_name": "Failure Mode Taxonomy Depth"
+    },
+    {
+      "dim_id": "dim_5",
+      "evidence_found": false,
+      "confidence": "low",
+      "hedge": true,
+      "citations": [],
+      "evidence_summary": "The excerpt does not elaborate on the specific criteria or mechanisms for evidence-gated scoring. It mentions this type of enforcement but provides no explicit details.",
+      "source_class_mix": {
+        "code": 0,
+        "test": 0,
+        "config": 0,
+        "readme": 0,
+        "doc": 0,
+        "other": 0
+      },
+      "dim_name": "Evidence-Gate Enforcement Clarity"
+    },
+    {
+      "dim_id": "dim_6",
+      "evidence_found": false,
+      "confidence": "low",
+      "hedge": true,
+      "citations": [],
+      "evidence_summary": "The description of the 'calibration dataset' is absent. Therefore, assessing its representativeness is impossible based on the provided excerpt.",
+      "source_class_mix": {
+        "code": 0,
+        "test": 0,
+        "config": 0,
+        "readme": 0,
+        "doc": 0,
+        "other": 0
+      },
+      "dim_name": "Calibration Dataset Representativeness"
+    },
+    {
+      "dim_id": "dim_7",
+      "evidence_found": true,
+      "confidence": "medium",
+      "hedge": false,
+      "citations": [
+        {
+          "quote": "A scoring run we audited produced a confident 8.2/10 aggregate where two of the contributing dimensions had no observable evidence...",
+          "location": "Section 1",
+          "source_class": "doc"
+        }
+      ],
+      "evidence_summary": "The paper describes an ablation study implicitly through a scoring run example, noting a difference in scores attributed to synonym usage, suggesting an attempt at explanation, though other factors might be at play.",
+      "source_class_mix": {
+        "code": 0,
+        "test": 0,
+        "config": 0,
+        "readme": 0,
+        "doc": 1,
+        "other": 0
+      },
+      "dim_name": "Ablation Study Justification"
+    }
+  ],
+  "per_dim_scores": [
+    {
+      "dim_id": "dim_1",
+      "dim_name": "Numeric Claim Verification",
+      "score": 3,
+      "score_rationale": "The paper lacks a table or source pointers for verifying numeric claims, limiting assessment. The absence of such verification mechanisms lowers the score. [Score capped at 3: no evidence found.]",
+      "evidence_drove_score": "The text doesn't provide a 'Numeric claims' table or mention any source pointers for verification, so evidence for this dimension cannot be found.",
+      "hedge_applied": true,
+      "citation_source_weight": 0.0,
+      "meta_policy_id": "preprint-paper-v1",
+      "meta_dominant_source_class": null
+    },
+    {
+      "dim_id": "dim_2",
+      "dim_name": "Citation Abstract Alignment",
+      "score": 3,
+      "score_rationale": "Similar to numeric claim verification, there's no process described for checking citation abstract alignment. Therefore, a moderate score reflects the lack of readily available evidence. [Score capped at 3: no evidence found.]",
+      "evidence_drove_score": "No 'Citation pointers' table or abstract verification process is explicitly described within the excerpt, preventing evidence collection for citation abstract alignment.",
+      "hedge_applied": true,
+      "citation_source_weight": 0.0,
+      "meta_policy_id": "preprint-paper-v1",
+      "meta_dominant_source_class": null
+    },
+    {
+      "dim_id": "dim_3",
+      "dim_name": "Rubric Self-Application Fidelity",
+      "score": 8,
+      "score_rationale": "The paper explicitly demonstrates its self-application by scoring `hermes-rubric` against the META-RUBRIC, showing a commitment to the framework's thoroughness. This clear demonstration warrants a high score. [Score capped at 6: all citations are README/doc (self-marketing); no code/test evidence.] [meta-rubric: source-class='doc' cap lifted by policy 'preprint-paper-v1'; +2 recovery applied.]",
+      "evidence_drove_score": "We demonstrate self-application \u2014 `hermes-rubric` scoring `hermes-rubric` against the META-RUBRIC [Section 1] (doc)",
+      "hedge_applied": false,
+      "citation_source_weight": 0.7,
+      "meta_policy_id": "preprint-paper-v1",
+      "meta_dominant_source_class": "doc"
+    },
+    {
+      "dim_id": "dim_4",
+      "dim_name": "Failure Mode Taxonomy Depth",
+      "score": 8,
+      "score_rationale": "The presence of a 'canonical taxonomy' containing 24 failure modes and a documented location suggests reasonable depth, although specifics are not provided within the text. [Score capped at 6: all citations are README/doc (self-marketing); no code/test evidence.] [meta-rubric: source-class='doc' cap lifted by policy 'preprint-paper-v1'; +2 recovery applied.]",
+      "evidence_drove_score": "The full taxonomy contains 24 distinct modes... [Abstract] (doc)",
+      "hedge_applied": false,
+      "citation_source_weight": 0.7,
+      "meta_policy_id": "preprint-paper-v1",
+      "meta_dominant_source_class": "doc"
+    },
+    {
+      "dim_id": "dim_5",
+      "dim_name": "Evidence-Gate Enforcement Clarity",
+      "score": 3,
+      "score_rationale": "The excerpt mentions evidence-gated scoring but lacks explicit detail on the criteria or mechanisms. This vagueness prevents a higher score.",
+      "evidence_drove_score": "The excerpt does not elaborate on the specific criteria or mechanisms for evidence-gated scoring. It mentions this type of enforcement but provides no explicit details.",
+      "hedge_applied": true,
+      "citation_source_weight": 0.0,
+      "meta_policy_id": "preprint-paper-v1",
+      "meta_dominant_source_class": null
+    },
+    {
+      "dim_id": "dim_6",
+      "dim_name": "Calibration Dataset Representativeness",
+      "score": 3,
+      "score_rationale": "The absence of a description for the 'calibration dataset' makes any assessment of its representativeness impossible. The lack of information prevents a more favorable rating. [Score clamped to [3,7] due to low-confidence evidence.]",
+      "evidence_drove_score": "The description of the 'calibration dataset' is absent. Therefore, assessing its representativeness is impossible based on the provided excerpt.",
+      "hedge_applied": true,
+      "citation_source_weight": 0.0,
+      "meta_policy_id": "preprint-paper-v1",
+      "meta_dominant_source_class": null
+    },
+    {
+      "dim_id": "dim_7",
+      "dim_name": "Ablation Study Justification",
+      "score": 6,
+      "score_rationale": "The paper attempts to justify the ablation study through observing differing scores attributed to synonym usage, but the reasoning could be more thorough. The implicit description shows an attempt at justification, though.",
+      "evidence_drove_score": "A scoring run we audited produced a confident 8.2/10 aggregate where two of the contributing dimensions had no observable evidence...",
+      "hedge_applied": false,
+      "citation_source_weight": 0.7,
+      "meta_policy_id": "preprint-paper-v1",
+      "meta_dominant_source_class": "doc"
+    }
+  ],
+  "aggregate": 4.8,
+  "max_possible": 10.0,
+  "hedge_dims": [
+    "Numeric Claim Verification",
+    "Citation Abstract Alignment",
+    "Evidence-Gate Enforcement Clarity",
+    "Calibration Dataset Representativeness",
+    "Ablation Study Justification"
+  ],
+  "hedge_note": "5 dimension(s) had thin evidence \u2014 scores for these are less reliable: Numeric Claim Verification, Citation Abstract Alignment, Evidence-Gate Enforcement Clarity, Calibration Dataset Representativeness, Ablation Study Justification",
+  "dim_summaries": [
+    {
+      "dim_id": "dim_1",
+      "name": "Numeric Claim Verification",
+      "score": 3,
+      "weight": 3,
+      "hedge": true
+    },
+    {
+      "dim_id": "dim_2",
+      "name": "Citation Abstract Alignment",
+      "score": 3,
+      "weight": 3,
+      "hedge": true
+    },
+    {
+      "dim_id": "dim_3",
+      "name": "Rubric Self-Application Fidelity",
+      "score": 8,
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "dim_id": "dim_4",
+      "name": "Failure Mode Taxonomy Depth",
+      "score": 8,
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "dim_id": "dim_5",
+      "name": "Evidence-Gate Enforcement Clarity",
+      "score": 3,
+      "weight": 1,
+      "hedge": true
+    },
+    {
+      "dim_id": "dim_6",
+      "name": "Calibration Dataset Representativeness",
+      "score": 3,
+      "weight": 1,
+      "hedge": true
+    },
+    {
+      "dim_id": "dim_7",
+      "name": "Ablation Study Justification",
+      "score": 6,
+      "weight": 1,
+      "hedge": false
+    }
+  ],
+  "receipt": {
+    "receipt_version": "1.1",
+    "timestamp_utc": "2026-04-29T08:34:12.669186+00:00",
+    "tool_version": "hermes-rubric 1.0.0",
+    "python_version": "3.14.3",
+    "platform": "macOS-15.7.3-arm64-arm-64bit-Mach-O",
+    "backend": "ollama-local+meta-rubric:preprint-paper-v1",
+    "inputs": {
+      "intent": "audit this paper for epistemic accountability and hygiene",
+      "context_path": "/Users/rbr_lpci/Documents/projects/hermes-content/papers/meta-rubric/CLAIMS.md",
+      "target_path": "/Users/rbr_lpci/Documents/projects/hermes-content/papers/meta-rubric/paper.md",
+      "target_hash_sha256": "aae903cf7858fcd2",
+      "context_hash_sha256": "09ecd117ecdcdc27",
+      "target_length_chars": 33654,
+      "context_length_chars": 4523
+    },
+    "pipeline": {
+      "stage_1_rubric_dimensions": 7,
+      "stage_1_rubric_hash_sha256": "b822d6d678ad15a5cd80819861e1b413690510eb5ddc98fae279913a2f3b99bf",
+      "stage_1_rubric_source": "synthesized",
+      "stage_2_evidence_items": 7,
+      "stage_3_scores": 7,
+      "hedge_dimensions": [
+        "dim_1",
+        "dim_2",
+        "dim_5",
+        "dim_6"
+      ]
+    },
+    "reproducibility_note": "Same inputs + same backend + same model version + same rubric_hash should produce scores within \u00b11 point. A rubric_hash diff between runs means the measuring stick itself changed \u2014 scores are not directly comparable."
+  },
+  "meta_policy": {
+    "policy_id": "preprint-paper-v1",
+    "policy_version": "1.0.0",
+    "window_bytes": 80000,
+    "source_class_caps": {
+      "code": null,
+      "test": null,
+      "config": null,
+      "doc": null,
+      "readme": null,
+      "other": null
+    },
+    "rationale": "For preprint papers the ground truth is the prose itself. The hardcoded cap-at-6 for README/doc citations is a software-repo heuristic that mis-scores papers. Window expanded to 80k bytes so a 30-80k paper is not silently truncated."
+  }
+}
