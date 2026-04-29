@@ -1,0 +1,33 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.3, pytest-9.0.3, pluggy-1.6.0 -- /Users/rbr_lpci/hermes-venv/bin/python
+cachedir: .pytest_cache
+metadata: {'Python': '3.14.3', 'Platform': 'macOS-15.7.3-arm64-arm-64bit-Mach-O', 'Packages': {'pytest': '9.0.3', 'pluggy': '1.6.0'}, 'Plugins': {'mock': '3.15.1', 'cov': '7.1.0', 'json-report': '1.5.0', 'metadata': '3.1.1', 'asyncio': '1.3.0', 'anyio': '4.13.0'}}
+rootdir: /Users/rbr_lpci/Documents/projects/hermes-rubric
+configfile: pyproject.toml
+plugins: mock-3.15.1, cov-7.1.0, json-report-1.5.0, metadata-3.1.1, asyncio-1.3.0, anyio-4.13.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 21 items
+
+tests/test_meta_tool.py::test_validate_policy_accepts_minimal_good_policy PASSED [  4%]
+tests/test_meta_tool.py::test_validate_policy_rejects_missing_required_field PASSED [  9%]
+tests/test_meta_tool.py::test_validate_policy_rejects_window_out_of_range PASSED [ 14%]
+tests/test_meta_tool.py::test_validate_policy_rejects_unknown_source_class_in_caps PASSED [ 19%]
+tests/test_meta_tool.py::test_validate_policy_rejects_invalid_strategy PASSED [ 23%]
+tests/test_meta_tool.py::test_validate_policy_rejects_invalid_hedge_band PASSED [ 28%]
+tests/test_meta_tool.py::test_load_registry_default_returns_three_baseline_policies PASSED [ 33%]
+tests/test_meta_tool.py::test_select_policy_first_match_wins_on_target_type PASSED [ 38%]
+tests/test_meta_tool.py::test_select_policy_falls_through_to_wildcard PASSED [ 42%]
+tests/test_meta_tool.py::test_select_policy_repo_matches_repo_policy PASSED [ 47%]
+tests/test_meta_tool.py::test_load_registry_rejects_invalid_file PASSED  [ 52%]
+tests/test_meta_tool.py::test_apply_policy_clamps_lifts_cap_when_policy_says_null PASSED [ 57%]
+tests/test_meta_tool.py::test_apply_policy_clamps_preserves_cap_when_policy_says_six PASSED [ 61%]
+tests/test_meta_tool.py::test_apply_policy_clamps_re_clamps_hedge_band PASSED [ 66%]
+tests/test_meta_tool.py::test_apply_policy_clamps_no_evidence_floor PASSED [ 71%]
+tests/test_meta_tool.py::test_apply_policy_clamps_records_meta_metadata PASSED [ 76%]
+tests/test_meta_tool.py::test_apply_policy_clamps_caps_when_policy_sets_explicit_cap PASSED [ 80%]
+tests/test_meta_tool.py::test_apply_weight_strategy_flatten_sets_all_weights_to_1 PASSED [ 85%]
+tests/test_meta_tool.py::test_apply_weight_strategy_preserve_is_identity PASSED [ 90%]
+tests/test_meta_tool.py::test_apply_weight_strategy_amplify_load_bearing PASSED [ 95%]
+tests/test_meta_tool.py::test_preprint_policy_lifts_caps_for_paper_target PASSED [100%]
+
+============================== 21 passed in 0.02s ==============================
