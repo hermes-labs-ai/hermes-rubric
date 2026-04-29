@@ -274,6 +274,28 @@ def apply_weight_strategy(rubric: dict[str, Any], policy: dict[str, Any]) -> dic
 # Top-level run
 # ---------------------------------------------------------------------------
 
+def load_rubric_file(rubric_file_path: str | Path) -> dict[str, Any]:
+    """Load a pre-synthesized rubric from a JSON file. Validates the rubric
+    structure matches what `synthesize()` would produce (rubric_intent +
+    dimensions array with id/name/description/evidence_instructions on each
+    dim). Raises ValueError on mismatch.
+
+    Used by `run_meta_rubric(rubric_file=...)` to skip the LLM-synthesis stage
+    entirely. The motivating use-case is rubric-equivalence experiments where
+    the same rubric must be re-applied across many runs without LLM variance,
+    and Mission-C-style validation harnesses where rubrics are sealed inputs
+    rather than per-run outputs.
+    """
+    p = Path(rubric_file_path).expanduser()
+    if not p.is_file():
+        raise FileNotFoundError(f"rubric file not found: {p}")
+    rubric = json.loads(p.read_text())
+    # Reuse synthesize._validate_rubric for shape parity
+    from hermes_rubric.synthesize import _validate_rubric
+    _validate_rubric(rubric)
+    return rubric
+
+
 def run_meta_rubric(
     intent: str,
     context_path: str,
@@ -281,10 +303,17 @@ def run_meta_rubric(
     target_type: str,
     registry: list[dict[str, Any]] | None = None,
     backend: str | None = None,
+    rubric_file: str | Path | None = None,
 ) -> dict[str, Any]:
     """Run the meta-rubric end-to-end. Returns a dict with the same shape as
     hermes-rubric output, plus a `meta_policy` block recording which policy
     was applied.
+
+    If ``rubric_file`` is provided, the synthesis stage is skipped and the
+    rubric is loaded from disk. The rest of the pipeline (collect_evidence,
+    score, apply_policy_clamps) runs unchanged. The receipt records the
+    rubric source as ``"file:<path>"`` so downstream auditors can tell a
+    skip-synthesis run from a fresh-synthesis run.
     """
     if not _HERMES_AVAILABLE:
         raise RuntimeError("hermes_rubric package not importable; cannot run pipeline")
@@ -304,16 +333,21 @@ def run_meta_rubric(
         context_path, window_bytes=policy["window_bytes"]
     )
 
-    # Stage 1: synthesize rubric (with optional scope_class / debias)
-    rubric = synthesize(
-        intent=intent,
-        context_summary=context_content,
-        target_type=target_type,
-        backend=backend,
-        scope_class=policy.get("scope_class"),
-        intent_debias=bool(policy.get("intent_debias", False)),
-        target_excerpt=target_content,
-    )
+    # Stage 1: synthesize rubric (or load from file)
+    if rubric_file is not None:
+        rubric = load_rubric_file(rubric_file)
+        rubric_source = f"file:{Path(rubric_file).expanduser()}"
+    else:
+        rubric = synthesize(
+            intent=intent,
+            context_summary=context_content,
+            target_type=target_type,
+            backend=backend,
+            scope_class=policy.get("scope_class"),
+            intent_debias=bool(policy.get("intent_debias", False)),
+            target_excerpt=target_content,
+        )
+        rubric_source = "synthesized"
     rubric = apply_weight_strategy(rubric, policy)
 
     # Stage 2: collect evidence
@@ -359,6 +393,7 @@ def run_meta_rubric(
             "window_bytes": policy["window_bytes"],
             "source_class_caps": policy["source_class_caps"],
             "rationale": policy["rationale"],
+            "rubric_source": rubric_source,
         },
     }
 
@@ -382,6 +417,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--target-type", required=True)
     parser.add_argument("--policy-file", default=None,
                         help="Path to a custom policy registry JSON. Default: schema examples.")
+    parser.add_argument("--rubric-file", default=None,
+                        help="Path to a pre-synthesized rubric JSON. When provided, "
+                             "skips the LLM synthesis stage and uses this rubric verbatim. "
+                             "Used for rubric-equivalence experiments and sealed-rubric reuse.")
     parser.add_argument("--out", default=None, help="Output JSON. Default: stdout.")
     parser.add_argument("--backend", default=None)
     args = parser.parse_args(argv)
@@ -394,6 +433,7 @@ def main(argv: list[str] | None = None) -> int:
         target_type=args.target_type,
         registry=registry,
         backend=args.backend,
+        rubric_file=args.rubric_file,
     )
     output_json = json.dumps(result, indent=2)
     if args.out:

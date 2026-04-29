@@ -253,6 +253,113 @@ def test_apply_weight_strategy_amplify_load_bearing():
 # End-to-end sanity: preprint policy lifts >= one cap on a paper-shaped target
 # ---------------------------------------------------------------------------
 
+def test_run_meta_rubric_with_rubric_file_skips_synthesize(tmp_path, monkeypatch):
+    """V1 (Mission C): --rubric-file flag must skip synthesize() and load
+    rubric from disk verbatim. The rest of the pipeline runs as normal."""
+    from meta_tool import hermes_meta_rubric as hmr
+
+    # Provided rubric on disk
+    rubric_in = {
+        "rubric_intent": "test intent",
+        "target_type": "preprint-paper",
+        "dimensions": [
+            {
+                "id": "dim_1", "name": "A", "description": "desc A",
+                "evidence_instructions": "look A", "weight": 2, "hedge": False,
+            },
+            {
+                "id": "dim_2", "name": "B", "description": "desc B",
+                "evidence_instructions": "look B", "weight": 1, "hedge": False,
+            },
+            {
+                "id": "dim_3", "name": "C", "description": "desc C",
+                "evidence_instructions": "look C", "weight": 1, "hedge": False,
+            },
+        ],
+    }
+    rubric_path = tmp_path / "rubric.json"
+    rubric_path.write_text(json.dumps(rubric_in))
+
+    target_path = tmp_path / "target.md"
+    target_path.write_text("# target\nbody content here.\n")
+    context_path = tmp_path / "context.md"
+    context_path.write_text("context summary\n")
+
+    # Sentinel that fails loudly if synthesize is called
+    def _fail_synthesize(*a, **kw):
+        raise AssertionError("synthesize() must NOT be called when rubric_file is provided")
+
+    def _fake_collect(rubric, target_content, target_path, backend, batch=False):
+        return [
+            {
+                "dim_id": d["id"],
+                "evidence_found": True,
+                "confidence": "high",
+                "hedge": False,
+                "citations": [{"quote": "x", "location": "section foo", "source_class": "doc"}],
+                "evidence_summary": "ok",
+                "dim_name": d["name"],
+                "source_class_mix": {"doc": 1, "code": 0, "test": 0, "config": 0, "readme": 0, "other": 0},
+            }
+            for d in rubric["dimensions"]
+        ]
+
+    def _fake_score(rubric, evidence_list, backend, batch=False):
+        return [
+            {
+                "dim_id": ev["dim_id"], "dim_name": ev["dim_name"],
+                "score": 7, "score_rationale": "ok",
+                "evidence_drove_score": "x", "hedge_applied": False,
+            }
+            for ev in evidence_list
+        ]
+
+    def _fake_build_receipt(**kw):
+        return {"backend": kw.get("backend", ""), "rubric": kw.get("rubric")}
+
+    def _fake_detect():
+        return "fake-backend"
+
+    monkeypatch.setattr(hmr, "synthesize", _fail_synthesize)
+    monkeypatch.setattr(hmr, "collect_evidence", _fake_collect)
+    monkeypatch.setattr(hmr, "score_dimensions", _fake_score)
+    monkeypatch.setattr(hmr, "build_receipt", _fake_build_receipt)
+    monkeypatch.setattr(hmr._backends, "detect", _fake_detect)
+
+    result = hmr.run_meta_rubric(
+        intent="audit",
+        context_path=str(context_path),
+        target_path=str(target_path),
+        target_type="preprint-paper",
+        rubric_file=str(rubric_path),
+    )
+
+    # Rubric carried through verbatim (intent + dim ids preserved)
+    assert result["rubric"]["rubric_intent"] == "test intent"
+    assert [d["id"] for d in result["rubric"]["dimensions"]] == ["dim_1", "dim_2", "dim_3"]
+    # Receipt notes file-source for auditability
+    assert result["meta_policy"]["rubric_source"].startswith("file:")
+    assert str(rubric_path) in result["meta_policy"]["rubric_source"]
+    # Pipeline ran end-to-end (per_dim_scores populated)
+    assert len(result["per_dim_scores"]) == 3
+
+
+def test_load_rubric_file_rejects_invalid_shape(tmp_path):
+    from meta_tool.hermes_meta_rubric import load_rubric_file
+
+    bad = tmp_path / "bad.json"
+    bad.write_text(json.dumps({"rubric_intent": "x"}))  # no dimensions
+    with pytest.raises(ValueError):
+        load_rubric_file(bad)
+
+
+def test_load_rubric_file_missing_file(tmp_path):
+    from meta_tool.hermes_meta_rubric import load_rubric_file
+
+    with pytest.raises(FileNotFoundError):
+        load_rubric_file(tmp_path / "does-not-exist.json")
+
+
 def test_preprint_policy_lifts_caps_for_paper_target():
     registry = load_registry()
     pol = select_policy("preprint-paper", registry)

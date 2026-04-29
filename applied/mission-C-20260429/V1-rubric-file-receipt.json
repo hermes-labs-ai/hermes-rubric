@@ -1,0 +1,32 @@
+{
+  "component": "V1",
+  "task": "--rubric-file flag in meta-tool wrapper",
+  "status": "PASS",
+  "acceptance_criteria": {
+    "flag_accepts_json_file": true,
+    "skips_synthesize_call": true,
+    "rest_of_pipeline_unchanged": true,
+    "all_existing_tests_pass": "21/21 pre-existing PASS",
+    "new_unit_test_added": "test_run_meta_rubric_with_rubric_file_skips_synthesize + 2 helper tests for load_rubric_file",
+    "test_count_after": "24/24 PASS"
+  },
+  "implementation_notes": [
+    "Added load_rubric_file() helper that reuses synthesize._validate_rubric() for shape parity with synthesize() output.",
+    "run_meta_rubric() gains an optional rubric_file parameter; when provided, the synthesize() stage is skipped.",
+    "The post-synthesis apply_weight_strategy() still runs against the loaded rubric, preserving policy effects on dim weights.",
+    "meta_policy.rubric_source records 'file:<path>' vs 'synthesized' so a downstream auditor can distinguish skip-synthesis runs.",
+    "CLI gains --rubric-file PATH, threaded through run_meta_rubric()."
+  ],
+  "test_invocation": "python -m pytest tests/test_meta_tool.py -v",
+  "test_result": "24 passed in 0.02s",
+  "files_modified": [
+    "/Users/rbr_lpci/Documents/projects/hermes-rubric/meta_tool/hermes_meta_rubric.py",
+    "/Users/rbr_lpci/Documents/projects/hermes-rubric/tests/test_meta_tool.py"
+  ],
+  "files_created": [],
+  "verification_scratchpad": {
+    "adversarial_claim": "The skip-synthesis path bypasses the policy's prompt_template_id and intent_debias signals, so a rubric loaded from disk could carry hidden assumptions that contradict the active policy.",
+    "likely_failure_mode": "User loads a repo-v1-style rubric while passing target-type=preprint-paper; policy lifts caps but rubric dimensions were authored under a code-artifact prompt template, so prose evidence scores higher than intended.",
+    "why_this_approach_survives": "Mission C V1 acceptance is narrow: the flag must (a) skip synthesize, (b) keep the rest of the pipeline unchanged, (c) not break the 21 existing tests. It does all three. The rubric-policy compatibility concern is a real second-order issue but is OUT OF SCOPE for V1: it's the user's responsibility to pair compatible rubric files with target-types, just as users today pair compatible policies with target-types. The receipt records rubric_source='file:<path>' so any audit can flag the pairing. Adding a compat-check would be a V1+ feature, not a V1 blocker."
+  }
+}
