@@ -1,0 +1,62 @@
+{
+  "rubric_intent": "Audit this preprint paper for epistemic accountability and hygiene, focusing on citation practices and transparency regarding evidence sources.",
+  "target_type": "preprint-paper",
+  "dimensions": [
+    {
+      "id": "dim_1",
+      "name": "README-Dominance",
+      "description": "Measures the degree to which the paper's claims rely heavily on README or documentation-style citations, indicating a potential lack of primary source evidence.",
+      "evidence_instructions": "Count the number of citations classified as 'readme' or 'doc'. Assess if these citations disproportionately support core claims; if so, assess for potential lack of original data/code backing claims.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_2",
+      "name": "Prose-as-Ground-Truth Justification",
+      "description": "Evaluates whether the paper explicitly and convincingly justifies its treatment of prose as a primary source of evidence, which is permissible under the preprint policy.",
+      "evidence_instructions": "Search for explicit statements explaining why the prose itself constitutes evidence, and assess the quality of that justification. Look for explanations of how the prose is validated or derived.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_3",
+      "name": "Source-Class Granularity",
+      "description": "Assesses the specificity with which the paper categorizes its evidence sources (e.g., 'code' vs. 'github repository' vs. specific file name).",
+      "evidence_instructions": "Examine citations to determine the level of detail provided about source type. More granular classification indicates greater accountability.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_4",
+      "name": "Self-Marketing Cap Adherence",
+      "description": "Determines if the paper respects the self-marketing citation cap (typically 6) when all citations are 'doc' or 'readme', as a measure of avoiding superficial validation.",
+      "evidence_instructions": "Count citations classified as 'doc' or 'readme'. If the count exceeds 6, assess whether the paper attempts to justify exceeding the cap (which is permissible, but requires justification).",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_5",
+      "name": "Code/Test Citation Presence",
+      "description": "Measures whether the paper cites code repositories or test suites as evidence for its claims, indicating a focus on reproducibility and verifiability.",
+      "evidence_instructions": "Search for citations classified as 'code' or 'test'. The presence of these signals stronger accountability.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_6",
+      "name": "Config Citation Presence",
+      "description": "Evaluates whether the paper cites configuration files used in experiments or system deployment, suggesting transparency regarding environment setup.",
+      "evidence_instructions": "Search for citations classified as 'config'. Presence of config files implies more transparency about the environment.",
+      "weight": 1,
+      "hedge": false
+    },
+    {
+      "id": "dim_7",
+      "name": "Other Source Justification",
+      "description": "Evaluates whether citations to sources classified as 'other' are justified or explained in terms of their relevance and reliability.",
+      "evidence_instructions": "Examine citations classified as 'other' and assess whether the paper provides clear reasoning for their inclusion and value. hedge: true",
+      "weight": 1,
+      "hedge": true
+    }
+  ]
+}

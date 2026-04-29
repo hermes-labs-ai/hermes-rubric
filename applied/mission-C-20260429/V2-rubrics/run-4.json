@@ -1,0 +1,62 @@
+{
+  "rubric_intent": "Evaluate a preprint paper's epistemic accountability and hygiene, specifically concerning claims and supporting evidence.",
+  "target_type": "preprint-paper",
+  "dimensions": [
+    {
+      "id": "dim_1",
+      "name": "README-Reliance",
+      "description": "Measures the extent to which the paper relies solely on README files or documentation for supporting claims, indicating potential lack of substantive evidence.",
+      "evidence_instructions": "Count the number of citations exclusively to 'README' or 'documentation' sources.  Assess whether claims are directly or indirectly supported by these sources.  Compare the proportion of such citations to total citations.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_2",
+      "name": "Prose-as-GroundTruth Justification",
+      "description": "Assesses whether the paper explicitly justifies its decision to treat prose as ground truth when applying the preprint policy, demonstrating awareness and rationale.",
+      "evidence_instructions": "Search for explicit statements within the paper explaining why the preprint policy (treating prose as ground truth) is being invoked. Identify the rationale provided for prioritizing the text over other potential sources.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_3",
+      "name": "Source Class Distribution",
+      "description": "Evaluates the diversity of sources used to support claims, detecting a potential bias towards easily accessible or non-rigorous sources.",
+      "evidence_instructions": "Categorize citations into source classes: code, test, config, doc, readme, other.  Quantify the proportion of citations from each class.  Note any significant imbalances (e.g., overwhelming presence of readme citations).",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_4",
+      "name": "Self-Marketing Citation Cap Adherence",
+      "description": "Determines if the paper adheres to the self-marketing citation cap (initially 6) when relying primarily on documentation/README sources.",
+      "evidence_instructions": "Count the total number of citations to 'doc' and 'readme' sources. If this number exceeds 6, note the violation. Assess if the paper acknowledges or addresses exceeding this cap.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_5",
+      "name": "Claim-Evidence Alignment",
+      "description": "Examines the consistency and specificity of evidence provided for key claims, indicating whether claims are well-supported or based on tenuous connections.",
+      "evidence_instructions": "Identify 3-5 key claims made in the paper. For each claim, trace the evidence provided and assess its direct relevance and strength. Note any significant gaps or discrepancies.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_6",
+      "name": "Explicit Uncertainty Qualification",
+      "description": "Measures the extent to which the paper acknowledges and qualifies claims with appropriate levels of uncertainty and caveats.",
+      "evidence_instructions": "Search for phrases indicating uncertainty (e.g., 'may', 'suggests', 'potentially', 'tentative'). Assess whether these qualifiers are applied appropriately to claims.",
+      "weight": 1,
+      "hedge": false
+    },
+    {
+      "id": "dim_7",
+      "name": "Code/Test/Config Evidence",
+      "description": "Evaluates the presence and quality of supporting evidence from code repositories, test suites, or configuration files, indicating transparency and reproducibility.",
+      "evidence_instructions": "Search for citations or references to code repositories, test suites, or configuration files. Assess the relevance and completeness of the provided information.",
+      "weight": 2,
+      "hedge": true
+    }
+  ]
+}

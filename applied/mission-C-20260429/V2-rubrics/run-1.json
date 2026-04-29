@@ -1,0 +1,62 @@
+{
+  "rubric_intent": "Assess the preprint paper's adherence to principles of epistemic accountability and hygiene, particularly regarding source attribution and transparency.",
+  "target_type": "preprint-paper",
+  "dimensions": [
+    {
+      "id": "dim_1",
+      "name": "README Citation Ratio",
+      "description": "Measures the proportion of citations that originate from README files, indicating potential reliance on superficial documentation instead of core code or data.",
+      "evidence_instructions": "Count the total number of citations. Count the number of citations specifically referencing README files. Calculate the ratio (README citations / total citations).",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_2",
+      "name": "Prose-Grounding Justification",
+      "description": "Evaluates whether claims explicitly presented in the prose are adequately justified by underlying code, test results, or configurations, given the preprint paper policy.",
+      "evidence_instructions": "Identify claims made in the prose. For each claim, trace its origin to a specific piece of evidence (code snippet, test output, configuration file). Note the level of detail provided connecting the claim to the evidence.  Look for explicit statements validating claims with concrete examples.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_3",
+      "name": "Source Class Diversity",
+      "description": "Assesses the variety of source classes (code, test, config, doc, readme, other) cited, indicating a breadth of evidence support.",
+      "evidence_instructions": "Identify all cited sources. Categorize each source into one of the predefined source classes (code, test, config, doc, readme, other). Calculate the number of distinct source classes represented in the citations.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_4",
+      "name": "Self-Marketing Citation Disclosure",
+      "description": "Determines if citations originating from self-promotional materials (e.g., project websites, marketing documents) are explicitly identified as such.",
+      "evidence_instructions": "Examine each citation for indicators of self-marketing (e.g., domain names associated with the project, promotional language). Note whether this affiliation is disclosed within the citation itself or accompanying text.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_5",
+      "name": "Configuration Transparency",
+      "description": "Evaluates the extent to which configuration details (parameters, hyperparameters, settings) are clearly documented and reproducible.",
+      "evidence_instructions": "Search for descriptions or references to configuration files or parameter settings. Assess whether the described settings are sufficiently detailed to allow for reproduction of results. Look for explicit statements on version control of configurations.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_6",
+      "name": "Test Evidence Linkage",
+      "description": "Examines whether claims are substantiated by reference to specific test results, demonstrating empirical validation.",
+      "evidence_instructions": "Identify claims that require empirical validation. Trace these claims to corresponding test results (e.g., test output, performance metrics). Assess the clarity and completeness of the connection between claims and test evidence.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_7",
+      "name": "Code Example Completeness",
+      "description": "Measures the degree to which code examples provided are self-contained, runnable, and directly relate to the claims being made.",
+      "evidence_instructions": "For each code example, assess its completeness: does it include necessary imports, dependencies, and setup instructions? Is the code runnable as presented? Does the example clearly support the corresponding claim?",
+      "weight": 1,
+      "hedge": false
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "rubric_intent": "Assess the preprint paper's adherence to principles of epistemic accountability and hygiene, focusing on how claims are supported and acknowledged.",
+  "target_type": "preprint-paper",
+  "dimensions": [
+    {
+      "id": "dim_1",
+      "name": "README-Reliance",
+      "description": "Measures the degree to which the paper's claims are solely supported by README or documentation-style citations, indicating a potential lack of primary evidence.",
+      "evidence_instructions": "Count the number of citations classified as 'readme' or 'doc'.  Note whether the 'preprint-paper policy' applies (prose is ground truth). If README-only citations exceed the cap (6, unless preprint-paper policy applies), flag as high reliance.  Check for discussion of the rationale for relying on README files.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_2",
+      "name": "Source-Class Distribution",
+      "description": "Evaluates the diversity of evidence sources used to support claims, assessing whether the paper relies too heavily on a single source class (e.g., code or doc).",
+      "evidence_instructions": "Determine the proportion of citations falling into each source class (code, test, config, doc, readme, other). A disproportionately high percentage within one class raises concerns. Consider if the stated reliance on a source class is justified by the nature of the contribution.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_3",
+      "name": "Prose-as-Grounding Justification",
+      "description": "Determines if the paper adequately justifies its use of the 'preprint-paper policy' where prose serves as ground truth, acknowledging potential limitations or biases.",
+      "evidence_instructions": "Search for explicit discussion of the preprint-paper policy and its application.  Does the paper address the potential risks of using prose as primary evidence?  Is the reasoning clear and transparent?",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_4",
+      "name": "Citation Transparency",
+      "description": "Assesses whether citations are used to clearly attribute claims and ideas, demonstrating an understanding of the intellectual provenance of the work.",
+      "evidence_instructions": "Examine how citations are used throughout the paper. Are they clearly linked to specific claims? Do they accurately represent the content of the cited works? Are there instances of citation ambiguity or misuse?",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_5",
+      "name": "Self-Marketing Citation Disclosure",
+      "description": "Evaluates whether the paper acknowledges and justifies citations to self-promotional materials (e.g., project websites, blog posts) where appropriate.",
+      "evidence_instructions": "Identify citations classified as 'readme' or those directly linking to project websites.  Is there an explanation for including these types of sources? Is the inclusion justified by their relevance?",
+      "weight": 1,
+      "hedge": false
+    },
+    {
+      "id": "dim_6",
+      "name": "Acknowledgement of Limitations (hedged)",
+      "description": "Checks if the paper acknowledges limitations of the methods or claims presented, demonstrating self-awareness and promoting critical evaluation.",
+      "evidence_instructions": "Search for sections discussing limitations, assumptions, or potential biases.  This might be in a dedicated 'Limitations' section, or interwoven within the prose.  The presence of a dedicated limitations section strengthens this aspect. hedge: true",
+      "weight": 1,
+      "hedge": true
+    }
+  ]
+}

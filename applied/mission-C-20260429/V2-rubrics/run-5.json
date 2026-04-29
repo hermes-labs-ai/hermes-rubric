@@ -1,0 +1,62 @@
+{
+  "rubric_intent": "Audit the preprint paper for adherence to principles of epistemic accountability and hygiene, specifically regarding citation practices and transparency.",
+  "target_type": "preprint-paper",
+  "dimensions": [
+    {
+      "id": "dim_1",
+      "name": "README Citation Reliance",
+      "description": "Measures the extent to which the paper's claims are supported solely by README or documentation-style citations.",
+      "evidence_instructions": "Count citations explicitly referencing 'README', 'documentation', or similar sources.  Calculate the proportion of citations that fall into this category.  Check if the 'self-marketing cap' (6) has been triggered and if so, whether this justification is explicitly provided.",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_2",
+      "name": "Prose-Grounding Justification",
+      "description": "Assesses whether the paper explicitly justifies reliance on prose (text within the paper) as 'ground truth' to bypass citation caps.",
+      "evidence_instructions": "Search for phrases like 'ground truth', 'for the purpose of this paper', or similar wording that justifies the bypassing of citation limitations based on prose.  Verify that these justifications are contextually relevant and specific.",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_3",
+      "name": "Source Class Diversity",
+      "description": "Evaluates the variety of source classes (code, tests, configs, docs, README, other) cited to support claims.",
+      "evidence_instructions": "Categorize each citation into its source class.  Assess if there's a bias towards specific source classes (e.g., overwhelming reliance on READMEs).",
+      "weight": 3,
+      "hedge": false
+    },
+    {
+      "id": "dim_4",
+      "name": "Citation Contextualization",
+      "description": "Determines whether citations are integrated within the text and explain *how* the cited source supports the claim.",
+      "evidence_instructions": "Examine the surrounding text for each citation. Does the paper explain the relationship between the cited source and the claim it supports, or is it just a name-drop?",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_5",
+      "name": "Code/Test/Config Transparency",
+      "description": "Evaluates the availability and linkage to underlying code, tests, and configuration files that underpin the paper's methodology or results.",
+      "evidence_instructions": "Identify any claims related to algorithms, data processing, or system setup.  Check if links to corresponding code repositories, test suites, or configuration files are provided. ",
+      "weight": 2,
+      "hedge": false
+    },
+    {
+      "id": "dim_6",
+      "name": "Self-Marketing Cap Mitigation (if triggered)",
+      "description": "Assesses the quality and appropriateness of the explanation offered if the self-marketing citation cap has been reached.",
+      "evidence_instructions": "If the 'self-marketing cap' is triggered (more than 6 doc/readme citations), look for a justification or explanation within the paper. Is the explanation clear, specific, and defensible?",
+      "weight": 1,
+      "hedge": false
+    },
+    {
+      "id": "dim_7",
+      "name": "Explicit Uncertainty Acknowledgement",
+      "description": "Measures whether the paper acknowledges limitations or uncertainties in its claims or methodology.",
+      "evidence_instructions": "Search for phrases indicating uncertainty, limitations, or caveats.  Are potential sources of error or bias explicitly discussed?",
+      "weight": 1,
+      "hedge": true
+    }
+  ]
+}
