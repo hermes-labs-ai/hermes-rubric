@@ -46,14 +46,14 @@ The tiers below are for teams that want API access, managed scoring pipelines, o
 
 **When to use:** compliance teams, audit firms, regulated-industry AI teams that need scoring results in EU AI Act evidence bundles.
 
-**To sign up:** email [rbosch@lpci.ai](mailto:rbosch@lpci.ai)
+**To sign up:** email [roli@hermes-labs.ai](mailto:roli@hermes-labs.ai)
 
 ---
 
 ## Checkout
 
 !!! note "Team plan checkout coming soon"
-    Stripe checkout will be wired here. For early access at $99/mo, email [rbosch@lpci.ai](mailto:rbosch@lpci.ai) and reference "Team Plan."
+    Stripe checkout will be wired here. For early access at $99/mo, email [roli@hermes-labs.ai](mailto:roli@hermes-labs.ai) and reference "Team Plan."
 
 ---
 
@@ -61,7 +61,7 @@ The tiers below are for teams that want API access, managed scoring pipelines, o
 
 If you need sealed, cryptographically verifiable EU AI Act evidence bundles — not just scoring — that's `hermes-bundle`, a separate proprietary product.
 
-Pricing: $5K design-partner pilot → $25K-$40K annual. Contact [rbosch@lpci.ai](mailto:rbosch@lpci.ai).
+Pricing: $5K design-partner pilot → $25K-$40K annual. Contact [roli@hermes-labs.ai](mailto:roli@hermes-labs.ai).
 
 ---
 

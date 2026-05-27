@@ -49,7 +49,7 @@ Alternatively, use a Stripe Payment Link (simpler than full Checkout integration
 2. Copy the `https://buy.stripe.com/XXXX` URL
 3. Drop it in the `<a href="...">` above
 
-For Enterprise: replace with `mailto:rbosch@lpci.ai?subject=Enterprise%20Plan%20Inquiry` (no Checkout needed — direct email).
+For Enterprise: replace with `mailto:roli@hermes-labs.ai?subject=Enterprise%20Plan%20Inquiry` (no Checkout needed — direct email).
 
 ---
 

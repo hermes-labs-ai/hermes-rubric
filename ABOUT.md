@@ -10,7 +10,7 @@ The thesis: language sets capability. The model is the ceiling, not the source. 
 - **[hermes-rubric](https://github.com/hermes-labs-ai/hermes-rubric)** evidence-first structured scoring. Cross-model Cohen's κ = 0.629 across 96 paired runs.
 - Companion open-source: lintlang, hermes-blind, langquant, hermes-prime, hermes-ctl.
 
-Research at [zenodo.org](https://zenodo.org). Engagements: rbosch@lpci.ai
+Research at [zenodo.org](https://zenodo.org). Engagements: roli@hermes-labs.ai
 
 ## On naming
 

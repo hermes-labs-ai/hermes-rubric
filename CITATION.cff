@@ -12,7 +12,7 @@ abstract: >-
 authors:
   - family-names: "Bosch"
     given-names: "Rolando"
-    email: "rbosch@lpci.ai"
+    email: "roli@hermes-labs.ai"
     affiliation: "Hermes Labs"
     orcid: ""
 version: "1.0.0"
@@ -37,7 +37,7 @@ preferred-citation:
   authors:
     - family-names: "Bosch"
       given-names: "Rolando"
-      email: "rbosch@lpci.ai"
+      email: "roli@hermes-labs.ai"
       affiliation: "Hermes Labs"
   version: "1.0.0"
   year: 2026

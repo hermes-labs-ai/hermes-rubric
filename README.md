@@ -161,7 +161,7 @@ MIT. See [LICENSE](LICENSE).
 
 ## Enterprise
 
-For custom AI-reliability engagements, on-prem deployments, or audit-grade evaluation pipelines: rbosch@lpci.ai · https://lpci.ai
+For custom AI-reliability engagements, on-prem deployments, or audit-grade evaluation pipelines: roli@hermes-labs.ai · https://lpci.ai
 
 ## About
 
