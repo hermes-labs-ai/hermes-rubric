@@ -169,7 +169,7 @@ def main() -> int:
                 time.sleep(60)
 
     # Summarize
-    rows = [json.loads(l) for l in RAW_JSONL.read_text().splitlines() if l.strip()]
+    rows = [json.loads(line) for line in RAW_JSONL.read_text().splitlines() if line.strip()]
     hr = [r["score"] for r in rows if r["arm"] == "hermes-rubric" and r["score"] is not None]
     raw = [r["score"] for r in rows if r["arm"] == "raw-llm" and r["score"] is not None]
 
@@ -200,7 +200,7 @@ def main() -> int:
     md = []
     md.append("# Wedge-Variance Empirical Comparison\n")
     md.append(f"**Date:** {utc_now()}  ")
-    md.append(f"**Target:** Paper 1 (\"Asymmetric Burden of Proof\") from `applied/papers-20260423.md` (~3.2KB)  ")
+    md.append("**Target:** Paper 1 (\"Asymmetric Burden of Proof\") from `applied/papers-20260423.md` (~3.2KB)  ")
     md.append(f"**Backend:** claude-cli, model `{MODEL_ID}`  ")
     md.append(f"**Reps:** {N} per arm  ")
     md.append(f"**Intent:** \"{INTENT}\"\n")

@@ -5,9 +5,7 @@ the run_meta_rubric integration uses dependency injection at the
 synthesize/collect/score boundary.
 """
 
-import copy
 import json
-from pathlib import Path
 
 import pytest
 
