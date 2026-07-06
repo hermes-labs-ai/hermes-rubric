@@ -17,3 +17,4 @@ internal/
 applied/self-*.json
 applied/**/*-tool-score.json
 applied/self-*.md
+applied/**/self-rubric.md
