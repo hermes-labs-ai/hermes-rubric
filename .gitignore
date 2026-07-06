@@ -16,3 +16,4 @@ internal/
 # and must stay tracked.
 applied/self-*.json
 applied/**/*-tool-score.json
+applied/self-*.md
