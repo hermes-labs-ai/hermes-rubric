@@ -10,3 +10,9 @@ build/
 site/
 # internal-only docs (not for public README)
 internal/
+
+# process self-grade JSONs are private (feedback_experiment_receipts_public_process_grades_private.md).
+# Experiment receipts (e.g. compute_kappa.py inputs under experiments/) are NOT covered by this rule
+# and must stay tracked.
+applied/self-*.json
+applied/**/*-tool-score.json
