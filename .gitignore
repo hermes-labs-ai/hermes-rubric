@@ -18,3 +18,5 @@ applied/self-*.json
 applied/**/*-tool-score.json
 applied/self-*.md
 applied/**/self-rubric.md
+# process self-grades are private (policy 2026-07-06)
+applied/**/*[Ss][Ee][Ll][Ff]-[Rr][Uu][Bb][Rr][Ii][Cc]*
