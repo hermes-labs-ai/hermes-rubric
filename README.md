@@ -71,7 +71,7 @@ hermes-rubric replaces that with three stages: synthesize a rubric, collect evid
 
 ## Numbers
 
-Cross-model Cohen's κ = 0.629 on 96 paired runs across three model families. Per-backend: Gemini 2.5 Flash κ=0.642 (N=47), Qwen-Plus κ=0.621 (N=47), Claude κ=0.527 (N=2, transparency only). 115 tests with two adversarial gates (verify with `pytest --collect-only -q | tail -1`). Passes the pre-registered ≥0.6 reproducibility floor.
+Cross-model Cohen's κ = 0.629 on 96 paired runs across three model families. Per-backend: Gemini 2.5 Flash κ=0.642 (N=47), Qwen-Plus κ=0.621 (N=47), Claude κ=0.527 (N=2, transparency only). 140 tests with two adversarial gates (verify with `pytest --collect-only -q | tail -1`). Passes the pre-registered ≥0.6 reproducibility floor.
 
 Reproduce the κ claim from raw artifacts in-repo:
 
@@ -153,7 +153,7 @@ pip install -e ".[dev]"
 pytest
 ```
 
-115 tests across 14 files, including two adversarial gates and a doc-consistency gate. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+140 tests across 16 files (135 passed, 5 skipped), including two adversarial gates and a doc-consistency gate. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## License
 
