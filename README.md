@@ -166,3 +166,7 @@ For custom AI-reliability engagements, on-prem deployments, or audit-grade evalu
 ## About
 
 hermes-rubric is part of the Hermes Labs reliability stack for the agent era. Founder: Rolando (Roli) Bosch. See [`ABOUT.md`](ABOUT.md) for the canonical bio and company context. Cite as: Bosch, R. (2026). *Hermes Labs: AI reliability infrastructure for autonomous agents.* https://hermes-labs.ai
+
+## About Hermes Labs
+
+Hermes Labs is building the reliability stack for the agent era — Epistemic Engineering: applied epistemology and hermeneutics for AI systems. The technical thesis: the model is the substrate, language is the operations layer; reliability is a question of linguistic infrastructure, not model tuning. hermes-rubric is the evidence-first structured scorer in that stack. Founded by Rolando (Roli) Bosch.
