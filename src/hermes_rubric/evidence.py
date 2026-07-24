@@ -20,6 +20,8 @@ class BatchTooLarge(ValueError):
 # Conservative input-side ceiling. Per-backend tuning lives in backends.py future work.
 _BATCH_PROMPT_CEILING_CHARS = 100_000
 
+DEFAULT_TARGET_WINDOW_BYTES = 8000
+
 # Source-class taxonomy. Higher-authority classes should outweigh marketing prose.
 SOURCE_CLASSES = ("code", "test", "config", "readme", "doc", "other")
 
@@ -160,27 +162,58 @@ def collect_evidence(
     target_path: str,
     backend: str | None = None,
     batch: bool = False,
+    target_window_bytes: int = DEFAULT_TARGET_WINDOW_BYTES,
 ) -> list[dict[str, Any]]:
     """Collect evidence for each rubric dimension. Returns list of evidence dicts.
 
     If batch=True, attempt one LLM call for all dimensions; fall back to per-dim
     on parse failure or oversize prompt. Result order matches rubric dim order
-    via dim_id-keyed reassembly regardless of mode.
+    via dim_id-keyed reassembly regardless of mode. ``target_window_bytes`` is
+    the single Stage-2 visibility limit in both modes.
     """
     dims = rubric.get("dimensions", [])
 
     if batch and len(dims) > 1:
         try:
-            return _collect_batched(dims, target_content, target_path, backend)
+            return _collect_batched(
+                dims,
+                target_content,
+                target_path,
+                backend,
+                target_window_bytes,
+            )
         except (BatchParseError, BatchTooLarge) as e:
             print(f"[hermes-rubric] batched evidence failed ({e.__class__.__name__}); "
                   f"falling back to per-dim", file=sys.stderr)
 
     evidence_list = []
     for dim in dims:
-        ev = _collect_one(dim, target_content, target_path, backend)
+        ev = _collect_one(
+            dim,
+            target_content,
+            target_path,
+            backend,
+            target_window_bytes,
+        )
         evidence_list.append(ev)
     return evidence_list
+
+
+def _target_excerpt(target_content: str, target_window_bytes: int) -> str:
+    """Apply the configured Stage-2 window and disclose any invisible tail."""
+    if (
+        isinstance(target_window_bytes, bool)
+        or not isinstance(target_window_bytes, int)
+        or target_window_bytes < 1
+    ):
+        raise ValueError("target_window_bytes must be a positive integer")
+    excerpt = target_content[:target_window_bytes]
+    if len(target_content) > target_window_bytes:
+        excerpt += (
+            f"\n[... truncated at configured target window "
+            f"{target_window_bytes} chars of {len(target_content)} total ...]"
+        )
+    return excerpt
 
 
 def _collect_batched(
@@ -188,11 +221,9 @@ def _collect_batched(
     target_content: str,
     target_path: str,
     backend: str | None,
+    target_window_bytes: int,
 ) -> list[dict[str, Any]]:
-    max_chars = 6000
-    excerpt = target_content[:max_chars]
-    if len(target_content) > max_chars:
-        excerpt += f"\n[... truncated at {max_chars} chars of {len(target_content)} total ...]"
+    excerpt = _target_excerpt(target_content, target_window_bytes)
 
     dim_blocks = "\n".join(
         f'<DIM id="{d["id"]}">\n'
@@ -294,12 +325,9 @@ def _collect_one(
     target_content: str,
     target_path: str,
     backend: str | None,
+    target_window_bytes: int,
 ) -> dict[str, Any]:
-    # Truncate target to keep prompts manageable
-    max_chars = 6000
-    excerpt = target_content[:max_chars]
-    if len(target_content) > max_chars:
-        excerpt += f"\n[... truncated at {max_chars} chars of {len(target_content)} total ...]"
+    excerpt = _target_excerpt(target_content, target_window_bytes)
 
     prompt = _EVIDENCE_PROMPT_TEMPLATE.format(
         dim_id=dim["id"],
@@ -347,9 +375,6 @@ def _extract_json(text: str) -> dict[str, Any]:
         except json.JSONDecodeError:  # noqa: silent
             pass
     raise ValueError(f"Cannot extract JSON from evidence response: {text[:300]}")
-
-
-DEFAULT_TARGET_WINDOW_BYTES = 8000
 
 
 def _warn_truncation(path: str, actual: int, window: int) -> None:

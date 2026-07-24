@@ -1,0 +1,184 @@
+"""Regression coverage for Stage-2 target-window visibility."""
+
+import json
+import sys
+from unittest.mock import patch
+
+import pytest
+
+
+def _dimension(dim_id: str) -> dict:
+    return {
+        "id": dim_id,
+        "name": f"Dimension {dim_id}",
+        "description": "Find the unique marker.",
+        "evidence_instructions": "Report whether the unique marker is visible.",
+        "weight": 1,
+        "hedge": False,
+    }
+
+
+def _evidence(dim_id: str) -> dict:
+    return {
+        "dim_id": dim_id,
+        "evidence_found": True,
+        "confidence": "high",
+        "hedge": False,
+        "citations": [],
+        "evidence_summary": "marker inspected",
+    }
+
+
+@pytest.mark.parametrize("batch", [False, True])
+def test_requested_window_exposes_marker_after_character_6000(batch):
+    """Both Stage-2 paths honor a requested window larger than the old 6k cap."""
+    from hermes_rubric import evidence as evidence_mod
+
+    marker = "UNIQUE_MARKER_AFTER_CHARACTER_6000"
+    target_content = ("x" * 6100) + marker
+    dims = [_dimension("dim_a")]
+    if batch:
+        dims.append(_dimension("dim_b"))
+    prompts = []
+
+    def backend_response(prompt, backend=None):
+        prompts.append(prompt)
+        if batch:
+            return json.dumps([_evidence(dim["id"]) for dim in dims])
+        return json.dumps(_evidence("dim_a"))
+
+    with patch.object(evidence_mod.backends, "call", side_effect=backend_response):
+        evidence_mod.collect_evidence(
+            rubric={"dimensions": dims},
+            target_content=target_content,
+            target_path="paper.md",
+            backend="stub",
+            batch=batch,
+            target_window_bytes=7000,
+        )
+
+    assert prompts
+    assert all(marker in prompt for prompt in prompts)
+    assert all(
+        "truncated at configured target window" not in prompt for prompt in prompts
+    )
+
+
+@pytest.mark.parametrize("batch", [False, True])
+def test_remaining_truncation_is_explicit_in_each_stage_2_prompt(batch):
+    """Any tail hidden by the configured window is diagnosed inside the prompt."""
+    from hermes_rubric import evidence as evidence_mod
+
+    hidden_marker = "HIDDEN_TAIL_MARKER"
+    target_content = ("x" * 6500) + hidden_marker
+    dims = [_dimension("dim_a")]
+    if batch:
+        dims.append(_dimension("dim_b"))
+    prompts = []
+
+    def backend_response(prompt, backend=None):
+        prompts.append(prompt)
+        if batch:
+            return json.dumps([_evidence(dim["id"]) for dim in dims])
+        return json.dumps(_evidence("dim_a"))
+
+    with patch.object(evidence_mod.backends, "call", side_effect=backend_response):
+        evidence_mod.collect_evidence(
+            rubric={"dimensions": dims},
+            target_content=target_content,
+            target_path="paper.md",
+            backend="stub",
+            batch=batch,
+            target_window_bytes=6200,
+        )
+
+    diagnostic = (
+        f"[... truncated at configured target window 6200 chars "
+        f"of {len(target_content)} total ...]"
+    )
+    assert prompts
+    assert all(diagnostic in prompt for prompt in prompts)
+    assert all(hidden_marker not in prompt for prompt in prompts)
+
+
+def test_invalid_stage_2_window_fails_closed():
+    from hermes_rubric import evidence as evidence_mod
+
+    with pytest.raises(ValueError, match="positive integer"):
+        evidence_mod.collect_evidence(
+            rubric={"dimensions": [_dimension("dim_a")]},
+            target_content="target",
+            target_path="paper.md",
+            backend="stub",
+            target_window_bytes=0,
+        )
+
+
+def test_cli_forwards_configured_window_to_stage_2(tmp_path, monkeypatch):
+    """The CLI flag, not an independent Stage-2 constant, controls visibility."""
+    from hermes_rubric import cli
+
+    target = tmp_path / "paper.md"
+    context = tmp_path / "context.txt"
+    output = tmp_path / "receipt.json"
+    target.write_text("paper")
+    context.write_text("context")
+    rubric = {"target_type": "paper", "dimensions": [_dimension("dim_a")]}
+    captured = {}
+
+    def fake_collect_evidence(**kwargs):
+        captured.update(kwargs)
+        return [_evidence("dim_a")]
+
+    monkeypatch.setattr(cli.backends, "detect", lambda: "stub")
+    monkeypatch.setattr(cli, "synthesize", lambda **kwargs: rubric)
+    monkeypatch.setattr(cli, "collect_evidence", fake_collect_evidence)
+    monkeypatch.setattr(
+        cli,
+        "score_dimensions",
+        lambda **kwargs: [
+            {
+                "dim_id": "dim_a",
+                "dim_name": "Dimension dim_a",
+                "score": 5,
+                "score_rationale": "deterministic",
+                "evidence_drove_score": "marker inspected",
+                "hedge_applied": False,
+            }
+        ],
+    )
+    monkeypatch.setattr(
+        cli,
+        "compute_aggregate",
+        lambda **kwargs: {
+            "aggregate": 5.0,
+            "hedge_dims": [],
+            "hedge_note": "",
+            "dim_summaries": [],
+        },
+    )
+    monkeypatch.setattr(cli, "build_receipt", lambda **kwargs: {})
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "hermes-rubric",
+            "--intent",
+            "inspect",
+            "--context",
+            str(context),
+            "--target",
+            str(target),
+            "--target-type",
+            "paper",
+            "--target-window-bytes",
+            "7000",
+            "--out",
+            str(output),
+        ],
+    )
+
+    cli.main()
+
+    assert captured["target_window_bytes"] == 7000
+    assert output.is_file()

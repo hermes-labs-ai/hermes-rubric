@@ -134,6 +134,7 @@ def main() -> None:
             target_path=resolved_target,
             backend=backend,
             batch=args.batch,
+            target_window_bytes=args.target_window_bytes,
         )
     except Exception as e:
         print(f"ERROR in Stage 2 (evidence collection): {e}", file=sys.stderr)
