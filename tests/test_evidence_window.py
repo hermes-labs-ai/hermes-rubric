@@ -133,6 +133,49 @@ def test_stage_2_window_enforces_utf8_bytes(batch):
     assert all("10 bytes of 20 total" in prompt for prompt in prompts)
 
 
+def test_pointer_id_overwrites_conflicting_model_section_location():
+    """A valid section pointer, not model prose, owns the canonical location."""
+    from hermes_rubric import evidence as evidence_mod
+
+    target_content = (
+        "## 3. Privacy note printed at end of every ingest run\nold context\n\n"
+        "## 8. Implementation notes\n"
+        "File count: 6,718 JSONL files in `~/.claude/projects/`.\n"
+    )
+    response = {
+        "dim_id": "tail",
+        "evidence_found": True,
+        "confidence": "high",
+        "hedge": False,
+        "citations": [{
+            "quote": "6,718 JSONL files",
+            "evidence_id": "S8:E1",
+            "location": "3. Privacy note printed at end of every ingest run",
+            "source_class": "doc",
+        }],
+        "evidence_summary": "tail marker found",
+    }
+    prompts = []
+
+    def backend_response(prompt, backend=None):
+        prompts.append(prompt)
+        return json.dumps(response)
+
+    with patch.object(evidence_mod.backends, "call", side_effect=backend_response):
+        result = evidence_mod.collect_evidence(
+            rubric={"dimensions": [_dimension("tail")]},
+            target_content=target_content,
+            target_path="spec.md",
+            backend="stub",
+            target_window_bytes=25000,
+        )
+
+    assert '<SECTION id="S8:E1" title="8. Implementation notes">' in prompts[0]
+    citation = result[0]["citations"][0]
+    assert citation["quote"] == "6,718 JSONL files"
+    assert citation["location"] == "S8:E1 — 8. Implementation notes"
+
+
 def test_invalid_stage_2_window_fails_closed():
     from hermes_rubric import evidence as evidence_mod
 
