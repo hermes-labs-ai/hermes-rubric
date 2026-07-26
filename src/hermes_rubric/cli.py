@@ -50,8 +50,11 @@ def main() -> None:
                         help="Batch evidence + score into one LLM call per stage. "
                              "Falls back to per-dim on parse failure or oversize prompt.")
     parser.add_argument("--target-window-bytes", type=int, default=8000,
-                        help="Max bytes of target/context content visible to the rubric. "
-                             "Files exceeding this trigger a stderr warning. Default: 8000.")
+                        help="Max bytes of target content visible during evidence collection. "
+                            "Files exceeding this trigger a stderr warning. Default: 8000.")
+    parser.add_argument("--context-window-bytes", type=int, default=8000,
+                        help="Max bytes of context supplied to rubric synthesis. "
+                             "Independent of --target-window-bytes. Default: 8000.")
     parser.add_argument("--scope-class", choices=list(SCOPE_CHOICES), default=None,
                         help="Tag the target's kind so the synthesizer judges it on "
                              "the right axes (gate-plan / sweep-plan / results-bundle). "
@@ -98,7 +101,7 @@ def main() -> None:
         print(f"ERROR: {e}", file=sys.stderr)
         sys.exit(1)
 
-    context_content = read_context(args.context, window_bytes=args.target_window_bytes)
+    context_content = read_context(args.context, window_bytes=args.context_window_bytes)
     log(f"target: {resolved_target} ({len(target_content)} chars)")
     log(f"context: {args.context} ({len(context_content)} chars)")
 

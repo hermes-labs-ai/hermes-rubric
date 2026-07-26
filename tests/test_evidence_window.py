@@ -214,3 +214,49 @@ def test_cli_forwards_configured_window_to_stage_2(tmp_path, monkeypatch):
 
     assert captured["target_window_bytes"] == 7000
     assert output.is_file()
+
+
+def test_large_target_window_does_not_expand_stage_1_context(tmp_path, monkeypatch):
+    """Large evidence reviews retain the bounded synthesis context by default."""
+    from hermes_rubric import cli
+
+    target = tmp_path / "paper.md"
+    context = tmp_path / "context.txt"
+    output = tmp_path / "receipt.json"
+    target.write_text("paper")
+    context.write_text("context")
+    rubric = {"target_type": "paper", "dimensions": [_dimension("dim_a")]}
+    windows = {}
+
+    def fake_read_context(path, window_bytes):
+        windows["context"] = window_bytes
+        return "context"
+
+    def fake_collect_evidence(**kwargs):
+        windows["target"] = kwargs["target_window_bytes"]
+        return [_evidence("dim_a")]
+
+    monkeypatch.setattr(cli.backends, "detect", lambda: "stub")
+    monkeypatch.setattr(cli, "read_context", fake_read_context)
+    monkeypatch.setattr(cli, "synthesize", lambda **kwargs: rubric)
+    monkeypatch.setattr(cli, "collect_evidence", fake_collect_evidence)
+    monkeypatch.setattr(cli, "score_dimensions", lambda **kwargs: [])
+    monkeypatch.setattr(
+        cli,
+        "compute_aggregate",
+        lambda **kwargs: {"aggregate": 5.0, "hedge_dims": [], "hedge_note": "", "dim_summaries": []},
+    )
+    monkeypatch.setattr(cli, "build_receipt", lambda **kwargs: {})
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "hermes-rubric", "--intent", "inspect", "--context", str(context),
+            "--target", str(target), "--target-type", "paper",
+            "--target-window-bytes", "25000", "--out", str(output),
+        ],
+    )
+
+    cli.main()
+
+    assert windows == {"context": 8000, "target": 25000}

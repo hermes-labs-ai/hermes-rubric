@@ -25,7 +25,8 @@ hermes-rubric kappa <result_a.json> <result_b.json>
 | `--intent-debias` | off | Prepend a debias preamble that neutralizes valence-loaded framing in the intent |
 | `--artifact-class <name>` | none | Use a deterministic class template instead of LLM synthesis (see [Class-aware mode](#class-aware-mode)) |
 | `--batch` | off | Bundle evidence + scoring into one LLM call per stage; falls back to per-dim on parse failure |
-| `--target-window-bytes <n>` | `8000` | Truncation cap for target/context content; oversize files emit a stderr warning |
+| `--target-window-bytes <n>` | `8000` | Byte cap for target evidence content; oversize files emit a stderr warning |
+| `--context-window-bytes <n>` | `8000` | Byte cap for Stage-1 synthesis context; independent of the target evidence window |
 | `--verbose` | off | Print stage progress to stderr |
 
 ## Subcommands
