@@ -38,7 +38,18 @@ Truncated output:
     {"dim_id": "claim_density", "score": 8, "rationale": "..."}
   ],
   "evidence_citations": [
-    {"dim_id": "claim_density", "citation": "paper.md:42", "quote": "..."}
+    {
+      "dim_id": "claim_density",
+      "evidence_found": true,
+      "citations": [
+        {
+          "quote": "...",
+          "evidence_id": "S1:E1",
+          "location": "S1:E1 — Whole document",
+          "source_class": "doc"
+        }
+      ]
+    }
   ],
   "dim_summaries": [
     {"dim_id": "claim_density", "name": "Claim Density", "score": 8, "weight": 3, "hedged": false}
@@ -51,7 +62,7 @@ What the keys mean:
 
 - `aggregate` - weighted score (0-10). Signal, not verdict.
 - `hedge_dims` - dimensions where evidence was thin. Scores in these dims clamp to `[3, 7]`. The more hedged dims, the less you should trust the aggregate.
-- `evidence_citations` - every score ties back to a quoted passage or `file:line`. This is the audit trail.
+- `evidence_citations` - each score carries quoted evidence, its `evidence_id`, and a runtime-canonicalized location and source class. This is the audit trail.
 - `receipt` - records backend, timestamp, and input hashes. The demonstrated agreement is batch-versus-per-dimension scoring on five fixtures; Stage-1 synthesis remains non-deterministic.
 
 ## What it does
@@ -62,7 +73,7 @@ hermes-rubric replaces that with three stages: synthesize a rubric, collect evid
 
 ## Key features
 
-- **Audit trail per dimension.** Every score ties to a quoted passage or `file:line`. No more headline numbers without backing.
+- **Audit trail per dimension.** Every score ties to quoted evidence with a runtime-canonicalized location. No more headline numbers without backing.
 - **Hedge-on-thin-evidence.** Dimensions with weak evidence are clamped to `[3, 7]` and flagged. The model can't bury weak evidence under a confident number.
 - **Adversarial gates.** Two tests fail the build if fluency outscores substance, or if fabricated claims outscore evidenced ones.
 - **Reproducibility receipts.** Record input hashes, backend, and timestamp. The demonstrated result is batch-versus-per-dimension agreement on five fixtures, not a general rerun guarantee.
