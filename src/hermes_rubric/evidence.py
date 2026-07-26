@@ -234,41 +234,41 @@ def _target_excerpt(target_content: str, target_window_bytes: int) -> str:
     return excerpt
 
 
-def _sectionize_evidence(text: str) -> tuple[str, dict[str, str]]:
+def _sectionize_evidence(text: str) -> tuple[str, dict[str, tuple[str, str]]]:
     """Preserve all Stage-2 text while adding deterministic Markdown pointers."""
     headings = list(_MARKDOWN_HEADING.finditer(text))
     if not headings:
         pointer_id = "S1:E1"
         return (
             f'<SECTION id="{pointer_id}" title="Whole document">\n{text}\n</SECTION>',
-            {pointer_id: f"{pointer_id} — Whole document"},
+            {pointer_id: (f"{pointer_id} — Whole document", text)},
         )
 
     parts: list[str] = []
-    locations: dict[str, str] = {}
+    sections: dict[str, tuple[str, str]] = {}
     if headings[0].start() > 0:
         pointer_id = "S0:E1"
         parts.append(
             f'<SECTION id="{pointer_id}" title="Preamble">\n'
             f'{text[:headings[0].start()]}\n</SECTION>'
         )
-        locations[pointer_id] = f"{pointer_id} — Preamble"
+        sections[pointer_id] = (f"{pointer_id} — Preamble", text[:headings[0].start()])
 
     for ordinal, heading in enumerate(headings, start=1):
         title = heading.group(2).strip()
         match = _NUMBERED_SECTION.match(title)
         section_key = f"S{match.group(1)}" if match else f"S{ordinal}"
         pointer_id = f"{section_key}:E1"
-        if pointer_id in locations:
+        if pointer_id in sections:
             pointer_id = f"{section_key}:E{ordinal}"
         end = headings[ordinal].start() if ordinal < len(headings) else len(text)
         parts.append(
             f'<SECTION id="{pointer_id}" title="{title}">\n'
             f'{text[heading.start():end]}\n</SECTION>'
         )
-        locations[pointer_id] = f"{pointer_id} — {title}"
+        sections[pointer_id] = (f"{pointer_id} — {title}", text[heading.start():end])
 
-    return "\n".join(parts), locations
+    return "\n".join(parts), sections
 
 
 def _collect_batched(
@@ -276,7 +276,7 @@ def _collect_batched(
     evidence_text: str,
     target_path: str,
     backend: str | None,
-    pointer_locations: dict[str, str],
+    pointer_sections: dict[str, tuple[str, str]],
 ) -> list[dict[str, Any]]:
     dim_blocks = "\n".join(
         f'<DIM id="{d["id"]}">\n'
@@ -313,26 +313,31 @@ def _collect_batched(
                 "citations": [],
                 "evidence_summary": f"Evidence missing from batched response for {dim['id']}.",
             }
-        ev = _normalize_evidence(ev, dim, pointer_locations)
+        ev = _normalize_evidence(ev, dim, pointer_sections)
         evidence_list.append(ev)
     return evidence_list
 
 
 def _normalize_evidence(
-    ev: dict[str, Any], dim: dict[str, Any], pointer_locations: dict[str, str]
+    ev: dict[str, Any], dim: dict[str, Any], pointer_sections: dict[str, tuple[str, str]]
 ) -> dict[str, Any]:
     """Apply hedge rule, source-class safety net, and dim_name pinning to one evidence dict."""
     if ev.get("confidence") == "low":
         ev["hedge"] = True
 
     citations = ev.get("citations") or []
+    accepted_citations = []
     for c in citations:
         if isinstance(c, dict):
             pointer_id = c.get("evidence_id")
-            if pointer_id in pointer_locations:
-                c["location"] = pointer_locations[pointer_id]
-            else:
-                c["location"] = "unmapped evidence pointer"
+            pointer = pointer_sections.get(pointer_id)
+            quote = c.get("quote")
+            if not pointer or not isinstance(quote, str) or not quote.strip():
+                continue
+            location, section_text = pointer
+            if _normalize_whitespace(quote) not in _normalize_whitespace(section_text):
+                continue
+            c["location"] = location
             suggested = c.get("source_class")
             fallback = classify_source(c.get("location", ""))
             if fallback != "other":
@@ -341,10 +346,20 @@ def _normalize_evidence(
                 c["source_class"] = suggested
             else:
                 c["source_class"] = "other"
-    ev["citations"] = citations
-    ev["source_class_mix"] = _source_class_mix(citations)
+            accepted_citations.append(c)
+    if citations and not accepted_citations:
+        ev["evidence_found"] = False
+        ev["confidence"] = "low"
+        ev["hedge"] = True
+    ev["citations"] = accepted_citations
+    ev["source_class_mix"] = _source_class_mix(accepted_citations)
     ev["dim_name"] = dim["name"]
     return ev
+
+
+def _normalize_whitespace(text: str) -> str:
+    """Collapse whitespace only; citation content remains otherwise verbatim."""
+    return " ".join(text.split())
 
 
 def _extract_json_array(text: str, expected_dim_ids: set[str]) -> list[dict[str, Any]]:
@@ -385,7 +400,7 @@ def _collect_one(
     evidence_text: str,
     target_path: str,
     backend: str | None,
-    pointer_locations: dict[str, str],
+    pointer_sections: dict[str, tuple[str, str]],
 ) -> dict[str, Any]:
     prompt = _EVIDENCE_PROMPT_TEMPLATE.format(
         dim_id=dim["id"],
@@ -407,7 +422,7 @@ def _collect_one(
             "citations": [],
             "evidence_summary": f"Evidence collection failed (JSON parse error). Raw: {raw[:200]}",
         }
-    return _normalize_evidence(ev, dim, pointer_locations)
+    return _normalize_evidence(ev, dim, pointer_sections)
 
 
 def _source_class_mix(citations: list[dict[str, Any]]) -> dict[str, int]:

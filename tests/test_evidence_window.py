@@ -133,8 +133,8 @@ def test_stage_2_window_enforces_utf8_bytes(batch):
     assert all("10 bytes of 20 total" in prompt for prompt in prompts)
 
 
-def test_pointer_id_overwrites_conflicting_model_section_location():
-    """A valid section pointer, not model prose, owns the canonical location."""
+def test_pointer_id_rejects_quote_from_a_different_section():
+    """A valid pointer cannot launder a quote from another section."""
     from hermes_rubric import evidence as evidence_mod
 
     target_content = (
@@ -148,7 +148,7 @@ def test_pointer_id_overwrites_conflicting_model_section_location():
         "confidence": "high",
         "hedge": False,
         "citations": [{
-            "quote": "6,718 JSONL files",
+            "quote": "old context",
             "evidence_id": "S8:E1",
             "location": "3. Privacy note printed at end of every ingest run",
             "source_class": "doc",
@@ -171,9 +171,9 @@ def test_pointer_id_overwrites_conflicting_model_section_location():
         )
 
     assert '<SECTION id="S8:E1" title="8. Implementation notes">' in prompts[0]
-    citation = result[0]["citations"][0]
-    assert citation["quote"] == "6,718 JSONL files"
-    assert citation["location"] == "S8:E1 — 8. Implementation notes"
+    assert result[0]["citations"] == []
+    assert result[0]["evidence_found"] is False
+    assert result[0]["hedge"] is True
 
 
 def test_invalid_stage_2_window_fails_closed():
