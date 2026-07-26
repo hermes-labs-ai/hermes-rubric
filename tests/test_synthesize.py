@@ -1,8 +1,9 @@
 """Tests for rubric synthesis stage."""
 
 import json
-import pytest
 from unittest.mock import patch
+
+import pytest
 
 
 def _make_rubric(dims=None):
@@ -56,6 +57,23 @@ def test_synthesize_returns_valid_rubric():
     assert "dimensions" in result
     assert len(result["dimensions"]) == 3
     assert result["rubric_intent"] != ""
+
+
+def test_synthesize_preserves_the_configured_target_type():
+    """Backend output cannot silently replace caller-bound target metadata."""
+    from hermes_rubric import synthesize as synth_mod
+
+    mock_rubric = _make_rubric()
+    mock_rubric["target_type"] = "paper-preprint"
+    with patch.object(synth_mod.backends, "call", return_value=json.dumps(mock_rubric)):
+        result = synth_mod.synthesize(
+            intent="rate as publication-ready",
+            context_summary="style guide content",
+            target_type="results-bundle",
+            backend="claude-cli",
+        )
+
+    assert result["target_type"] == "results-bundle"
 
 
 def test_synthesize_validates_minimum_dimensions():

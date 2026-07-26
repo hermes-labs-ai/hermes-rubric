@@ -7,6 +7,8 @@ import sys
 from datetime import datetime, timezone
 from typing import Any
 
+from . import __version__
+
 
 def build_receipt(
     intent: str,
@@ -23,7 +25,7 @@ def build_receipt(
     return {
         "receipt_version": "1.1",
         "timestamp_utc": datetime.now(timezone.utc).isoformat(),
-        "tool_version": "hermes-rubric 1.0.0",
+        "tool_version": f"hermes-rubric {__version__}",
         "python_version": sys.version.split()[0],
         "platform": platform.platform(),
         "backend": backend,
@@ -47,8 +49,9 @@ def build_receipt(
             ],
         },
         "reproducibility_note": (
-            "Same inputs + same backend + same model version + same rubric_hash should produce "
-            "scores within ±1 point. A rubric_hash diff between runs means the measuring stick itself "
+            "Records inputs, backend, and rubric_hash. The demonstrated agreement is "
+            "batch-versus-per-dimension scoring on five fixtures; Stage-1 rubric synthesis is "
+            "not deterministic. A rubric_hash diff between runs means the measuring stick itself "
             "changed — scores are not directly comparable."
         ),
     }

@@ -35,9 +35,9 @@ print(result["hedge_dims"])  # ["Reproducibility"]
 
 Calls the configured backend to produce a rubric for the artifact. Returns a `Rubric` object with `dimensions` (list of `Dimension`).
 
-### `evidence.collect_evidence(rubric, target_content, target_path) -> list[Evidence]`
+### `evidence.collect_evidence(rubric, target_content, target_path, target_window_bytes=8000) -> list[Evidence]`
 
-For each dimension in the rubric, asks the backend to find a citation in `target_content`. Returns a list of `Evidence` objects with `dim_id`, `citation` (path:line or quoted passage), and `quote` (the text).
+For each dimension in the rubric, asks the backend to find a citation in `target_content`. The configured target window is the sole Stage-2 visibility cap for both per-dimension and batched evidence prompts; any hidden tail is identified by an explicit truncation marker. Returns a list of `Evidence` objects with `dim_id`, `citation` (path:line or quoted passage), and `quote` (the text).
 
 Dimensions where evidence is thin get `quote = "<thin>"` and `hedge = True`.
 

@@ -15,7 +15,7 @@ pip install hermes-rubric
 
 ```bash
 hermes-rubric --version
-# hermes-rubric 1.0.0
+# hermes-rubric 1.0.1
 ```
 
 ## Backends

@@ -3,9 +3,8 @@
 import json
 from typing import Any
 
-from .preambles import wrap_intent_for_rubric
-
 from . import backends
+from .preambles import wrap_intent_for_rubric
 
 _SYNTH_PROMPT_TEMPLATE = """\
 You are a rubric generator. Your job: produce a structured evaluation rubric for the given intent and context.
@@ -84,6 +83,9 @@ def synthesize(
     raw = backends.call(prompt, backend=backend)
     # Extract JSON from response (may have leading/trailing prose from some backends)
     rubric = _extract_json(raw, "rubric")
+    # ``target_type`` is caller-bound input metadata, not a field the backend
+    # may reclassify while synthesizing the rubric.
+    rubric["target_type"] = target_type
     _validate_rubric(rubric)
     return rubric
 

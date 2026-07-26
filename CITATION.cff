@@ -15,8 +15,7 @@ authors:
     email: "roli@hermes-labs.ai"
     affiliation: "Hermes Labs"
     orcid: ""
-version: "1.0.0"
-date-released: "2026-04-28"
+version: "1.0.1"
 license: "MIT"
 repository-code: "https://github.com/hermes-labs-ai/hermes-rubric"
 url: "https://hermes-labs.ai"
@@ -39,6 +38,6 @@ preferred-citation:
       given-names: "Rolando"
       email: "roli@hermes-labs.ai"
       affiliation: "Hermes Labs"
-  version: "1.0.0"
+  version: "1.0.1"
   year: 2026
   url: "https://github.com/hermes-labs-ai/hermes-rubric"

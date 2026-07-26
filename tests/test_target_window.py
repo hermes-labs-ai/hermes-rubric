@@ -63,3 +63,18 @@ def test_context_warns_on_oversize(tmp_path, capsys):
 
     assert "WARNING" in err
     assert len(out) == 8000
+
+
+def test_context_window_is_utf8_byte_safe(tmp_path, capsys):
+    """The documented byte window does not split or overrun UTF-8 content."""
+    from hermes_rubric.evidence import read_context
+
+    ctx = tmp_path / "unicode.md"
+    ctx.write_text("é" * 10)
+
+    out = read_context(str(ctx), window_bytes=10)
+    err = capsys.readouterr().err
+
+    assert out == "é" * 5
+    assert len(out.encode("utf-8")) == 10
+    assert "20 > 10" in err

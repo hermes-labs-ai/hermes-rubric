@@ -20,6 +20,8 @@ class BatchTooLarge(ValueError):
 # Conservative input-side ceiling. Per-backend tuning lives in backends.py future work.
 _BATCH_PROMPT_CEILING_CHARS = 100_000
 
+DEFAULT_TARGET_WINDOW_BYTES = 8000
+
 # Source-class taxonomy. Higher-authority classes should outweigh marketing prose.
 SOURCE_CLASSES = ("code", "test", "config", "readme", "doc", "other")
 
@@ -39,6 +41,8 @@ _DOC_PAT = re.compile(r"(^|/)(docs?/|.*\.rst$|AGENTS\.md|INTENT\.md|llms\.txt)",
 _TEST_PAT = re.compile(r"(^|/)tests?/|(?:^|[/_])test_|_test\.", re.I)
 _CODE_PAT = re.compile(r"\.(py|js|ts|go|rs|java|c|cpp|h|rb)(\b|:)", re.I)
 _CONFIG_PAT = re.compile(r"(pyproject\.toml|setup\.cfg|\.ya?ml|\.toml|\.json|Dockerfile|\.env)($|:)", re.I)
+_MARKDOWN_HEADING = re.compile(r"^(#{1,6})\s+(.+?)\s*#*\s*$", re.M)
+_NUMBERED_SECTION = re.compile(r"^(\d+(?:\.\d+)*)\.?\s+")
 
 
 def classify_source(location: str) -> str:
@@ -94,6 +98,10 @@ Each citation MUST include a source_class tag describing WHERE the evidence came
 Code and test citations are ground-truth; README and doc citations are self-description
 and may be marketing. Tag accurately — a later step down-weights README/doc evidence.
 
+Each citation MUST also include `evidence_id`, copied exactly from the enclosing
+`<SECTION id="...">` block. The runtime, not your `location` text, resolves
+the canonical location from this ID.
+
 Output valid JSON only. No prose before or after.
 
 Format:
@@ -103,7 +111,7 @@ Format:
   "confidence": "high" | "medium" | "low",
   "hedge": false,
   "citations": [
-    {{"quote": "<exact short quote or section reference>", "location": "<file:line or section name>", "source_class": "code|test|config|readme|doc|other"}}
+    {{"quote": "<exact short quote or section reference>", "evidence_id": "<SECTION id>", "location": "<optional human note>", "source_class": "code|test|config|readme|doc|other"}}
   ],
   "evidence_summary": "<1-2 sentence summary of what the evidence shows>"
 }}
@@ -133,6 +141,8 @@ Instructions:
 
 Each citation MUST include source_class: "code"|"test"|"config"|"readme"|"doc"|"other".
 Code/test/config are ground-truth; README/doc may be marketing.
+Each citation MUST include `evidence_id`, copied exactly from its enclosing
+`<SECTION id="...">` block. The runtime resolves canonical locations from IDs.
 
 Output a JSON ARRAY. One element per <DIM>. Order is irrelevant — dim_id is the key.
 Each element MUST include "dim_id" matching exactly one <DIM id="..."> above.
@@ -147,7 +157,7 @@ Each element format:
   "confidence": "high" | "medium" | "low",
   "hedge": false,
   "citations": [
-    {{"quote": "<short quote or section reference>", "location": "<file:line or section>", "source_class": "code|test|config|readme|doc|other"}}
+    {{"quote": "<short quote or section reference>", "evidence_id": "<SECTION id>", "location": "<optional human note>", "source_class": "code|test|config|readme|doc|other"}}
   ],
   "evidence_summary": "<1-2 sentence summary>"
 }}
@@ -160,40 +170,114 @@ def collect_evidence(
     target_path: str,
     backend: str | None = None,
     batch: bool = False,
+    target_window_bytes: int = DEFAULT_TARGET_WINDOW_BYTES,
 ) -> list[dict[str, Any]]:
     """Collect evidence for each rubric dimension. Returns list of evidence dicts.
 
     If batch=True, attempt one LLM call for all dimensions; fall back to per-dim
     on parse failure or oversize prompt. Result order matches rubric dim order
-    via dim_id-keyed reassembly regardless of mode.
+    via dim_id-keyed reassembly regardless of mode. ``target_window_bytes`` is
+    the single Stage-2 visibility limit in both modes.
     """
     dims = rubric.get("dimensions", [])
+    excerpt = _target_excerpt(target_content, target_window_bytes)
+    evidence_text, pointer_locations = _sectionize_evidence(excerpt)
 
     if batch and len(dims) > 1:
         try:
-            return _collect_batched(dims, target_content, target_path, backend)
+            return _collect_batched(
+                dims,
+                evidence_text,
+                target_path,
+                backend,
+                pointer_locations,
+            )
         except (BatchParseError, BatchTooLarge) as e:
             print(f"[hermes-rubric] batched evidence failed ({e.__class__.__name__}); "
                   f"falling back to per-dim", file=sys.stderr)
 
     evidence_list = []
     for dim in dims:
-        ev = _collect_one(dim, target_content, target_path, backend)
+        ev = _collect_one(
+            dim,
+            evidence_text,
+            target_path,
+            backend,
+            pointer_locations,
+        )
         evidence_list.append(ev)
     return evidence_list
 
 
+def _utf8_prefix(text: str, window_bytes: int) -> tuple[str, bool]:
+    """Return the largest UTF-8-safe prefix within ``window_bytes``."""
+    encoded = text.encode("utf-8")
+    if len(encoded) <= window_bytes:
+        return text, False
+    return encoded[:window_bytes].decode("utf-8", errors="ignore"), True
+
+
+def _target_excerpt(target_content: str, target_window_bytes: int) -> str:
+    """Apply the configured Stage-2 byte window and disclose any invisible tail."""
+    if (
+        isinstance(target_window_bytes, bool)
+        or not isinstance(target_window_bytes, int)
+        or target_window_bytes < 1
+    ):
+        raise ValueError("target_window_bytes must be a positive integer")
+    excerpt, truncated = _utf8_prefix(target_content, target_window_bytes)
+    if truncated:
+        excerpt += (
+            f"\n[... truncated at configured target window "
+            f"{target_window_bytes} bytes of {len(target_content.encode('utf-8'))} total ...]"
+        )
+    return excerpt
+
+
+def _sectionize_evidence(text: str) -> tuple[str, dict[str, tuple[str, str]]]:
+    """Preserve all Stage-2 text while adding deterministic Markdown pointers."""
+    headings = list(_MARKDOWN_HEADING.finditer(text))
+    if not headings:
+        pointer_id = "S1:E1"
+        return (
+            f'<SECTION id="{pointer_id}" title="Whole document">\n{text}\n</SECTION>',
+            {pointer_id: (f"{pointer_id} — Whole document", text)},
+        )
+
+    parts: list[str] = []
+    sections: dict[str, tuple[str, str]] = {}
+    if headings[0].start() > 0:
+        pointer_id = "S0:E1"
+        parts.append(
+            f'<SECTION id="{pointer_id}" title="Preamble">\n'
+            f'{text[:headings[0].start()]}\n</SECTION>'
+        )
+        sections[pointer_id] = (f"{pointer_id} — Preamble", text[:headings[0].start()])
+
+    for ordinal, heading in enumerate(headings, start=1):
+        title = heading.group(2).strip()
+        match = _NUMBERED_SECTION.match(title)
+        section_key = f"S{match.group(1)}" if match else f"S{ordinal}"
+        pointer_id = f"{section_key}:E1"
+        if pointer_id in sections:
+            pointer_id = f"{section_key}:E{ordinal}"
+        end = headings[ordinal].start() if ordinal < len(headings) else len(text)
+        parts.append(
+            f'<SECTION id="{pointer_id}" title="{title}">\n'
+            f'{text[heading.start():end]}\n</SECTION>'
+        )
+        sections[pointer_id] = (f"{pointer_id} — {title}", text[heading.start():end])
+
+    return "\n".join(parts), sections
+
+
 def _collect_batched(
     dims: list[dict[str, Any]],
-    target_content: str,
+    evidence_text: str,
     target_path: str,
     backend: str | None,
+    pointer_sections: dict[str, tuple[str, str]],
 ) -> list[dict[str, Any]]:
-    max_chars = 6000
-    excerpt = target_content[:max_chars]
-    if len(target_content) > max_chars:
-        excerpt += f"\n[... truncated at {max_chars} chars of {len(target_content)} total ...]"
-
     dim_blocks = "\n".join(
         f'<DIM id="{d["id"]}">\n'
         f'NAME: {d["name"]}\n'
@@ -204,7 +288,7 @@ def _collect_batched(
     )
 
     prompt = _BATCHED_EVIDENCE_PROMPT_TEMPLATE.format(
-        target_content=excerpt,
+        target_content=evidence_text,
         dim_blocks=dim_blocks,
     )
     if len(prompt) > _BATCH_PROMPT_CEILING_CHARS:
@@ -229,19 +313,31 @@ def _collect_batched(
                 "citations": [],
                 "evidence_summary": f"Evidence missing from batched response for {dim['id']}.",
             }
-        ev = _normalize_evidence(ev, dim)
+        ev = _normalize_evidence(ev, dim, pointer_sections)
         evidence_list.append(ev)
     return evidence_list
 
 
-def _normalize_evidence(ev: dict[str, Any], dim: dict[str, Any]) -> dict[str, Any]:
+def _normalize_evidence(
+    ev: dict[str, Any], dim: dict[str, Any], pointer_sections: dict[str, tuple[str, str]]
+) -> dict[str, Any]:
     """Apply hedge rule, source-class safety net, and dim_name pinning to one evidence dict."""
     if ev.get("confidence") == "low":
         ev["hedge"] = True
 
     citations = ev.get("citations") or []
+    accepted_citations = []
     for c in citations:
         if isinstance(c, dict):
+            pointer_id = c.get("evidence_id")
+            pointer = pointer_sections.get(pointer_id)
+            quote = c.get("quote")
+            if not pointer or not isinstance(quote, str) or not quote.strip():
+                continue
+            location, section_text = pointer
+            if _normalize_whitespace(quote) not in _normalize_whitespace(section_text):
+                continue
+            c["location"] = location
             suggested = c.get("source_class")
             fallback = classify_source(c.get("location", ""))
             if fallback != "other":
@@ -250,10 +346,20 @@ def _normalize_evidence(ev: dict[str, Any], dim: dict[str, Any]) -> dict[str, An
                 c["source_class"] = suggested
             else:
                 c["source_class"] = "other"
-    ev["citations"] = citations
-    ev["source_class_mix"] = _source_class_mix(citations)
+            accepted_citations.append(c)
+    if citations and not accepted_citations:
+        ev["evidence_found"] = False
+        ev["confidence"] = "low"
+        ev["hedge"] = True
+    ev["citations"] = accepted_citations
+    ev["source_class_mix"] = _source_class_mix(accepted_citations)
     ev["dim_name"] = dim["name"]
     return ev
+
+
+def _normalize_whitespace(text: str) -> str:
+    """Collapse whitespace only; citation content remains otherwise verbatim."""
+    return " ".join(text.split())
 
 
 def _extract_json_array(text: str, expected_dim_ids: set[str]) -> list[dict[str, Any]]:
@@ -291,22 +397,17 @@ def _extract_json_array(text: str, expected_dim_ids: set[str]) -> list[dict[str,
 
 def _collect_one(
     dim: dict[str, Any],
-    target_content: str,
+    evidence_text: str,
     target_path: str,
     backend: str | None,
+    pointer_sections: dict[str, tuple[str, str]],
 ) -> dict[str, Any]:
-    # Truncate target to keep prompts manageable
-    max_chars = 6000
-    excerpt = target_content[:max_chars]
-    if len(target_content) > max_chars:
-        excerpt += f"\n[... truncated at {max_chars} chars of {len(target_content)} total ...]"
-
     prompt = _EVIDENCE_PROMPT_TEMPLATE.format(
         dim_id=dim["id"],
         dim_name=dim["name"],
         dim_description=dim["description"],
         evidence_instructions=dim["evidence_instructions"],
-        target_content=excerpt,
+        target_content=evidence_text,
     )
 
     raw = backends.call(prompt, backend=backend)
@@ -321,7 +422,7 @@ def _collect_one(
             "citations": [],
             "evidence_summary": f"Evidence collection failed (JSON parse error). Raw: {raw[:200]}",
         }
-    return _normalize_evidence(ev, dim)
+    return _normalize_evidence(ev, dim, pointer_sections)
 
 
 def _source_class_mix(citations: list[dict[str, Any]]) -> dict[str, int]:
@@ -349,16 +450,13 @@ def _extract_json(text: str) -> dict[str, Any]:
     raise ValueError(f"Cannot extract JSON from evidence response: {text[:300]}")
 
 
-DEFAULT_TARGET_WINDOW_BYTES = 8000
-
-
-def _warn_truncation(path: str, actual: int, window: int) -> None:
+def _warn_truncation(path: str, actual_bytes: int, window_bytes: int) -> None:
     """Emit a stderr warning when a target file is silently truncated."""
     import sys
-    lost = actual - window
+    lost = actual_bytes - window_bytes
     sys.stderr.write(
         f"[hermes-rubric] WARNING: target file exceeds --target-window-bytes "
-        f"({actual} > {window}); last {lost} chars will not be visible to the "
+        f"({actual_bytes} > {window_bytes}); last {lost} bytes will not be visible to the "
         f"rubric. Consider a tighter gate-card style artifact "
         f"(see hermes-handbook/rubric-passthrough-pattern.md). [{path}]\n"
     )
@@ -378,22 +476,23 @@ def read_target(target_path: str, window_bytes: int = DEFAULT_TARGET_WINDOW_BYTE
         # the file is larger than the configured window. Downstream stages
         # are responsible for honoring the window when they construct prompts.
         text = p.read_text(errors="replace")
-        if len(text) > window_bytes:
-            _warn_truncation(str(p), len(text), window_bytes)
+        if len(text.encode("utf-8")) > window_bytes:
+            _warn_truncation(str(p), len(text.encode("utf-8")), window_bytes)
         return text, str(p)
 
     if p.is_dir():
         # Concatenate all text files in the directory (up to 50 files,
-        # window_bytes chars each).
+        # window_bytes UTF-8 bytes each).
         parts = []
         count = 0
         for f in sorted(p.rglob("*")):
             if f.is_file() and f.suffix in (".md", ".py", ".txt", ".json", ".yaml", ".toml", ".rst"):
                 try:
                     raw = f.read_text(errors="replace")
-                    if len(raw) > window_bytes:
-                        _warn_truncation(str(f), len(raw), window_bytes)
-                    text = raw[:window_bytes]
+                    raw_bytes = len(raw.encode("utf-8"))
+                    if raw_bytes > window_bytes:
+                        _warn_truncation(str(f), raw_bytes, window_bytes)
+                    text, _ = _utf8_prefix(raw, window_bytes)
                     parts.append(f"=== {f.relative_to(p)} ===\n{text}")
                     count += 1
                     if count >= 50:
@@ -413,9 +512,10 @@ def read_context(context_path: str, window_bytes: int = DEFAULT_TARGET_WINDOW_BY
     p = Path(context_path).expanduser()
     if p.is_file():
         raw = p.read_text(errors="replace")
-        if len(raw) > window_bytes:
-            _warn_truncation(str(p), len(raw), window_bytes)
-        return raw[:window_bytes]
+        raw_bytes = len(raw.encode("utf-8"))
+        if raw_bytes > window_bytes:
+            _warn_truncation(str(p), raw_bytes, window_bytes)
+        return _utf8_prefix(raw, window_bytes)[0]
 
     # Try glob
     matches = sorted(glob_mod.glob(str(p)))
@@ -427,9 +527,10 @@ def read_context(context_path: str, window_bytes: int = DEFAULT_TARGET_WINDOW_BY
         for m in matches[:5]:
             try:
                 raw = Path(m).read_text(errors="replace")
-                if len(raw) > per_file:
-                    _warn_truncation(str(m), len(raw), per_file)
-                parts.append(raw[:per_file])
+                raw_bytes = len(raw.encode("utf-8"))
+                if raw_bytes > per_file:
+                    _warn_truncation(str(m), raw_bytes, per_file)
+                parts.append(_utf8_prefix(raw, per_file)[0])
             except OSError:
                 continue
         return "\n\n---\n\n".join(parts)
