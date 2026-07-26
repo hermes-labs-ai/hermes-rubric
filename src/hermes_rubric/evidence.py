@@ -199,19 +199,27 @@ def collect_evidence(
     return evidence_list
 
 
+def _utf8_prefix(text: str, window_bytes: int) -> tuple[str, bool]:
+    """Return the largest UTF-8-safe prefix within ``window_bytes``."""
+    encoded = text.encode("utf-8")
+    if len(encoded) <= window_bytes:
+        return text, False
+    return encoded[:window_bytes].decode("utf-8", errors="ignore"), True
+
+
 def _target_excerpt(target_content: str, target_window_bytes: int) -> str:
-    """Apply the configured Stage-2 window and disclose any invisible tail."""
+    """Apply the configured Stage-2 byte window and disclose any invisible tail."""
     if (
         isinstance(target_window_bytes, bool)
         or not isinstance(target_window_bytes, int)
         or target_window_bytes < 1
     ):
         raise ValueError("target_window_bytes must be a positive integer")
-    excerpt = target_content[:target_window_bytes]
-    if len(target_content) > target_window_bytes:
+    excerpt, truncated = _utf8_prefix(target_content, target_window_bytes)
+    if truncated:
         excerpt += (
             f"\n[... truncated at configured target window "
-            f"{target_window_bytes} chars of {len(target_content)} total ...]"
+            f"{target_window_bytes} bytes of {len(target_content.encode('utf-8'))} total ...]"
         )
     return excerpt
 
@@ -377,13 +385,13 @@ def _extract_json(text: str) -> dict[str, Any]:
     raise ValueError(f"Cannot extract JSON from evidence response: {text[:300]}")
 
 
-def _warn_truncation(path: str, actual: int, window: int) -> None:
+def _warn_truncation(path: str, actual_bytes: int, window_bytes: int) -> None:
     """Emit a stderr warning when a target file is silently truncated."""
     import sys
-    lost = actual - window
+    lost = actual_bytes - window_bytes
     sys.stderr.write(
         f"[hermes-rubric] WARNING: target file exceeds --target-window-bytes "
-        f"({actual} > {window}); last {lost} chars will not be visible to the "
+        f"({actual_bytes} > {window_bytes}); last {lost} bytes will not be visible to the "
         f"rubric. Consider a tighter gate-card style artifact "
         f"(see hermes-handbook/rubric-passthrough-pattern.md). [{path}]\n"
     )
@@ -403,22 +411,23 @@ def read_target(target_path: str, window_bytes: int = DEFAULT_TARGET_WINDOW_BYTE
         # the file is larger than the configured window. Downstream stages
         # are responsible for honoring the window when they construct prompts.
         text = p.read_text(errors="replace")
-        if len(text) > window_bytes:
-            _warn_truncation(str(p), len(text), window_bytes)
+        if len(text.encode("utf-8")) > window_bytes:
+            _warn_truncation(str(p), len(text.encode("utf-8")), window_bytes)
         return text, str(p)
 
     if p.is_dir():
         # Concatenate all text files in the directory (up to 50 files,
-        # window_bytes chars each).
+        # window_bytes UTF-8 bytes each).
         parts = []
         count = 0
         for f in sorted(p.rglob("*")):
             if f.is_file() and f.suffix in (".md", ".py", ".txt", ".json", ".yaml", ".toml", ".rst"):
                 try:
                     raw = f.read_text(errors="replace")
-                    if len(raw) > window_bytes:
-                        _warn_truncation(str(f), len(raw), window_bytes)
-                    text = raw[:window_bytes]
+                    raw_bytes = len(raw.encode("utf-8"))
+                    if raw_bytes > window_bytes:
+                        _warn_truncation(str(f), raw_bytes, window_bytes)
+                    text, _ = _utf8_prefix(raw, window_bytes)
                     parts.append(f"=== {f.relative_to(p)} ===\n{text}")
                     count += 1
                     if count >= 50:
@@ -438,9 +447,10 @@ def read_context(context_path: str, window_bytes: int = DEFAULT_TARGET_WINDOW_BY
     p = Path(context_path).expanduser()
     if p.is_file():
         raw = p.read_text(errors="replace")
-        if len(raw) > window_bytes:
-            _warn_truncation(str(p), len(raw), window_bytes)
-        return raw[:window_bytes]
+        raw_bytes = len(raw.encode("utf-8"))
+        if raw_bytes > window_bytes:
+            _warn_truncation(str(p), raw_bytes, window_bytes)
+        return _utf8_prefix(raw, window_bytes)[0]
 
     # Try glob
     matches = sorted(glob_mod.glob(str(p)))
@@ -452,9 +462,10 @@ def read_context(context_path: str, window_bytes: int = DEFAULT_TARGET_WINDOW_BY
         for m in matches[:5]:
             try:
                 raw = Path(m).read_text(errors="replace")
-                if len(raw) > per_file:
-                    _warn_truncation(str(m), len(raw), per_file)
-                parts.append(raw[:per_file])
+                raw_bytes = len(raw.encode("utf-8"))
+                if raw_bytes > per_file:
+                    _warn_truncation(str(m), raw_bytes, per_file)
+                parts.append(_utf8_prefix(raw, per_file)[0])
             except OSError:
                 continue
         return "\n\n---\n\n".join(parts)

@@ -93,12 +93,44 @@ def test_remaining_truncation_is_explicit_in_each_stage_2_prompt(batch):
         )
 
     diagnostic = (
-        f"[... truncated at configured target window 6200 chars "
+        f"[... truncated at configured target window 6200 bytes "
         f"of {len(target_content)} total ...]"
     )
     assert prompts
     assert all(diagnostic in prompt for prompt in prompts)
     assert all(hidden_marker not in prompt for prompt in prompts)
+
+
+@pytest.mark.parametrize("batch", [False, True])
+def test_stage_2_window_enforces_utf8_bytes(batch):
+    """The public byte window never exposes more UTF-8 content than configured."""
+    from hermes_rubric import evidence as evidence_mod
+
+    dims = [_dimension("dim_a")]
+    if batch:
+        dims.append(_dimension("dim_b"))
+    prompts = []
+
+    def backend_response(prompt, backend=None):
+        prompts.append(prompt)
+        if batch:
+            return json.dumps([_evidence(dim["id"]) for dim in dims])
+        return json.dumps(_evidence("dim_a"))
+
+    with patch.object(evidence_mod.backends, "call", side_effect=backend_response):
+        evidence_mod.collect_evidence(
+            rubric={"dimensions": dims},
+            target_content="é" * 10,
+            target_path="paper.md",
+            backend="stub",
+            batch=batch,
+            target_window_bytes=10,
+        )
+
+    assert prompts
+    assert all("é" * 5 in prompt for prompt in prompts)
+    assert all("é" * 6 not in prompt for prompt in prompts)
+    assert all("10 bytes of 20 total" in prompt for prompt in prompts)
 
 
 def test_invalid_stage_2_window_fails_closed():
