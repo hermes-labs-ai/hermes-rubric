@@ -3,9 +3,8 @@
 import json
 from typing import Any
 
-from .preambles import wrap_intent_for_rubric
-
 from . import backends
+from .preambles import wrap_intent_for_rubric
 
 _SYNTH_PROMPT_TEMPLATE = """\
 You are a rubric generator. Your job: produce a structured evaluation rubric for the given intent and context.

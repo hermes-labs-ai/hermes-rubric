@@ -6,6 +6,7 @@ Full flag and subcommand reference for hermes-rubric.
 
 ```
 hermes-rubric --target <path> [options]
+hermes-rubric --version
 hermes-rubric kappa <result_a.json> <result_b.json>
 ```
 
@@ -13,6 +14,7 @@ hermes-rubric kappa <result_a.json> <result_b.json>
 
 | Flag | Default | Purpose |
 |---|---|---|
+| `--version` | n/a | Print the installed Hermes Rubric version and exit |
 | `--target <path>` | required | File or directory to score |
 | `--intent <text>` | required (unless `--artifact-class`) | One-sentence goal for the scoring run |
 | `--context <path>` | required (unless `--artifact-class`) | Context file the rubric synthesizer uses |

@@ -6,10 +6,9 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from .preambles import SCOPE_CHOICES
-
-from . import backends
+from . import __version__, backends
 from .evidence import collect_evidence, read_context, read_target
+from .preambles import SCOPE_CHOICES
 from .receipt import build_receipt
 from .score import compute_aggregate, score_dimensions
 from .synthesize import synthesize
@@ -25,6 +24,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         prog="hermes-rubric",
         description="Evidence-first structured scoring. Synthesizes rubric, collects evidence, then scores.",
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
     )
     parser.add_argument("--intent", default=None, help="One-sentence goal for the scoring (optional when --artifact-class is set)")
     parser.add_argument("--context", default=None, help="Path to context file(s) used for rubric synthesis (optional when --artifact-class is set)")

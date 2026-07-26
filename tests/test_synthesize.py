@@ -1,8 +1,9 @@
 """Tests for rubric synthesis stage."""
 
 import json
-import pytest
 from unittest.mock import patch
+
+import pytest
 
 
 def _make_rubric(dims=None):

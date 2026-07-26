@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.1 — unreleased — correctness patch
+
+- Honor the configured target window throughout both Stage-2 evidence paths
+  instead of silently applying a second 6,000-character cap.
+- Preserve the caller-bound rubric `target_type` rather than allowing backend
+  output to reclassify it.
+- Implement `hermes-rubric --version` and derive receipt `tool_version` from
+  the same runtime version surface.
+
 ## 1.0.0 — 2026-04-28 — first official release
 
 The repo has been public since 2026-04-24 as a 0.9-era preview. v1.0.0 is the first tagged release on PyPI + GitHub Releases, headlined by class-aware rubric templates.
