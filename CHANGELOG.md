@@ -1,6 +1,19 @@
 # Changelog
 
-## 1.0.1 — unreleased — correctness patch
+## 1.0.2 — 2026-08-04 — scoring identity and integration clarity
+
+- Pin Stage-3 dimension IDs and names to the synthesized rubric across
+  per-dimension, batched, missing-result, and parse-fallback paths.
+- Publish dedicated Documentation and Changelog links in package metadata.
+- State the backend requirement before the first README command.
+- Align quickstart commands and Python imports with the current CLI and API.
+- Clarify which paths are local, which cloud backends are optional, and which
+  stages remain non-deterministic.
+- Remove unsupported recomputation and retired research claims from current
+  public documentation.
+- Add an OIDC Trusted Publishing workflow for PyPI releases.
+
+## 1.0.1 — 2026-07-26 — correctness patch
 
 - Honor the configured target window throughout both Stage-2 evidence paths
   instead of silently applying a second 6,000-character cap.

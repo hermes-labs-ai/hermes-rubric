@@ -94,6 +94,20 @@ def _missing_dim_fallback(ev: dict[str, Any], dim: dict[str, Any]) -> dict[str, 
     }
 
 
+def _pin_dimension_identity(
+    score: dict[str, Any],
+    ev: dict[str, Any],
+    dim: dict[str, Any],
+) -> dict[str, Any]:
+    """Complete the Stage-3 shape and pin identity to the synthesized rubric."""
+    score["dim_id"] = dim.get("id", ev["dim_id"])
+    score["dim_name"] = dim.get("name", ev.get("dim_name", ev["dim_id"]))
+    score.setdefault("score_rationale", "")
+    score.setdefault("evidence_drove_score", "")
+    score.setdefault("hedge_applied", False)
+    return score
+
+
 def _apply_clamps(s: dict[str, Any], ev: dict[str, Any]) -> dict[str, Any]:
     """Apply hedge / no-evidence / self-marketing clamps. Mirrors original loop body."""
     if ev.get("hedge") and (s["score"] < 3 or s["score"] > 7):
@@ -137,6 +151,7 @@ def score_dimensions(
         dim_id = ev["dim_id"]
         dim = dims_by_id.get(dim_id, {})
         s = _score_one(dim, ev, backend)
+        s = _pin_dimension_identity(s, ev, dim)
         scores.append(_apply_clamps(s, ev))
 
     return scores
@@ -183,8 +198,7 @@ def _score_batched(
         if s is None:
             s = _missing_dim_fallback(ev, dim)
         else:
-            # Pin contract — fill any missing keys from defaults
-            s.setdefault("dim_name", dim.get("name", ev.get("dim_name", ev["dim_id"])))
+            # Fill non-identity contract fields from defaults.
             s.setdefault("score_rationale", "")
             s.setdefault("evidence_drove_score", "")
             s.setdefault("hedge_applied", False)
@@ -193,6 +207,7 @@ def _score_batched(
             except (TypeError, ValueError):
                 s["score"] = 3
                 s["hedge_applied"] = True
+        s = _pin_dimension_identity(s, ev, dim)
         scores.append(_apply_clamps(s, ev))
     return scores
 

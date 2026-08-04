@@ -1,20 +1,10 @@
 # Benchmarks
 
-Cross-model agreement and reproducibility data for hermes-rubric.
+Bounded evaluation evidence for hermes-rubric.
 
-## Headline number
+## Available evidence
 
-**Cross-model Cohen's κ = 0.629** (62.9% chance-corrected agreement) across 96 paired runs on the batch-equivalence test set. Passes the pre-registered ≥0.6 reproducibility floor.
-
-## Per-backend breakdown
-
-| Backend | κ | N (paired runs) |
-|---|---|---|
-| Gemini 2.5 Flash | 0.642 | 47 |
-| Qwen-Plus | 0.621 | 47 |
-| Claude (Anthropic SDK) | 0.527 | 2 |
-
-Claude κ at N=2 is too few pairs for a stable estimate — included for transparency only. Deferred Claude paper-grade run noted in `ACTIONABLES.md`.
+The committed [2026-04-25 report](../experiments/batch-equiv-2026-04-25/RESULTS.md) documents a batch-versus-per-dimension comparison on five fixtures. Raw run JSON is gitignored and not included, so this repository does not currently support a from-clone recomputation claim.
 
 ## Test-set composition
 
@@ -26,21 +16,11 @@ Claude κ at N=2 is too few pairs for a stable estimate — included for transpa
 
 Full target list at [`experiments/batch-equiv-2026-04-25/RESULTS.md`](../experiments/batch-equiv-2026-04-25/RESULTS.md).
 
-## Reproduce
-
-```bash
-git clone https://github.com/hermes-labs-ai/hermes-rubric && cd hermes-rubric
-python experiments/batch-equiv-2026-04-25/compute_kappa.py
-# Per-target κ table, per-backend mean, overall mean. Should match RESULTS.md.
-```
-
-If the script's output doesn't match this number, file an issue. The chain is broken and we want to know.
-
 ## What the κ measures
 
-`hermes-rubric kappa <run_a.json> <run_b.json>` computes Cohen's κ between two completed runs on the same target. The metric answers: "how much do two scoring runs agree above chance?"
+`hermes-rubric kappa --run1 <run_a.json> --run2 <run_b.json>` computes Cohen's κ between two completed runs on the same target. The metric answers: "how much do two scoring runs agree above chance?"
 
-κ = 0.629 on this test set is evidence for **batch-vs-per-dim equivalence**, not yet a generalization claim across all artifact domains. Cross-domain κ (paper-quality vs deploy-readiness vs lead-score) is on the roadmap (see `experiments/rubric-quality-PROPOSAL.md`).
+The committed report is bounded evidence about **batch-vs-per-dim behavior** on its fixtures, not a generalization claim across all artifact domains. Cross-domain κ (paper-quality vs deploy-readiness vs lead-score) is on the roadmap (see `experiments/rubric-quality-PROPOSAL.md`).
 
 ## Variance comparison
 
@@ -68,5 +48,5 @@ Each score has a full rubric + citations + per-dimension rationale in the file.
 ## Known limitations
 
 - **κ measured on 5 fixture targets only.** Evidence for batch-vs-per-dim equivalence on this set, not yet a generalization claim across all domains.
-- **Stage-1 rubric synthesis is not deterministic.** Same intent + context can produce slightly different dim sets. Use `--artifact-class <name>` for full reproducibility on repeated artifact types.
-- **Anthropic SDK backend has only N=2 Claude pairs in the cross-model figure.** Larger run is on the roadmap.
+- **Stage-1 rubric synthesis is not deterministic.** Same intent + context can produce slightly different dim sets. Use `--artifact-class <name>` to keep the dimension set fixed across runs.
+- **Raw paired-run JSON is not committed.** Treat the report as a historical result, not a from-clone rerun guarantee.

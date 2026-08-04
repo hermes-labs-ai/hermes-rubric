@@ -89,6 +89,33 @@ def test_batched_score_missing_dim_falls_back():
     assert by_id["fr_a"]["score"] == 8
 
 
+def test_batched_scores_pin_canonical_dimension_identity():
+    """Batched Stage 3 may omit or drift names; rubric identity still wins."""
+    from hermes_rubric import score as score_mod
+
+    rubric = _load_rubric()
+    evidence_list = [_ev(d["id"]) for d in rubric["dimensions"]]
+    raw = json.dumps([
+        _score_obj("fr_a", 8, dim_name="Drifted name"),
+        {key: value for key, value in _score_obj("fr_b", 6).items() if key != "dim_name"},
+        _score_obj("fr_c", 7, dim_name="Also drifted"),
+        _score_obj("fr_d", 5, dim_name="Wrong"),
+    ])
+
+    with patch.object(score_mod.backends, "call", return_value=raw):
+        scores = score_mod.score_dimensions(
+            rubric=rubric,
+            evidence_list=evidence_list,
+            backend="stub",
+            batch=True,
+        )
+
+    assert [(s["dim_id"], s["dim_name"]) for s in scores] == [
+        (dim["id"], dim["name"]) for dim in rubric["dimensions"]
+    ]
+    assert [s["score"] for s in scores] == [8, 6, 7, 5]
+
+
 def test_batched_parse_failure_falls_back_to_per_dim():
     """Malformed JSON on batched call → per-dim fallback fires."""
     from hermes_rubric import score as score_mod

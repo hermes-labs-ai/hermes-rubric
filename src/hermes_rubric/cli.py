@@ -65,7 +65,8 @@ def main() -> None:
     parser.add_argument("--artifact-class", default=None,
                         help="Use a deterministic class template for the rubric instead of "
                              "LLM synthesis. Available: social-post, show-hn-post, linkedin-post, "
-                             "outreach-email. Stage 1 is bypassed; dim set is fixed across runs.")
+                             "outreach-email, repo-readme. Stage 1 is bypassed; dim set is fixed "
+                             "across runs.")
 
     args = parser.parse_args()
 

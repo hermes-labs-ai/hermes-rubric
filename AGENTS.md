@@ -13,7 +13,8 @@ An evidence-first scoring tool. Three stages before any number is produced: rubr
 
 ## Rules
 
-1. No API key may be required for the tool to run
+1. The default auto-detected paths must not require an API key; cloud backends
+   remain explicit opt-ins
 2. Both adversarial tests in `tests/test_adversarial.py` must pass before any change ships
 3. Hedge enforcement in `score.py` is a hard constraint — do not weaken it
 4. Any new rubric dimension must cite a failure mode in `calibration/failure-mode-taxonomy.md`
@@ -21,6 +22,6 @@ An evidence-first scoring tool. Three stages before any number is produced: rubr
 
 ## Backend auto-detection
 
-Priority: claude-cli > ollama-local > RuntimeError
+Automatic priority: claude-cli > ollama-local > RuntimeError
 
-Do not add API-key-based backends. Do not add OpenAI or Anthropic direct SDK calls.
+Do not add API-key-based or third-party backends to automatic detection.
