@@ -16,6 +16,8 @@ For builders shipping AI artifacts (papers, PRs, prompts, cold emails, lead doss
 pip install hermes-rubric
 ```
 
+By default, the CLI auto-detects Claude Code first, then local Ollama; see [Backends](docs/BACKENDS.md) for requirements and alternatives.
+
 ## Quick start
 
 ```bash
