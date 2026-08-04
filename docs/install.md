@@ -15,7 +15,7 @@ pip install hermes-rubric
 
 ```bash
 hermes-rubric --version
-# hermes-rubric 1.0.1
+# hermes-rubric 1.0.2
 ```
 
 ## Backends
@@ -42,7 +42,6 @@ git clone https://github.com/hermes-labs-ai/hermes-rubric
 cd hermes-rubric
 pip install -e ".[dev]"
 pytest
-# 73 tests should pass
 ```
 
 ## Upgrade
@@ -53,4 +52,4 @@ pip install --upgrade hermes-rubric
 
 ## What gets installed
 
-The `hermes-rubric` CLI command + the `hermes_rubric` Python library. No API keys, no cloud services, no telemetry. Everything runs locally.
+The `hermes-rubric` CLI command and the `hermes_rubric` Python library. The default Claude Code and Ollama paths require no API key; optional cloud backends use their provider credentials. Hermes Rubric sends no telemetry of its own.

@@ -2,7 +2,7 @@
 
 **Language scaffolds hold state. LLM scores don't — unless you force them to.**
 
-The LPCI thesis (proved March 2026) showed that a stateless LLM can maintain coherent state through language scaffolding alone — the artifact is the memory, not the model. hermes-rubric applies that same principle to scoring: the rubric + evidence citations are the audit trail. The number at the end means something only because the scaffold forced the model to collect evidence before scoring.
+Hermes Rubric makes the rubric, evidence citations, and receipt the inspectable state of a scoring run. The number at the end is useful only because the workflow requires evidence collection before scoring.
 
 Without a scaffold, LLMs reward fluency. hermes-rubric forces a three-stage path before any number is produced:
 
@@ -69,4 +69,4 @@ hermes-rubric is the **scoring and regression** layer. It sits above the static 
 | **Scoring + regression** | **hermes-rubric** (this tool) |
 | Evidence bundle (audit deliverable) | hermes-bundle (proprietary) |
 
-[Install →](install.md) | [Quickstart →](quickstart.md) | [Pricing →](pricing.md)
+[Install →](install.md) | [Quickstart →](quickstart.md)

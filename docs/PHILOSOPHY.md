@@ -22,7 +22,7 @@ This tool is an instance of a wider Hermes Labs thesis: AI reliability is a ques
 
 Most "improve the LLM's output" interventions try to make the model smarter (RLHF, finetuning, better prompts). hermes-rubric goes the other direction: leave the model alone, engineer the language layer above it. The model's outputs become structured artifacts (rubric, citations, scores) that can be inspected, reproduced, and audited. The LLM is treated as an interpretive engine, not a smart oracle.
 
-This is formalized as **LPCI** (Linguistically Persistent Cognitive Interface): stateless LLMs hold state via language scaffolds, not architecture. Transfer entropy ≈ 0 in embedding-space proxy, Markov property holds, the substrate is linguistic. See the [langquant repo](https://github.com/hermes-labs-ai/langquant) for the empirical demonstration.
+Hermes Rubric applies a narrower engineering idea: the rubric, citations, and receipt externalize the state needed to inspect a scoring run. The model remains an interpretive engine rather than the source of truth.
 
 The engineering follow-on for evaluation: when language is the substrate, scoring is interpretive engineering. The artifact is the score plus its citations plus its receipts. The LLM is the engine, not the source of truth.
 
@@ -42,7 +42,7 @@ If those tests fail, the build breaks. The scaffold is contractually enforced.
 - **Not a prompt-optimization technique.** The wins come from structure, not phrasing.
 - **Not a benchmark of LLM quality.** The same model gets different scores on different artifacts; that's the design.
 - **Not a substitute for human review on high-stakes decisions.** The score and receipts are an input to human judgment, not a replacement.
-- **Not deterministic across rubric synthesis.** Stage 1 is LLM-driven; same intent + context can produce slightly different dim sets. Use `--artifact-class <name>` for full reproducibility on repeated artifact types.
+- **Not deterministic across rubric synthesis.** Stage 1 is LLM-driven; same intent + context can produce slightly different dim sets. Use `--artifact-class <name>` to keep the dimension set fixed across runs.
 
 ## Further reading
 

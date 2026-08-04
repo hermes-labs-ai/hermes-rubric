@@ -18,7 +18,7 @@ hermes-rubric \
     --out result.json
 ```
 
-Replace `STYLE-GUIDE.md` with any rubric context you have (or omit `--context` — the rubric will be synthesized from `--intent` alone).
+Replace `STYLE-GUIDE.md` with the standards or requirements the rubric should apply. `--context` is required unless you use a bundled `--artifact-class` template.
 
 ## Step 3: Read the output
 
@@ -33,24 +33,37 @@ Replace `STYLE-GUIDE.md` with any rubric context you have (or omit `--context` �
   "evidence_citations": [
     {
       "dim_id": "claim_density",
-      "citation": "paper.md:42",
-      "quote": "TE≈0 (Markov), measured across 7 models"
+      "evidence_found": true,
+      "citations": [
+        {
+          "quote": "The evaluation includes a reproducible comparison command.",
+          "evidence_id": "S1:E1",
+          "location": "S1:E1 — Whole document",
+          "source_class": "doc"
+        }
+      ]
     }
   ],
   "per_dim_scores": [
-    {"dim_id": "claim_density", "score": 8, "rationale": "3 citations with file:line pointers"},
-    {"dim_id": "reproducibility", "score": 4, "rationale": "hedged — no reproduction command found", "hedged": true}
+    {"dim_id": "claim_density", "score": 8, "score_rationale": "3 citations with evidence pointers"},
+    {"dim_id": "reproducibility", "score": 4, "score_rationale": "hedged — no reproduction command found", "hedge_applied": true}
   ],
   "aggregate": 6.5,
   "hedge_dims": ["reproducibility"],
-  "hedge_note": "1 dimension had thin evidence — score less reliable: reproducibility",
+  "hedge_note": "1 dimension(s) had thin evidence — scores for these are less reliable: Reproducibility",
+  "dim_summaries": [
+    {"dim_id": "claim_density", "name": "Claim Density", "score": 8, "weight": 3, "hedge": false}
+  ],
   "receipt": {
-    "backend": "claude-cli",
-    "timestamp_utc": "2026-04-26T14:32:00Z",
-    "input_hashes": {"target": "sha256:...", "context": "sha256:..."}
+    "tool_version": "hermes-rubric 1.0.2",
+    "backend": "claude-cli-contextual",
+    "inputs": {"target_hash_sha256": "...", "context_hash_sha256": "..."},
+    "pipeline": {"stage_1_rubric_hash_sha256": "..."}
   }
 }
 ```
+
+The output above is truncated to its most useful fields.
 
 **What to look at first:**
 
@@ -64,6 +77,7 @@ Replace `STYLE-GUIDE.md` with any rubric context you have (or omit `--context` �
 ```bash
 hermes-rubric \
     --intent "rate this PR for production-readiness" \
+    --context CONTRIBUTING.md \
     --target pr-description.md \
     --out pr-score.json
 ```
@@ -82,6 +96,7 @@ hermes-rubric \
 ```bash
 hermes-rubric --batch \
     --intent "rate this for publication-readiness" \
+    --context STYLE-GUIDE.md \
     --target paper.md \
     --out result.json
 ```
@@ -89,16 +104,27 @@ hermes-rubric --batch \
 ## Python library
 
 ```python
-from hermes_rubric import synthesize_rubric, collect_evidence, score_all, compute_aggregate
+from hermes_rubric.synthesize import synthesize
+from hermes_rubric.evidence import collect_evidence
+from hermes_rubric.score import score_dimensions, compute_aggregate
 
-rubric = synthesize_rubric(intent="...", context_text="...", target_type="paper")
-evidence = collect_evidence(rubric, target_text="...")
-scores = score_all(rubric, evidence, target_text="...")
-result = compute_aggregate(rubric, scores)
+rubric = synthesize(
+    intent="...",
+    context_summary="...",
+    target_type="paper",
+    target_excerpt="...",
+)
+evidence = collect_evidence(
+    rubric=rubric,
+    target_content="...",
+    target_path="paper.md",
+)
+scores = score_dimensions(rubric=rubric, evidence_list=evidence)
+result = compute_aggregate(rubric=rubric, scores=scores)
 
 print(result["aggregate"])       # 8.7
 print(result["hedge_dims"])      # ["reproducibility"]
-print(result["evidence_citations"])  # [{dim_id, citation, quote}, ...]
+print(evidence)                   # [{dim_id, citations, evidence_summary, ...}, ...]
 ```
 
 ## Calibration dataset
