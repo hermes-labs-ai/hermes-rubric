@@ -4,7 +4,7 @@ Evidence-first assessment for agent outputs and applications.
 
 [![PyPI](https://img.shields.io/pypi/v/hermes-rubric)](https://pypi.org/project/hermes-rubric/)
 [![Python](https://img.shields.io/pypi/pyversions/hermes-rubric)](https://pypi.org/project/hermes-rubric/)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 [![CI](https://github.com/hermes-labs-ai/hermes-rubric/actions/workflows/ci.yml/badge.svg)](https://github.com/hermes-labs-ai/hermes-rubric/actions/workflows/ci.yml)
 
 Hermes turns an artifact into cited evidence, dimension scores, honest coverage facts, and caller-controlled feedback. It measures and explains; your application decides what to do next.
@@ -191,4 +191,4 @@ The adversarial tests in `tests/test_adversarial.py` are release gates. See [CON
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+Copyright 2026 Hermes Labs. Licensed under Apache-2.0. See [LICENSE](LICENSE).

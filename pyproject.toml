@@ -7,7 +7,7 @@ name = "hermes-rubric"
 version = "1.1.0"
 description = "Evidence-first assessment for agent outputs and applications, with cited scoring and coverage-aware feedback."
 readme = "README.md"
-license = { text = "MIT" }
+license = "Apache-2.0"
 authors = [{ name = "Rolando Bosch", email = "roli@hermes-labs.ai" }]
 requires-python = ">=3.10"
 dependencies = ["pyyaml>=6.0"]
@@ -15,7 +15,7 @@ keywords = ["llm", "evaluation", "rubric", "scoring", "ai-audit", "evidence", "h
 classifiers = [
   "Development Status :: 4 - Beta",
   "Intended Audience :: Developers",
-  "License :: OSI Approved :: MIT License",
+  "License :: OSI Approved :: Apache Software License",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",

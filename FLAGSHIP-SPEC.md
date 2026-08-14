@@ -82,7 +82,7 @@ Each Hermes tool either *produces* something hermes-rubric scores or *consumes* 
 hermes-rubric must pass its own audit. The recursive sanity check is `SCOPE_CLASS=sweep-plan hermes-rubric-blinded --target FLAGSHIP-SPEC.md`; result published as `audit-runs/flagship-spec-self-audit.md` in the repo, sealed in the manifest. **That self-audit is the v1 demo.** If the tool can't audit its own spec, it can't audit yours.
 
 Buyer-scrutiny checklist (load-bearing items called out):
-- ✅ Open source, MIT, on PyPI; Hermes Seal manifest staged
+- ✅ Open source under Apache-2.0, on PyPI; Hermes Seal manifest staged
 - ✅ Reproducibility receipt per scoring run (prompt sha256 + backend + timestamp)
 - ✅ No vendor lock-in: 5 backends incl. local Ollama (data never leaves machine)
 - ✅ Adversarial fabrication test enforces evidence-gate mechanically
