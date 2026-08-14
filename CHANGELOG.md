@@ -1,6 +1,20 @@
 # Changelog
 
-## 1.0.2 — 2026-08-04 — scoring identity and integration clarity
+## [1.1.0] — 2026-08-14 — portable assessment core
+
+- Add one-call in-memory and path APIs: `assess`, `assess_path`, and async wrappers.
+- Add typed top-level results with stable serialization and result schema `1.0`.
+- Support caller-provided frozen rubrics alongside synthesis and artifact classes.
+- Report complete/partial evidence coverage, byte/source facts, and limitations.
+- Normalize public errors by pipeline stage while preserving exception causes.
+- Add caller-policy feedback with quality, evidence, and coverage gap kinds.
+- Delegate the CLI to the shared public orchestrator while preserving existing flags,
+  exit behavior, and output keys.
+- Lead documentation with the agent/application integration path and state the
+  current prefix-window limitation explicitly.
+- Add release notes, an adapter contract, and a portable agent-output example.
+
+## [1.0.2] — 2026-08-04 — scoring identity and integration clarity
 
 - Pin Stage-3 dimension IDs and names to the synthesized rubric across
   per-dimension, batched, missing-result, and parse-fallback paths.

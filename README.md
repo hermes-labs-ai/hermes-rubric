@@ -1,164 +1,194 @@
 # hermes-rubric
 
-Score AI artifacts with receipts, not vibes.
+Evidence-first assessment for agent outputs and applications.
 
 [![PyPI](https://img.shields.io/pypi/v/hermes-rubric)](https://pypi.org/project/hermes-rubric/)
 [![Python](https://img.shields.io/pypi/pyversions/hermes-rubric)](https://pypi.org/project/hermes-rubric/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![CI](https://github.com/hermes-labs-ai/hermes-rubric/actions/workflows/ci.yml/badge.svg)](https://github.com/hermes-labs-ai/hermes-rubric/actions/workflows/ci.yml)
-[![Hermes Seal](https://img.shields.io/badge/hermes--seal-verified-purple)](https://hermes-labs.ai)
 
-For builders shipping AI artifacts (papers, PRs, prompts, cold emails, lead dossiers) where you need a defensible score with citations, not an unaudited LLM judgment. Built for the case where "the model said 8.7" doesn't survive review.
+Hermes turns an artifact into cited evidence, dimension scores, honest coverage facts, and caller-controlled feedback. It measures and explains; your application decides what to do next.
+
+```python
+from hermes_rubric import FeedbackPolicy, assess
+
+result = assess(
+    target=agent_output,
+    intent="Answer accurately and support material claims with checkable evidence.",
+    context=task_context,
+    target_type="agent-output",
+    backend="openai-sdk",
+)
+
+print(result.aggregate)
+print(result.coverage.status)
+print(result.feedback(FeedbackPolicy(minimum_score=7)).to_prompt())
+```
+
+The same call can sit inside LangChain, the OpenAI Agents SDK, Semantic Kernel, PydanticAI, a bespoke loop, a notebook, CI, or a plain Python service. Those frameworks are not core dependencies, and Hermes does not run an agent loop for you.
 
 ## Install
+
+The base package requires Python 3.10 or newer and PyYAML:
 
 ```bash
 pip install hermes-rubric
 ```
 
-By default, the CLI auto-detects Claude Code first, then local Ollama; see [Backends](docs/BACKENDS.md) for requirements and alternatives.
+For the example above, install the OpenAI extra and set `OPENAI_API_KEY`:
 
-## Quick start
+```bash
+pip install "hermes-rubric[openai]"
+```
+
+You can instead use local Ollama, Claude Code, another built-in backend, or a backend plugin. Automatic selection checks authenticated Claude Code first, then local Ollama; cloud providers are always explicit opt-ins. See [Backends](docs/BACKENDS.md).
+
+## One transaction, three evidence-first stages
+
+Hermes keeps the measuring process separate from runtime policy:
+
+1. Synthesize a task-specific rubric, load a bundled deterministic template, or accept a caller-provided frozen rubric.
+2. Collect and validate citations for each dimension.
+3. Score only against accepted evidence, applying the existing hedge, no-evidence, and source-authority clamps.
+
+The returned `AssessmentResult` has attribute access plus `to_dict()` and `to_json()`. Its JSON preserves the established CLI keys and adds a versioned schema and coverage report.
+
+```python
+payload = result.to_dict()
+
+assert payload["schema_version"] == "1.0"
+print(payload["evidence_citations"])
+print(payload["per_dim_scores"])
+print(payload["receipt"])
+```
+
+The aggregate is a signal, not a verdict.
+
+## Choose the measuring stick
+
+Synthesize from intent and context when the criteria should be task-specific:
+
+```python
+result = assess(
+    target=answer,
+    intent="Evaluate whether this answer is accurate and well-supported.",
+    context="The answer must distinguish observation from inference.",
+    target_type="agent-output",
+)
+```
+
+Reuse a frozen rubric when runs must share the same dimensions:
+
+```python
+import json
+from hermes_rubric import assess
+
+with open("rubric.json") as handle:
+    frozen_rubric = json.load(handle)
+
+result = assess(target=answer, rubric=frozen_rubric)
+```
+
+Use a bundled deterministic artifact class for common publishing surfaces:
+
+```python
+result = assess(target=readme_text, artifact_class="repo-readme")
+```
+
+Bundled classes are `social-post`, `show-hn-post`, `linkedin-post`, `outreach-email`, and `repo-readme`.
+
+## Coverage is part of the result
+
+Version 1.1 uses the existing UTF-8-safe prefix strategy for evidence collection. The default target window is 8,000 bytes. Hermes reports `coverage.status` as `complete` or `partial`, includes visible and total byte facts when they are knowable, discloses directory source limits, and lists plain-language limitations.
+
+```python
+if result.coverage.status == "partial":
+    for limitation in result.coverage.limitations:
+        print(limitation)
+```
+
+`partial` means relevant material may not have been inspected. It must not be translated into “the evidence is absent.” Full chunked retrieval is a later engine capability, not a v1.1 claim.
+
+## Feedback without hidden policy
+
+Hermes distinguishes three next-step types:
+
+- `quality_gap`: inspected evidence supports a score below a threshold you supplied.
+- `evidence_gap`: accepted evidence is absent or hedged.
+- `coverage_gap`: the relevant material may not have been inspected.
+
+No pass/fail threshold is built in. `FeedbackPolicy(minimum_score=...)` is caller policy, and `to_prompt()` only creates deterministic instructions—it never mutates a runtime or retries an agent. A coverage-only gap asks for wider inspection, not an automatic rewrite.
+
+## File and CLI workflows
+
+Use `assess_path()` for a file or directory:
+
+```python
+from hermes_rubric import assess_path
+
+result = assess_path(
+    "paper.md",
+    intent="Evaluate publication readiness.",
+    context_path="STYLE-GUIDE.md",
+    target_type="paper",
+)
+```
+
+The CLI is the equivalent file and automation surface:
 
 ```bash
 hermes-rubric \
-  --intent "rate this paper for publication-readiness" \
+  --intent "Evaluate publication readiness" \
   --context STYLE-GUIDE.md \
   --target paper.md \
   --out result.json
 ```
 
-Truncated output:
+Existing flags, output keys, and stage exit codes remain available. See the full [CLI reference](docs/CLI.md).
 
-```json
-{
-  "aggregate": 8.7,
-  "max_possible": 10.0,
-  "hedge_dims": ["Reproducibility"],
-  "hedge_note": "1 dimension(s) had thin evidence — scores for these are less reliable: Reproducibility",
-  "per_dim_scores": [
-    {"dim_id": "claim_density", "score": 8, "score_rationale": "..."}
-  ],
-  "evidence_citations": [
-    {
-      "dim_id": "claim_density",
-      "evidence_found": true,
-      "citations": [
-        {
-          "quote": "...",
-          "evidence_id": "S1:E1",
-          "location": "S1:E1 — Whole document",
-          "source_class": "doc"
-        }
-      ]
-    }
-  ],
-  "dim_summaries": [
-    {"dim_id": "claim_density", "name": "Claim Density", "score": 8, "weight": 3, "hedge": false}
-  ],
-  "receipt": {
-    "tool_version": "hermes-rubric 1.0.2",
-    "backend": "claude-cli-contextual",
-    "inputs": {"target_hash_sha256": "...", "context_hash_sha256": "..."},
-    "pipeline": {"stage_1_rubric_hash_sha256": "..."}
-  }
-}
+Async wrappers keep synchronous providers off the event loop:
+
+```python
+from hermes_rubric import assess_async
+
+result = await assess_async(answer, rubric=frozen_rubric)
 ```
 
-What the keys mean:
+They use `asyncio.to_thread`; cancellation cannot interrupt a provider call already running in its worker thread.
 
-- `aggregate` - weighted score (0-10). Signal, not verdict.
-- `hedge_dims` - dimensions where evidence was thin. Scores in these dims clamp to `[3, 7]`. The more hedged dims, the less you should trust the aggregate.
-- `evidence_citations` - each score carries quoted evidence, its `evidence_id`, and a runtime-canonicalized location and source class. This is the audit trail.
-- `receipt` - records backend, timestamp, and input hashes. The demonstrated agreement is batch-versus-per-dimension scoring on five fixtures; Stage-1 synthesis remains non-deterministic.
+## When to use Hermes
 
-## What it does
+Use it when:
 
-Ask an LLM to score something. You get `8.4/10`. No audit trail, no idea why, drift on rerun. Fluency outscores substance.
+- an agent or application needs cited, inspectable assessment rather than a raw judge score;
+- weak or missing evidence must remain visible;
+- the same assessment contract should work across different runtimes;
+- receipts and frozen rubrics matter for reviewing repeated runs.
 
-hermes-rubric replaces that with three stages: synthesize a rubric, collect evidence citations, score only against the evidence. Every score ships with a citation list (see the JSON above). Dimensions where evidence is thin get clamped and flagged. Batch and per-dimension scoring agreed within the pre-registered margin on five fixtures; that does not make Stage-1 synthesis deterministic.
-
-## Key features
-
-- **Audit trail per dimension.** Every score ties to quoted evidence with a runtime-canonicalized location. No more headline numbers without backing.
-- **Hedge-on-thin-evidence.** Dimensions with weak evidence are clamped to `[3, 7]` and flagged. The model can't bury weak evidence under a confident number.
-- **Adversarial gates.** Two tests fail the build if fluency outscores substance, or if fabricated claims outscore evidenced ones.
-- **Reproducibility receipts.** Record input hashes, backend, and timestamp. The demonstrated result is batch-versus-per-dimension agreement on five fixtures, not a general rerun guarantee.
-- **Class-aware mode.** `--artifact-class social-post` uses a fixed rubric template instead of LLM synthesis, keeping the dimension set stable across runs.
-- **7 backends out of the box.** Claude Code CLI, Ollama, DashScope Qwen, Gemini HTTP, OpenAI HTTP, OpenAI SDK, and Google GenAI SDK, plus a plugin entry point for your own.
-
-## Evaluation evidence
-
-The committed [2026-04-25 report](experiments/batch-equiv-2026-04-25/RESULTS.md) documents a bounded batch-versus-per-dimension comparison on five fixtures. Raw run JSON is not included, so this repository does not currently support a from-clone recomputation claim. The test suite also includes two adversarial gates.
-
-## When to use it
-
-- Scoring artifacts where fluency-vs-substance divergence matters: papers, proposals, PRs, cold emails, lead dossiers
-- You need an audit trail. "The model said 8.7" isn't enough; you need to know why
-- You're calibrating against a specific style guide and generic "quality vibes" won't do
-- You need receipts and fixed rubric dimensions to compare and defend repeated scoring runs
-
-## When not to use it
-
-- Binary pass/fail gates (use a deterministic linter)
-- Single-sentence inputs (no evidence surface to cite)
-- Volume-over-fidelity scoring where cost matters more than rigor
-- Adversarial scoring where the author controls both the artifact and the rubric synthesis
+Use a deterministic validator instead when the rule can be expressed exactly. Do not use Hermes as proof of factual truth, as a compliance certification, or as an automatic release decision. If the artifact is longer than the inspected window, review coverage before acting on missing evidence.
 
 ## Documentation
 
-- [`docs/PHILOSOPHY.md`](docs/PHILOSOPHY.md) - the linguistic-state thesis behind the design
-- [`docs/BENCHMARKS.md`](docs/BENCHMARKS.md) - Cohen's κ methodology, per-backend breakdown, paired-run details
-- [`docs/CLI.md`](docs/CLI.md) - all flags, subcommands, environment variables
-- [`docs/BACKENDS.md`](docs/BACKENDS.md) - 7 built-in backends + plugin entry-point protocol
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) - three-stage scaffold internals
-- [`docs/API.md`](docs/API.md) - Python library reference
-- [`AGENTS.md`](AGENTS.md) - integration guide for AI agents and coding assistants
-- [`llms.txt`](llms.txt) - LLM-readable project summary
-- [`calibration/`](calibration/) - 7 labeled cases, meta-rubric, 24-failure-mode taxonomy
-- [`experiments/`](experiments/) - historical evaluation reports and run manifests
-
-## Examples
-
-Three worked examples ship in-repo:
-
-- [`evals/wedge-variance/`](evals/wedge-variance/) - variance comparison: hermes-rubric aggregate vs raw 0-10 LLM rating
-- [`applied/papers-20260423.md`](applied/papers-20260423.md) - two published Zenodo papers scored on publication-readiness
-- [`calibration/dataset.jsonl`](calibration/dataset.jsonl) - 7 labeled cases used for cross-backend κ measurement
-
-## Library usage
-
-```python
-from hermes_rubric.synthesize import synthesize
-from hermes_rubric.evidence import collect_evidence
-from hermes_rubric.score import score_dimensions, compute_aggregate
-
-rubric = synthesize(intent="...", context_summary="...", target_type="paper", target_excerpt="...")
-evidence = collect_evidence(rubric=rubric, target_content="...", target_path="paper.md")
-scores = score_dimensions(rubric=rubric, evidence_list=evidence)
-result = compute_aggregate(rubric=rubric, scores=scores)
-```
-
-Full API reference: [`docs/API.md`](docs/API.md).
+- [Quickstart](docs/quickstart.md)
+- [Python API](docs/API.md)
+- [Architecture and product boundary](docs/ARCHITECTURE.md)
+- [Adapter contract](docs/ADAPTERS.md)
+- [Backends](docs/BACKENDS.md)
+- [CLI](docs/CLI.md)
+- [Benchmarks and evidence limits](docs/BENCHMARKS.md)
+- [v1.1.0 release notes](RELEASE-NOTES-v1.1.0.md)
 
 ## Contributing
 
 ```bash
-git clone https://github.com/hermes-labs-ai/hermes-rubric && cd hermes-rubric
+git clone https://github.com/hermes-labs-ai/hermes-rubric
+cd hermes-rubric
 pip install -e ".[dev]"
 pytest
 ```
 
-The suite includes two adversarial gates and a documentation-consistency gate. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+The adversarial tests in `tests/test_adversarial.py` are release gates. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
 MIT. See [LICENSE](LICENSE).
-
-## Enterprise
-
-For custom AI-reliability engagements, on-prem deployments, or audit-grade evaluation pipelines: roli@hermes-labs.ai · https://lpci.ai
-
-## About
-
-hermes-rubric is part of the Hermes Labs reliability stack for the agent era. Founder: Rolando (Roli) Bosch. See [`ABOUT.md`](ABOUT.md) for the canonical bio and company context. Cite as: Bosch, R. (2026). *Hermes Labs: AI reliability infrastructure for autonomous agents.* https://hermes-labs.ai

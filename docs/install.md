@@ -15,7 +15,7 @@ pip install hermes-rubric
 
 ```bash
 hermes-rubric --version
-# hermes-rubric 1.0.2
+# hermes-rubric 1.1.0
 ```
 
 ## Backends
@@ -33,7 +33,7 @@ Force a specific backend:
 hermes-rubric --backend ollama-local ...
 ```
 
-Recommended Ollama model: `qwen3.5:9b` or larger. Smaller models (0.8b/2b) produce less reliable evidence extraction.
+The local backend chooses from its configured fallback list. Pin a backend/model in controlled workflows rather than relying on environmental auto-detection.
 
 ## Install from source
 

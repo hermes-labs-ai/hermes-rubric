@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from . import __version__
+from .models import SCHEMA_VERSION
 
 
 def build_receipt(
@@ -20,6 +21,7 @@ def build_receipt(
     scores: list[dict[str, Any]],
     target_content: str,
     context_content: str,
+    coverage: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build a reproducibility receipt for the scoring run."""
     return {
@@ -39,6 +41,7 @@ def build_receipt(
             "context_length_chars": len(context_content),
         },
         "pipeline": {
+            "result_schema_version": SCHEMA_VERSION,
             "stage_1_rubric_dimensions": len(rubric.get("dimensions", [])),
             "stage_1_rubric_hash_sha256": rubric_hash(rubric),
             "stage_1_rubric_source": rubric.get("rubric_source", "synthesized"),
@@ -47,6 +50,7 @@ def build_receipt(
             "hedge_dimensions": [
                 ev["dim_id"] for ev in evidence_list if ev.get("hedge")
             ],
+            "coverage": coverage,
         },
         "reproducibility_note": (
             "Records inputs, backend, and rubric_hash. The demonstrated agreement is "

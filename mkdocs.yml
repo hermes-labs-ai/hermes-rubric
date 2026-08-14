@@ -1,5 +1,5 @@
 site_name: hermes-rubric
-site_description: Evidence-first structured scoring. Synthesizes a rubric, collects citations, then scores — not fluency.
+site_description: Framework-neutral, evidence-first assessment for agent outputs and applications.
 site_url: https://hermes-labs-ai.github.io/hermes-rubric
 repo_url: https://github.com/hermes-labs-ai/hermes-rubric
 repo_name: hermes-labs-ai/hermes-rubric
@@ -24,7 +24,13 @@ nav:
   - Home: index.md
   - Install: install.md
   - Quickstart: quickstart.md
-  - Pricing: pricing.md
+  - Python API: API.md
+  - CLI: CLI.md
+  - Backends: BACKENDS.md
+  - Architecture: ARCHITECTURE.md
+  - Adapter contract: ADAPTERS.md
+  - Benchmarks: BENCHMARKS.md
+  - Philosophy: PHILOSOPHY.md
 
 plugins:
   - search

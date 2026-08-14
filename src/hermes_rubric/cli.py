@@ -1,17 +1,13 @@
 """hermes-rubric CLI entry point."""
 
 import argparse
-import json
 import sys
 from pathlib import Path
-from typing import Any
 
-from . import __version__, backends
-from .evidence import collect_evidence, read_context, read_target
+from . import __version__
+from .assessment import assess_path
+from .errors import AssessmentError
 from .preambles import SCOPE_CHOICES
-from .receipt import build_receipt
-from .score import compute_aggregate, score_dimensions
-from .synthesize import synthesize
 
 
 def main() -> None:
@@ -87,113 +83,37 @@ def main() -> None:
         if args.verbose:
             print(f"[hermes-rubric] {msg}", file=sys.stderr)
 
-    # Auto-detect backend
     try:
-        backend = args.backend or backends.detect()
-    except RuntimeError as e:
-        print(f"ERROR: {e}", file=sys.stderr)
-        sys.exit(1)
-    log(f"backend: {backend}")
-
-    # Read inputs
-    try:
-        target_content, resolved_target = read_target(args.target, window_bytes=args.target_window_bytes)
-    except FileNotFoundError as e:
-        print(f"ERROR: {e}", file=sys.stderr)
-        sys.exit(1)
-
-    context_content = read_context(args.context, window_bytes=args.context_window_bytes)
-    log(f"target: {resolved_target} ({len(target_content)} chars)")
-    log(f"context: {args.context} ({len(context_content)} chars)")
-
-    # Stage 1: Synthesize rubric (or load deterministic class template)
-    if args.artifact_class:
-        log(f"Stage 1: loading class template {args.artifact_class!r} (synthesis bypassed)...")
-        try:
-            from . import classes as classes_mod
-            class_data = classes_mod.load_class(args.artifact_class)
-            rubric = classes_mod.to_rubric(class_data)
-        except Exception as e:
-            print(f"ERROR in Stage 1 (class template load): {e}", file=sys.stderr)
-            sys.exit(2)
-    else:
-        log("Stage 1: synthesizing rubric...")
-        try:
-            rubric = synthesize(
-                intent=args.intent,
-                context_summary=context_content,
-                target_type=args.target_type,
-                backend=backend,
-                scope_class=args.scope_class,
-                intent_debias=args.intent_debias,
-                target_excerpt=target_content,
-            )
-        except Exception as e:
-            print(f"ERROR in Stage 1 (rubric synthesis): {e}", file=sys.stderr)
-            sys.exit(2)
-    log(f"  rubric: {len(rubric['dimensions'])} dimensions")
-
-    # Stage 2: Collect evidence
-    log("Stage 2: collecting evidence...")
-    try:
-        evidence_list = collect_evidence(
-            rubric=rubric,
-            target_content=target_content,
-            target_path=resolved_target,
-            backend=backend,
+        result = assess_path(
+            args.target,
+            intent=args.intent,
+            context_path=args.context,
+            target_type=args.target_type,
+            artifact_class=args.artifact_class,
+            backend=args.backend,
             batch=args.batch,
             target_window_bytes=args.target_window_bytes,
+            context_window_bytes=args.context_window_bytes,
+            scope_class=args.scope_class,
+            intent_debias=args.intent_debias,
+            _progress=log,
         )
-    except Exception as e:
-        print(f"ERROR in Stage 2 (evidence collection): {e}", file=sys.stderr)
-        sys.exit(3)
-    hedge_count = sum(1 for ev in evidence_list if ev.get("hedge"))
-    log(f"  evidence: {len(evidence_list)} dimensions, {hedge_count} hedged")
-
-    # Stage 3: Score
-    log("Stage 3: scoring dimensions...")
-    try:
-        scores = score_dimensions(rubric=rubric, evidence_list=evidence_list, backend=backend, batch=args.batch)
-        aggregate_data = compute_aggregate(rubric=rubric, scores=scores)
-    except Exception as e:
-        print(f"ERROR in Stage 3 (scoring): {e}", file=sys.stderr)
+    except AssessmentError as exc:
+        if exc.stage in {"backend", "input"}:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            sys.exit(1)
+        if exc.stage == "rubric":
+            label = "class template load" if args.artifact_class else "rubric synthesis"
+            print(f"ERROR in Stage 1 ({label}): {exc}", file=sys.stderr)
+            sys.exit(2)
+        if exc.stage == "evidence":
+            print(f"ERROR in Stage 2 (evidence collection): {exc}", file=sys.stderr)
+            sys.exit(3)
+        label = "scoring" if exc.stage == "score" else exc.stage
+        print(f"ERROR in Stage 3 ({label}): {exc}", file=sys.stderr)
         sys.exit(4)
-    log(f"  aggregate: {aggregate_data['aggregate']}/10")
 
-    # Build receipt — surface claude-cli mode (bare vs contextual) so
-    # downstream readers know whether the score was context-compensated.
-    backend_label = backend
-    if backend == "claude-cli":
-        backend_label = backends.claude_cli_mode()
-    if args.batch:
-        backend_label = f"{backend_label}+batch"
-    receipt = build_receipt(
-        intent=args.intent,
-        context_path=args.context,
-        target_path=args.target,
-        backend=backend_label,
-        rubric=rubric,
-        evidence_list=evidence_list,
-        scores=scores,
-        target_content=target_content,
-        context_content=context_content,
-    )
-
-    # Assemble output
-    output: dict[str, Any] = {
-        "rubric": rubric,
-        "evidence_citations": evidence_list,
-        "per_dim_scores": scores,
-        "aggregate": aggregate_data["aggregate"],
-        "max_possible": 10.0,
-        "hedge_dims": aggregate_data["hedge_dims"],
-        "hedge_note": aggregate_data["hedge_note"],
-        "dim_summaries": aggregate_data["dim_summaries"],
-        "receipt": receipt,
-    }
-
-    # Write output
-    output_json = json.dumps(output, indent=2)
+    output_json = result.to_json()
     if args.out:
         out_path = Path(args.out).expanduser()
         out_path.parent.mkdir(parents=True, exist_ok=True)

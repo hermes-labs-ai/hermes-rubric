@@ -4,7 +4,7 @@ Bounded evaluation evidence for hermes-rubric.
 
 ## Available evidence
 
-The committed [2026-04-25 report](../experiments/batch-equiv-2026-04-25/RESULTS.md) documents a batch-versus-per-dimension comparison on five fixtures. Raw run JSON is gitignored and not included, so this repository does not currently support a from-clone recomputation claim.
+The committed [2026-04-25 report](https://github.com/hermes-labs-ai/hermes-rubric/blob/main/experiments/batch-equiv-2026-04-25/RESULTS.md) documents a batch-versus-per-dimension comparison on five fixtures. Raw run JSON is gitignored and not included, so this repository does not currently support a from-clone recomputation claim.
 
 ## Test-set composition
 
@@ -14,7 +14,7 @@ The committed [2026-04-25 report](../experiments/batch-equiv-2026-04-25/RESULTS.
 - Deploy-readiness scoring
 - Email-quality scoring
 
-Full target list at [`experiments/batch-equiv-2026-04-25/RESULTS.md`](../experiments/batch-equiv-2026-04-25/RESULTS.md).
+Full target list at [`experiments/batch-equiv-2026-04-25/RESULTS.md`](https://github.com/hermes-labs-ai/hermes-rubric/blob/main/experiments/batch-equiv-2026-04-25/RESULTS.md).
 
 ## What the κ measures
 
@@ -24,11 +24,11 @@ The committed report is bounded evidence about **batch-vs-per-dim behavior** on 
 
 ## Variance comparison
 
-[`evals/wedge-variance/`](../evals/wedge-variance/) compares hermes-rubric's `aggregate` score against raw 0–10 LLM ratings on the same target × same backend. Demonstrates the variance-reduction wedge with a reproducible runner.
+[`evals/wedge-variance/`](https://github.com/hermes-labs-ai/hermes-rubric/tree/main/evals/wedge-variance) contains a runner and historical outputs comparing Hermes aggregate scores with raw 0–10 LLM ratings on the same target and backend. Interpret only the observations and limitations recorded with that run.
 
 ## Worked examples
 
-[`applied/papers-20260423.md`](../applied/papers-20260423.md) - two publicly published Zenodo papers scored on publication-readiness:
+[`applied/papers-20260423.md`](https://github.com/hermes-labs-ai/hermes-rubric/blob/main/applied/papers-20260423.md) - two publicly published Zenodo papers scored on publication-readiness:
 
 | Paper | Aggregate |
 |---|---|
@@ -39,11 +39,11 @@ Each score has a full rubric + citations + per-dimension rationale in the file.
 
 ## Calibration set
 
-[`calibration/dataset.jsonl`](../calibration/dataset.jsonl) - 7 labeled cases across paper-quality, tool-fit, and deploy-readiness. All targets are publicly available artifacts (Zenodo papers, public OSS tools).
+[`calibration/dataset.jsonl`](https://github.com/hermes-labs-ai/hermes-rubric/blob/main/calibration/dataset.jsonl) - 7 labeled cases across paper-quality, tool-fit, and deploy-readiness. All targets are publicly available artifacts (Zenodo papers, public OSS tools).
 
-[`calibration/META-RUBRIC.md`](../calibration/META-RUBRIC.md) - the rubric for evaluating rubric generators. 7 dimensions, each motivated by a specific LLM failure mode from the failure-mode taxonomy.
+[`calibration/META-RUBRIC.md`](https://github.com/hermes-labs-ai/hermes-rubric/blob/main/calibration/META-RUBRIC.md) - the rubric for evaluating rubric generators. 7 dimensions, each motivated by a specific LLM failure mode from the failure-mode taxonomy.
 
-[`calibration/failure-mode-taxonomy.md`](../calibration/failure-mode-taxonomy.md) - 24 failure modes mined from the Hermes Labs research corpus (1,892 experiment records + named post-mortem incidents). Each FM cites a source artifact.
+[`calibration/failure-mode-taxonomy.md`](https://github.com/hermes-labs-ai/hermes-rubric/blob/main/calibration/failure-mode-taxonomy.md) - the committed failure-mode taxonomy and its source pointers.
 
 ## Known limitations
 

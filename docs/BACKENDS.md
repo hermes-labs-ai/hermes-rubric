@@ -6,7 +6,7 @@ Seven built-in backends are available. Automatic selection checks only Claude Co
 
 | Backend | Requires | Notes |
 |---|---|---|
-| `claude-cli` | Claude Code installed (`claude --print`) | Default. Highest consistency. |
+| `claude-cli` | Claude Code installed (`claude --print`) | First automatic candidate. |
 | `ollama-local` | Ollama running locally (default `qwen3.5:14b`) | Zero cost, offline. Fallback chain: `gemma3:12b` → `gemma3:4b` → `mistral:7b` → `qwen3.5:9b` → `qwen3.5:4b`. |
 | `dashscope-qwen` | `DASHSCOPE_API_KEY` | Alibaba Cloud Qwen. |
 | `google-gemini` | `GEMINI_API_KEY` or `GOOGLE_API_KEY` | REST. |
@@ -82,19 +82,9 @@ Users `pip install` your package, and hermes-rubric discovers it on first call.
 
 See `src/hermes_rubric/backends.py` for the source-of-truth implementations of all seven built-in backends. Each is ~30-60 lines.
 
-## Cost / consistency tradeoff
-
-| Backend | Cost / 1k runs | Per-run consistency |
-|---|---|---|
-| `claude-cli` | $0 (uses your Claude Code subscription) | High |
-| `ollama-local` | $0 (local compute) | Medium |
-| `dashscope-qwen` | ~$0.50 | High |
-| `google-gemini` | ~$1-3 | High |
-| `openai` / `openai-sdk` | ~$5-15 | High |
-
 ## Choosing for your use case
 
-- **CI / local dev:** `claude-cli` if you have Claude Code; otherwise `ollama-local`
+- **CI / local development:** use an explicitly configured backend available in that environment
 - **Cross-backend agreement check:** run with two backends, use `hermes-rubric kappa` to measure
-- **Production scoring at volume:** `dashscope-qwen` (cheapest cloud) or `claude-cli` if you have a subscription with headroom
+- **Production:** choose explicitly based on your own latency, privacy, availability, and provider-cost requirements
 - **Historical comparison context:** see the bounded report linked from [`BENCHMARKS.md`](BENCHMARKS.md)

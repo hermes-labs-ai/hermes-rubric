@@ -2,6 +2,10 @@
 
 Full flag and subcommand reference for hermes-rubric.
 
+The CLI delegates successful runs to the same `assess_path()` transaction as
+the Python API. Existing flags, stage exit codes, default stdout behavior, and
+legacy JSON keys are preserved.
+
 ## Synopsis
 
 ```
@@ -28,6 +32,14 @@ hermes-rubric kappa --run1 <result_a.json> --run2 <result_b.json>
 | `--target-window-bytes <n>` | `8000` | Byte cap for target evidence content; oversize files emit a stderr warning |
 | `--context-window-bytes <n>` | `8000` | Byte cap for Stage-1 synthesis context; independent of the target evidence window |
 | `--verbose` | off | Print stage progress to stderr |
+
+## Coverage in JSON output
+
+Version 1.1 adds `schema_version` and `coverage` without removing or renaming
+existing keys. The current evidence strategy is a UTF-8-safe target prefix.
+When a target or directory exceeds the configured window/source limits,
+`coverage.status` is `partial` and `coverage.limitations` explains what was not
+inspected. Missing evidence under partial coverage is not proof of absence.
 
 ## Subcommands
 
