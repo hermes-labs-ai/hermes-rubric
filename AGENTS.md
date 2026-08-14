@@ -20,6 +20,13 @@ An evidence-first scoring tool. Three stages before any number is produced: rubr
 4. Any new rubric dimension must cite a failure mode in `calibration/failure-mode-taxonomy.md`
 5. Numeric claims in any file in this repo must have a pointer to a source
 
+## Public integration boundary
+
+- Prefer `hermes_rubric.assess` or `assess_path` for new integrations.
+- Runtime adapters own thresholds, retries, and mutation; the core measures and explains.
+- Never translate partial coverage into negative evidence without surfacing the coverage gap.
+- Preserve the result `schema_version`, coverage report, and receipt across transports.
+
 ## Backend auto-detection
 
 Automatic priority: claude-cli > ollama-local > RuntimeError

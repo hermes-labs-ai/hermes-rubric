@@ -198,41 +198,17 @@ def test_cli_forwards_configured_window_to_stage_2(tmp_path, monkeypatch):
     output = tmp_path / "receipt.json"
     target.write_text("paper")
     context.write_text("context")
-    rubric = {"target_type": "paper", "dimensions": [_dimension("dim_a")]}
     captured = {}
 
-    def fake_collect_evidence(**kwargs):
-        captured.update(kwargs)
-        return [_evidence("dim_a")]
+    class FakeResult:
+        def to_json(self):
+            return "{}"
 
-    monkeypatch.setattr(cli.backends, "detect", lambda: "stub")
-    monkeypatch.setattr(cli, "synthesize", lambda **kwargs: rubric)
-    monkeypatch.setattr(cli, "collect_evidence", fake_collect_evidence)
-    monkeypatch.setattr(
-        cli,
-        "score_dimensions",
-        lambda **kwargs: [
-            {
-                "dim_id": "dim_a",
-                "dim_name": "Dimension dim_a",
-                "score": 5,
-                "score_rationale": "deterministic",
-                "evidence_drove_score": "marker inspected",
-                "hedge_applied": False,
-            }
-        ],
-    )
-    monkeypatch.setattr(
-        cli,
-        "compute_aggregate",
-        lambda **kwargs: {
-            "aggregate": 5.0,
-            "hedge_dims": [],
-            "hedge_note": "",
-            "dim_summaries": [],
-        },
-    )
-    monkeypatch.setattr(cli, "build_receipt", lambda **kwargs: {})
+    def fake_assess_path(*args, **kwargs):
+        captured.update(kwargs)
+        return FakeResult()
+
+    monkeypatch.setattr(cli, "assess_path", fake_assess_path)
     monkeypatch.setattr(
         sys,
         "argv",
@@ -268,28 +244,18 @@ def test_large_target_window_does_not_expand_stage_1_context(tmp_path, monkeypat
     output = tmp_path / "receipt.json"
     target.write_text("paper")
     context.write_text("context")
-    rubric = {"target_type": "paper", "dimensions": [_dimension("dim_a")]}
     windows = {}
 
-    def fake_read_context(path, window_bytes):
-        windows["context"] = window_bytes
-        return "context"
+    class FakeResult:
+        def to_json(self):
+            return "{}"
 
-    def fake_collect_evidence(**kwargs):
+    def fake_assess_path(*args, **kwargs):
+        windows["context"] = kwargs["context_window_bytes"]
         windows["target"] = kwargs["target_window_bytes"]
-        return [_evidence("dim_a")]
+        return FakeResult()
 
-    monkeypatch.setattr(cli.backends, "detect", lambda: "stub")
-    monkeypatch.setattr(cli, "read_context", fake_read_context)
-    monkeypatch.setattr(cli, "synthesize", lambda **kwargs: rubric)
-    monkeypatch.setattr(cli, "collect_evidence", fake_collect_evidence)
-    monkeypatch.setattr(cli, "score_dimensions", lambda **kwargs: [])
-    monkeypatch.setattr(
-        cli,
-        "compute_aggregate",
-        lambda **kwargs: {"aggregate": 5.0, "hedge_dims": [], "hedge_note": "", "dim_summaries": []},
-    )
-    monkeypatch.setattr(cli, "build_receipt", lambda **kwargs: {})
+    monkeypatch.setattr(cli, "assess_path", fake_assess_path)
     monkeypatch.setattr(
         sys,
         "argv",

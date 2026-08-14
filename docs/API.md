@@ -1,113 +1,142 @@
-# Python API reference
+# Python API
 
-Library usage for embedding hermes-rubric in your own code.
+The public API is a stable assessment transaction: explicit inputs, one execution boundary, a typed result, truthful coverage, and optional caller-policy feedback.
 
-## Quick example
+## In-memory assessment
 
 ```python
-from hermes_rubric.synthesize import synthesize
-from hermes_rubric.evidence import collect_evidence
-from hermes_rubric.score import score_dimensions, compute_aggregate
+from hermes_rubric import FeedbackPolicy, assess
 
-rubric = synthesize(
-    intent="rate this as a publication-ready research artifact",
-    context_summary="...",
-    target_type="paper",
-    target_excerpt="...",
+result = assess(
+    target="The agent output to assess",
+    intent="Check accuracy and evidence grounding.",
+    context="Material claims need checkable support.",
+    target_name="agent-output.md",
+    context_name="task-context.md",
+    target_type="agent-output",
+    backend="ollama-local",
 )
 
-evidence = collect_evidence(
-    rubric=rubric,
-    target_content="...",
-    target_path="paper.md",
+print(result.aggregate)
+print(result.coverage.to_dict())
+print(result.feedback(FeedbackPolicy(minimum_score=7)).to_prompt())
+```
+
+`target` and `context` are literal strings. Hermes never guesses whether an arbitrary string is a path.
+
+## Path assessment
+
+```python
+from hermes_rubric import assess_path
+
+result = assess_path(
+    "src/",
+    intent="Assess this implementation against its stated contract.",
+    context_path="SPEC.md",
+    target_type="repo",
+    target_window_bytes=32000,
 )
-
-scores = score_dimensions(rubric=rubric, evidence_list=evidence)
-result = compute_aggregate(rubric=rubric, scores=scores)
-
-print(result["aggregate"])  # 8.7
-print(result["hedge_dims"])  # ["Reproducibility"]
 ```
 
-## Stages
+`target_path` accepts a file or directory. `context_path` accepts a file or glob. Directory loading retains the established eligible-suffix and source-count limits and reports exclusions through `result.coverage`.
 
-### `synthesize.synthesize(intent, context_summary, target_type, target_excerpt) -> dict`
+## Rubric sources
 
-Calls the configured backend to produce a rubric dictionary with a `dimensions` list.
+Exactly one source is active:
 
-### `evidence.collect_evidence(rubric, target_content, target_path, target_window_bytes=8000) -> list[dict]`
+- `rubric=<mapping>`: copy and minimally validate a caller-provided frozen rubric.
+- `artifact_class=<name>`: load a bundled deterministic class template.
+- neither: synthesize from non-empty `intent` and `context`.
 
-For each dimension in the rubric, asks the backend to find citations in `target_content`. The configured target window is the sole Stage-2 visibility cap for both per-dimension and batched evidence prompts; any hidden tail is identified by an explicit truncation marker. Each returned dictionary includes the dimension ID and name, accepted citation dictionaries, evidence summary, confidence, and hedge state.
+`rubric` and `artifact_class` are mutually exclusive. Frozen-rubric and class-template modes do not require intent or context.
 
-Dimensions where evidence is thin return no accepted citations and set `hedge = True`.
+## Function parameters
 
-### `score.score_dimensions(rubric, evidence_list) -> list[dict]`
+`assess()` accepts:
 
-For each dimension and evidence pair, asks the backend to score 0-10 based only on the evidence. Hedged dimensions clamp to [3, 7]. Returned dictionaries include `dim_id`, `dim_name`, `score`, `score_rationale`, and `hedge_applied`.
+```text
+target
+intent=None, context=None
+target_name="<memory>", context_name="<memory>"
+target_type="document"
+rubric=None, artifact_class=None
+backend=None, batch=False
+target_window_bytes=8000, context_window_bytes=8000
+scope_class=None, intent_debias=False
+```
 
-### `score.compute_aggregate(rubric, scores) -> dict`
+`assess_path()` accepts the same pipeline options, replacing the in-memory inputs and logical names with `target_path` and `context_path`.
 
-Computes the weighted aggregate, hedge summary, dimension summaries, and ID-mismatch count. The CLI combines this dictionary with the rubric, evidence, scores, and receipt to produce its final JSON output.
+## Async wrappers
 
-## Class-aware mode
+`assess_async()` and `assess_path_async()` have the same semantics. They use `asyncio.to_thread` so synchronous providers do not block the caller's event loop. Cancelling the await does not stop a provider request already executing in the worker thread.
+
+## `AssessmentResult`
+
+Stable top-level attributes:
+
+- `rubric`
+- `evidence_citations`
+- `per_dim_scores`
+- `aggregate`
+- `max_possible`
+- `hedge_dims`
+- `hedge_note`
+- `dim_summaries`
+- `receipt`
+- `schema_version`
+- `coverage`
+
+`to_dict()` and `to_json()` preserve the established CLI JSON keys. `schema_version` is the result-contract version and is independent of the package version.
+
+## `CoverageReport`
+
+Coverage reports:
+
+- `status`: `complete` or `partial`
+- `strategy`: currently `utf8-prefix`
+- `visible_bytes` and `total_bytes`, or `null` where an exact fact cannot be established
+- `considered_sources` and `total_sources`
+- `limitations`: plain-language exclusions and uncertainty
+
+The current engine does not claim full-document inspection when a prefix or source limit applies.
+
+## Feedback
 
 ```python
-from hermes_rubric.classes import load_class, to_rubric
+from hermes_rubric import FeedbackPolicy
 
-rubric = to_rubric(load_class("social-post"))
-# Skips Stage 1; rubric is loaded from hermes_rubric/classes/social-post.yaml
+packet = result.feedback(FeedbackPolicy(minimum_score=7.0))
+print(packet.to_dict())
+print(packet.to_prompt())
 ```
 
-Then proceed with `collect_evidence` and the rest as normal.
+Findings use `quality_gap`, `evidence_gap`, or `coverage_gap`. Quality findings require a caller threshold and accepted, unhedged evidence. Feedback is deterministic and does not execute a revision loop.
 
-## Backend selection
+## Errors
+
+`AssessmentError` exposes a stable `stage`:
 
 ```python
-from hermes_rubric.backends import detect, get_backend, register
+from hermes_rubric import AssessmentError, assess
 
-# Get the auto-detected backend
-backend = get_backend(detect())
-
-# Or force one
-backend = get_backend("ollama-local")
-
-# Register a custom backend
-class MyBackend:
-    name = "my-backend"
-    def call(self, prompt, max_tokens=2048):
-        ...
-    def model_id(self): return "my-model"
-    def availability(self): return True
-
-register(MyBackend())
+try:
+    result = assess("...", rubric=frozen_rubric)
+except AssessmentError as error:
+    print(error.stage)  # backend, input, rubric, evidence, score, or receipt
+    print(error.__cause__)
 ```
 
-See [`BACKENDS.md`](BACKENDS.md) for the full plugin protocol.
+This lets adapters choose fail-open, fail-closed, retry, or human-review behavior without parsing exception strings.
 
-## Cohen's κ between two runs
+## Legacy stage functions
 
-```python
-from hermes_rubric.agreement import cohens_kappa
+The existing modules remain importable for advanced composition:
 
-report = cohens_kappa(result_a_json, result_b_json)
-print(f"κ={report['mean_kappa']:.3f} (n={report['matched_dims']})")
-```
+- `hermes_rubric.synthesize.synthesize`
+- `hermes_rubric.evidence.collect_evidence`
+- `hermes_rubric.score.score_dimensions`
+- `hermes_rubric.score.compute_aggregate`
+- `hermes_rubric.backends`
 
-Same as the `hermes-rubric kappa` CLI subcommand.
-
-## Data shapes
-
-The current Python API returns JSON-shaped dictionaries and lists rather than exported dataclass types. The field descriptions above and the CLI JSON example define the public data shape.
-
-## Source
-
-- `src/hermes_rubric/synthesize.py`
-- `src/hermes_rubric/evidence.py`
-- `src/hermes_rubric/score.py`
-- `src/hermes_rubric/backends.py`
-- `src/hermes_rubric/classes/`
-
-## When to use the library vs the CLI
-
-- **CLI:** scoring artifacts ad-hoc, in CI pipelines, in notebooks
-- **Library:** embedding scoring into a larger Python workflow, building custom rubric synthesis steps, integrating with non-standard backends
+New integrations should prefer the public transaction so orchestration, coverage, receipts, and error semantics do not drift.

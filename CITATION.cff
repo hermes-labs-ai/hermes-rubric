@@ -1,20 +1,17 @@
 cff-version: 1.2.0
 message: "If you use hermes-rubric in your research, please cite it."
-title: "hermes-rubric: Evidence-first structured scoring for LLM-judged artifacts"
+title: "hermes-rubric: Evidence-first assessment for agent outputs and applications"
 abstract: >-
-  hermes-rubric is an evidence-first scoring scaffold for LLM-as-judge
-  evaluation. It enforces a three-stage pipeline (rubric synthesis,
-  per-dimension evidence collection, evidence-only scoring) so that the
-  resulting score has an audit trail. Class-aware rubric templates
-  (v1.0) determinize Stage-1, producing fixed dim sets across runs.
-  A bounded five-fixture evaluation documents batch-versus-per-dimension
-  agreement; it is not a general rerun guarantee.
+  hermes-rubric is a framework-neutral, evidence-first assessment primitive.
+  It provides one-call in-memory and path APIs that select or synthesize a
+  rubric, collect validated citations, score only against accepted evidence,
+  and return coverage, feedback, and a receipt.
 authors:
   - family-names: "Bosch"
     given-names: "Rolando"
     email: "roli@hermes-labs.ai"
     affiliation: "Hermes Labs"
-version: "1.0.2"
+version: "1.1.0"
 license: "MIT"
 repository-code: "https://github.com/hermes-labs-ai/hermes-rubric"
 url: "https://hermes-labs.ai"
@@ -31,12 +28,12 @@ keywords:
   - "structured evaluation"
 preferred-citation:
   type: software
-  title: "hermes-rubric: Evidence-first structured scoring for LLM-judged artifacts"
+  title: "hermes-rubric: Evidence-first assessment for agent outputs and applications"
   authors:
     - family-names: "Bosch"
       given-names: "Rolando"
       email: "roli@hermes-labs.ai"
       affiliation: "Hermes Labs"
-  version: "1.0.2"
+  version: "1.1.0"
   year: 2026
   url: "https://github.com/hermes-labs-ai/hermes-rubric"

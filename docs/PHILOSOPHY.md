@@ -1,6 +1,6 @@
 # Philosophy: why hermes-rubric is shaped the way it is
 
-The thesis behind the design. Skip if you just want to install and use it - see the [README](../README.md). Read if you want to understand why the three-stage scaffold exists, why fluency outscores substance in raw LLM scoring, and why the receipts matter more than the score.
+The thesis behind the design. Skip if you just want to install and use it - see the [README](https://github.com/hermes-labs-ai/hermes-rubric#readme). Read if you want to understand why the three-stage scaffold exists, why fluency outscores substance in raw LLM scoring, and why the receipts matter more than the score.
 
 ## The problem: fluency wins in raw LLM scoring
 
@@ -48,5 +48,5 @@ If those tests fail, the build breaks. The scaffold is contractually enforced.
 
 - [`BENCHMARKS.md`](BENCHMARKS.md) - the reproducibility data and per-backend κ
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) - the three-stage scaffold internals
-- [`../calibration/failure-mode-taxonomy.md`](../calibration/failure-mode-taxonomy.md) - 24 LLM failure modes that motivated the design
-- [`../ABOUT.md`](../ABOUT.md) - Hermes Labs context and the wider thesis
+- [Failure-mode taxonomy](https://github.com/hermes-labs-ai/hermes-rubric/blob/main/calibration/failure-mode-taxonomy.md) - the committed failure modes and source pointers
+- [About Hermes Labs](https://github.com/hermes-labs-ai/hermes-rubric/blob/main/ABOUT.md) - project context and the wider thesis
