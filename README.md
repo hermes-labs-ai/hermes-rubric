@@ -176,6 +176,7 @@ Use a deterministic validator instead when the rule can be expressed exactly. Do
 - [Backends](docs/BACKENDS.md)
 - [CLI](docs/CLI.md)
 - [Benchmarks and evidence limits](docs/BENCHMARKS.md)
+- [v1.1.1 release notes](RELEASE-NOTES-v1.1.1.md)
 - [v1.1.0 release notes](RELEASE-NOTES-v1.1.0.md)
 
 ## Contributing

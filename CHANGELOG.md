@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.1.1] — 2026-08-17 — Apache-2.0 successor release
+
+- Release the portable assessment core under Apache-2.0.
+
 ## [1.1.0] — 2026-08-14 — portable assessment core
 
 - Add one-call in-memory and path APIs: `assess`, `assess_path`, and async wrappers.
