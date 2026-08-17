@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "hermes-rubric"
-version = "1.1.0"
+version = "1.1.1"
 description = "Evidence-first assessment for agent outputs and applications, with cited scoring and coverage-aware feedback."
 readme = "README.md"
 license = "Apache-2.0"
