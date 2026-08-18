@@ -29,6 +29,7 @@ nav:
   - Backends: BACKENDS.md
   - Architecture: ARCHITECTURE.md
   - Adapter contract: ADAPTERS.md
+  - Host integration: HOST-INTEGRATION.md
   - Benchmarks: BENCHMARKS.md
   - Philosophy: PHILOSOPHY.md
 
