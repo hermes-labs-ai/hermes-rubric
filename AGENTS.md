@@ -32,3 +32,20 @@ An evidence-first scoring tool. Three stages before any number is produced: rubr
 Automatic priority: claude-cli > ollama-local > RuntimeError
 
 Do not add API-key-based or third-party backends to automatic detection.
+
+## Optional Hermes Gate
+
+For a consequential semantic review of an assistant-generated English draft,
+you may run the standalone deterministic second-opinion check:
+
+```bash
+hermeneutic gate --draft review-summary.md
+```
+
+It flags surface shapes such as completion overclaiming, unsupported numeric
+claims, relayed authority, and unhedged certainty. It runs offline, does not
+invoke this package or a model backend, and does not initialize a Hermes Rubric
+assessment, bundle, receipt, or release gate. Inspect both its printed verdict
+and exit code: low-severity `RISK` is advisory (exit 0); medium/high `RISK`
+exits 1. If it flags a claim, add direct evidence, hedge the claim, or remove
+the unverifiable wording.
