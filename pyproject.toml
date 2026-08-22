@@ -35,7 +35,7 @@ google = ["google-generativeai>=0.8"]
 hermes-rubric = "hermes_rubric.cli:main"
 
 [project.urls]
-Homepage = "https://hermes-labs.ai"
+Homepage = "https://hermes-labs.ai/hermes-rubric"
 Documentation = "https://github.com/hermes-labs-ai/hermes-rubric/tree/main/docs"
 Repository = "https://github.com/hermes-labs-ai/hermes-rubric"
 Issues = "https://github.com/hermes-labs-ai/hermes-rubric/issues"
