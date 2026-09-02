@@ -181,6 +181,7 @@ reuse the prior result's rubric without changing its hash.
 - [Backends](docs/BACKENDS.md)
 - [CLI](docs/CLI.md)
 - [Benchmarks and evidence limits](docs/BENCHMARKS.md)
+- [v1.2.1 release notes](RELEASE-NOTES-v1.2.1.md)
 - [v1.1.1 release notes](RELEASE-NOTES-v1.1.1.md)
 - [v1.1.0 release notes](RELEASE-NOTES-v1.1.0.md)
 

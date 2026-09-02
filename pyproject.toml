@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "hermes-rubric"
-version = "1.2.0"
+version = "1.2.1"
 description = "Evidence-first assessment for agent outputs and applications, with cited scoring and coverage-aware feedback."
 readme = "README.md"
 license = "Apache-2.0"
@@ -30,9 +30,13 @@ dev = ["pytest>=7", "ruff>=0.6"]
 # SDK-based backends are optional; users install the provider they want.
 openai = ["openai>=1.50"]
 google = ["google-generativeai>=0.8"]
+inspect = ["inspect-ai>=0.3.245"]
 
 [project.scripts]
 hermes-rubric = "hermes_rubric.cli:main"
+
+[project.entry-points.inspect_ai]
+hermes_rubric = "hermes_rubric.integrations.inspect_ai"
 
 [project.urls]
 Homepage = "https://hermes-labs.ai/hermes-rubric"
