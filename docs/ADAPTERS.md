@@ -52,4 +52,41 @@ This function deliberately does not retry or mutate an agent. A runtime-specific
 - Preserve `schema_version`, coverage, and the receipt when transporting results.
 - Do not promise cancellation of a synchronous provider already running in `assess_async()`.
 
-Official framework packages are future optional extras. Version 1.1 provides the stable contract they can share; it does not claim bundled LangChain, OpenAI Agents, Semantic Kernel, or PydanticAI adapters.
+Framework integrations remain optional extras over this stable contract. The
+Inspect AI scorer below is the first bundled adapter; Hermes does not claim
+bundled LangChain, OpenAI Agents, Semantic Kernel, or PydanticAI adapters.
+
+## Inspect AI scorer
+
+Install the optional scorer integration:
+
+```bash
+pip install "hermes-rubric[inspect]"
+```
+
+Inspect registers it as `hermes_rubric/hermes_rubric_scorer`, so it can score
+new tasks or re-score an existing eval log without changing the evaluated
+agent:
+
+```bash
+inspect score run.eval \
+  --scorer hermes_rubric/hermes_rubric_scorer \
+  -S intent="Assess whether the answer is accurate and evidence-supported."
+```
+
+From Python, use the same scorer in a task:
+
+```python
+from hermes_rubric.integrations.inspect_ai import hermes_rubric_scorer
+
+scorer = hermes_rubric_scorer(
+    rubric=frozen_rubric,
+    backend="openai-sdk",
+)
+```
+
+The numeric `Score.value` uses Hermes' 0-10 aggregate scale. The full
+assessment—including citations, coverage facts, and receipt—is stored under
+`Score.metadata["hermes_rubric"]`. The adapter does not define a pass
+threshold or retry the evaluated agent. Assessment errors fail scoring by
+default; `fail_on_error=False` records a visible unscored sample instead.

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1] — 2026-09-02
+
+### Added
+
+- Add a native Inspect AI scorer that preserves Hermes evidence, coverage,
+  and receipts in Inspect score metadata and supports post-hoc log re-scoring.
+
 ## [1.2.0] — 2026-09-02
 
 ### Added
