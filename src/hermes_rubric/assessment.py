@@ -80,6 +80,7 @@ def assess_path(
     scope_class: str | None = None,
     intent_debias: bool = False,
     _progress: ProgressCallback | None = None,
+    _rubric_provenance: str | None = None,
 ) -> AssessmentResult:
     """Assess a target file or directory, with an optional context path/glob."""
     try:
@@ -107,6 +108,7 @@ def assess_path(
         scope_class=scope_class,
         intent_debias=intent_debias,
         progress=_progress,
+        rubric_provenance=_rubric_provenance,
     )
 
 
@@ -139,6 +141,7 @@ def _run_assessment(
     scope_class: str | None,
     intent_debias: bool,
     progress: ProgressCallback | None = None,
+    rubric_provenance: str | None = None,
 ) -> AssessmentResult:
     _validate_mode(
         intent=intent,
@@ -166,7 +169,8 @@ def _run_assessment(
             _emit(progress, "Stage 1: using caller-provided rubric (synthesis bypassed)...")
             selected_rubric = copy.deepcopy(dict(rubric))
             _validate_rubric(selected_rubric)
-            selected_rubric["rubric_source"] = "provided"
+            if rubric_provenance is None:
+                selected_rubric["rubric_source"] = "provided"
         elif artifact_class is not None:
             _emit(
                 progress,
@@ -240,6 +244,8 @@ def _run_assessment(
             context_content=context_input.content,
             coverage=coverage.to_dict(),
         )
+        if rubric_provenance is not None:
+            receipt["pipeline"]["stage_1_rubric_source"] = rubric_provenance
     except Exception as exc:  # noqa: BLE001 - stable public stage boundary
         _raise_stage("receipt", exc)
 
