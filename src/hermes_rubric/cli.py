@@ -8,6 +8,7 @@ from . import __version__
 from .assessment import assess_path
 from .errors import AssessmentError
 from .preambles import SCOPE_CHOICES
+from .synthesize import load_pinned
 
 
 def main() -> None:
@@ -26,8 +27,8 @@ def main() -> None:
         action="version",
         version=f"%(prog)s {__version__}",
     )
-    parser.add_argument("--intent", default=None, help="One-sentence goal for the scoring (optional when --artifact-class is set)")
-    parser.add_argument("--context", default=None, help="Path to context file(s) used for rubric synthesis (optional when --artifact-class is set)")
+    parser.add_argument("--intent", default=None, help="One-sentence goal for the scoring (optional when --artifact-class or --pin-rubric is set)")
+    parser.add_argument("--context", default=None, help="Path to context file(s) used for rubric synthesis (optional when --artifact-class or --pin-rubric is set)")
     parser.add_argument("--target", required=True, help="Path to file or directory to score")
     parser.add_argument("--target-type", default="document", help="Type label for the target (e.g. paper, tool, repo)")
     parser.add_argument("--out", default=None, help="Output JSON file path. Defaults to stdout.")
@@ -63,17 +64,39 @@ def main() -> None:
                              "LLM synthesis. Available: social-post, show-hn-post, linkedin-post, "
                              "outreach-email, repo-readme. Stage 1 is bypassed; dim set is fixed "
                              "across runs.")
+    parser.add_argument(
+        "--pin-rubric",
+        default=None,
+        metavar="PATH",
+        help="Score against a rubric from a prior JSON result. Stage 1 is bypassed "
+             "and the rubric hash remains identical for comparable re-grades.",
+    )
 
     args = parser.parse_args()
 
-    # Validate: --intent and --context are required unless --artifact-class is set
-    if not args.artifact_class:
+    if args.pin_rubric and args.artifact_class:
+        parser.error("--pin-rubric and --artifact-class are mutually exclusive")
+
+    pinned_rubric = None
+    rubric_provenance = None
+    if args.pin_rubric:
+        try:
+            pinned_rubric = load_pinned(args.pin_rubric)
+        except (OSError, TypeError, ValueError) as exc:
+            print(f"ERROR in Stage 1 (pinned rubric load): {exc}", file=sys.stderr)
+            sys.exit(2)
+        rubric_provenance = f"pinned:{args.pin_rubric}"
         if not args.intent:
-            parser.error("--intent is required when --artifact-class is not set")
+            args.intent = pinned_rubric.get("rubric_intent")
+
+    # Validate: synthesis needs intent and context; deterministic sources do not.
+    if not args.artifact_class and not args.pin_rubric:
+        if not args.intent:
+            parser.error("--intent is required when --artifact-class/--pin-rubric is not set")
         if not args.context:
-            parser.error("--context is required when --artifact-class is not set")
+            parser.error("--context is required when --artifact-class/--pin-rubric is not set")
     else:
-        # When using a class template, default the missing fields so downstream code is unchanged
+        # Deterministic rubric sources can use the target as evidence context.
         if not args.intent:
             args.intent = f"Score against the {args.artifact_class} class template."
         if not args.context:
@@ -89,6 +112,7 @@ def main() -> None:
             intent=args.intent,
             context_path=args.context,
             target_type=args.target_type,
+            rubric=pinned_rubric,
             artifact_class=args.artifact_class,
             backend=args.backend,
             batch=args.batch,
@@ -97,6 +121,7 @@ def main() -> None:
             scope_class=args.scope_class,
             intent_debias=args.intent_debias,
             _progress=log,
+            _rubric_provenance=rubric_provenance,
         )
     except AssessmentError as exc:
         if exc.stage in {"backend", "input"}:

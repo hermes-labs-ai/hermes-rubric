@@ -1,6 +1,7 @@
 """Stage 1: synthesize a rubric from (intent, context, target_type)."""
 
 import json
+from pathlib import Path
 from typing import Any
 
 from . import backends
@@ -121,3 +122,23 @@ def _validate_rubric(rubric: dict) -> None:
         for field in ("id", "name", "description", "evidence_instructions"):
             if field not in d:
                 raise ValueError(f"Dimension {i} missing field '{field}'")
+
+
+def load_pinned(path: str | Path) -> dict[str, Any]:
+    """Load a frozen rubric from a bare rubric or prior result JSON file."""
+    pinned_path = Path(path).expanduser()
+    if not pinned_path.is_file():
+        raise FileNotFoundError(f"pinned rubric file not found: {pinned_path}")
+    try:
+        data = json.loads(pinned_path.read_text())
+    except json.JSONDecodeError as exc:
+        raise ValueError(
+            f"pinned rubric file is not valid JSON: {pinned_path} ({exc})"
+        ) from exc
+    if not isinstance(data, dict):
+        raise ValueError(
+            f"pinned rubric JSON must be an object, got {type(data).__name__}"
+        )
+    rubric = data["rubric"] if isinstance(data.get("rubric"), dict) else data
+    _validate_rubric(rubric)
+    return rubric

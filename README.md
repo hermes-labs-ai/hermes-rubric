@@ -169,6 +169,9 @@ Use it when:
 
 Use a deterministic validator instead when the rule can be expressed exactly. Do not use Hermes as proof of factual truth, as a compliance certification, or as an automatic release decision. If the artifact is longer than the inspected window, review coverage before acting on missing evidence.
 
+For directly comparable re-grades, pass `--pin-rubric prior-result.json` to
+reuse the prior result's rubric without changing its hash.
+
 ## Documentation
 
 - [Quickstart](docs/quickstart.md)

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Add `--pin-rubric <path>` for comparable re-grades against an unchanged
+  rubric from a prior JSON result, with pin provenance recorded in the receipt.
+
 ## [1.1.1] — 2026-08-17 — Apache-2.0 successor release
 
 - Release the portable assessment core under Apache-2.0.
