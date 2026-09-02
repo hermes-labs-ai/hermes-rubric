@@ -13,6 +13,9 @@ from hermes_rubric.receipt import rubric_hash
 from hermes_rubric.synthesize import load_pinned
 from tests.test_assessment_api import RUBRIC
 
+CONTROLLED_SCORE = 8  # Source: tests/test_assessment_api.py::controlled_pipeline
+ARGPARSE_USAGE_ERROR = 2  # Source: argparse.ArgumentParser.error
+
 
 @pytest.fixture
 def controlled_pipeline(monkeypatch):
@@ -35,7 +38,7 @@ def controlled_pipeline(monkeypatch):
             {
                 "dim_id": dim["id"],
                 "dim_name": dim["name"],
-                "score": 8,
+                "score": CONTROLLED_SCORE,
                 "score_rationale": "controlled",
                 "evidence_drove_score": "answer",
                 "hedge_applied": False,
@@ -52,7 +55,7 @@ def test_load_pinned_accepts_bare_and_prior_result(tmp_path):
     bare = tmp_path / "rubric.json"
     prior = tmp_path / "result.json"
     bare.write_text(json.dumps(RUBRIC))
-    prior.write_text(json.dumps({"rubric": RUBRIC, "aggregate": 7.0}))
+    prior.write_text(json.dumps({"rubric": RUBRIC}))
 
     assert load_pinned(bare) == RUBRIC
     assert load_pinned(prior) == RUBRIC
@@ -137,4 +140,4 @@ def test_cli_rejects_two_deterministic_sources(monkeypatch, tmp_path):
     )
     with pytest.raises(SystemExit) as exc_info:
         cli_mod.main()
-    assert exc_info.value.code == 2
+    assert exc_info.value.code == ARGPARSE_USAGE_ERROR
