@@ -59,7 +59,7 @@ def render_run(
     The target opens with the final output so it stays inside the inspected
     window even when a long trace follows. With ``include_trace`` the
     chronological run items (messages, tool calls and results, handoffs,
-    reasoning summaries) follow as a numbered transcript. The context carries
+    reasoning) follow as a numbered transcript. The context carries
     the task input, the participating agents with their instructions, a run
     summary, and any ``extra_context`` supplied by the caller.
     """
@@ -181,9 +181,9 @@ def _render_item(index: int, item: Any, tool_names: Mapping[str, str]) -> str:
     if kind == "message_output_item":
         return f"{prefix} message: {_message_text(raw)}"
     if kind == "tool_call_item":
-        return f"{prefix} tool call {_call_name(raw)}({_call_arguments(raw)})"
+        return f"{prefix} tool call {_tool_call_name(item, raw)}({_call_arguments(raw)})"
     if kind == "tool_call_output_item":
-        name = tool_names.get(str(_field(raw, "call_id")), "tool")
+        name = tool_names.get(str(_call_id(item, raw)), "tool")
         output = getattr(item, "output", None)
         if output is None:
             output = _field(raw, "output")
@@ -195,7 +195,15 @@ def _render_item(index: int, item: Any, tool_names: Mapping[str, str]) -> str:
         target = _agent_name(getattr(item, "target_agent", None))
         return f"{prefix} handoff {source} -> {target}"
     if kind == "reasoning_item":
-        return f"{prefix} reasoning summary: {_reasoning_text(raw) or '(none)'}"
+        summary = _reasoning_summary_text(raw)
+        if summary:
+            return f"{prefix} reasoning summary: {summary}"
+        # Reasoning emitted without a requested summary carries its text on
+        # ``content`` instead; rendering "(none)" would drop it from the trace.
+        content = _reasoning_content_text(raw)
+        if content:
+            return f"{prefix} reasoning: {content}"
+        return f"{prefix} reasoning summary: (none)"
     return f"{prefix} {kind}: {_compact_json(_dump(raw))}"
 
 
@@ -244,9 +252,16 @@ def _content_text(content: Any) -> str:
     return "".join(parts)
 
 
-def _reasoning_text(raw: Any) -> str:
-    summary = _field(raw, "summary") or []
-    return " ".join(str(_field(part, "text") or "") for part in summary).strip()
+def _reasoning_summary_text(raw: Any) -> str:
+    return _joined_part_text(_field(raw, "summary"))
+
+
+def _reasoning_content_text(raw: Any) -> str:
+    return _joined_part_text(_field(raw, "content"))
+
+
+def _joined_part_text(parts: Any) -> str:
+    return " ".join(str(_field(part, "text") or "") for part in parts or []).strip()
 
 
 def _call_name(raw: Any) -> str:
@@ -254,6 +269,32 @@ def _call_name(raw: Any) -> str:
     if name:
         return str(name)
     return str(_field(raw, "type") or "call")
+
+
+def _tool_call_name(item: Any, raw: Any) -> str:
+    """Prefer the tool name the SDK resolved for this call.
+
+    Hosted calls (computer, shell, apply_patch, local shell) carry no ``name``
+    on the raw payload, so the raw item alone renders as its wire type. The
+    SDK records the configured tool name on ``ToolCallItem.tool_name``.
+    """
+    name = getattr(item, "tool_name", None)
+    if name:
+        return str(name)
+    return _call_name(raw)
+
+
+def _call_id(item: Any, raw: Any) -> Any:
+    """Resolve the call identifier used to pair a tool call with its output.
+
+    ``ToolCallItem`` and ``ToolCallOutputItem`` fall back from ``call_id`` to
+    ``id`` for hosted variants that only carry the latter; reading ``raw_item``
+    directly would leave those pairs unmatched.
+    """
+    call_id = getattr(item, "call_id", None)
+    if call_id is None:
+        call_id = _field(raw, "call_id")
+    return call_id
 
 
 def _call_arguments(raw: Any) -> str:
@@ -344,23 +385,54 @@ def _agents_in_order(run: Any, items: list[Any]) -> list[tuple[str, Any]]:
 def _tool_names_by_call_id(items: list[Any]) -> dict[str, str]:
     names: dict[str, str] = {}
     for item in items:
-        if getattr(item, "type", None) in {"tool_call_item", "handoff_call_item"}:
-            raw = getattr(item, "raw_item", None)
-            call_id = _field(raw, "call_id")
-            if call_id is not None:
-                names[str(call_id)] = _call_name(raw)
+        kind = getattr(item, "type", None)
+        if kind not in {"tool_call_item", "handoff_call_item"}:
+            continue
+        raw = getattr(item, "raw_item", None)
+        call_id = _call_id(item, raw)
+        if call_id is not None:
+            names[str(call_id)] = (
+                _tool_call_name(item, raw) if kind == "tool_call_item" else _call_name(raw)
+            )
     return names
+
+
+def _guardrail_intervened(output: Any) -> bool:
+    """Report whether a guardrail result blocked or flagged the run.
+
+    Input and output guardrails expose a ``tripwire_triggered`` flag. Tool
+    guardrails have no such flag: ``ToolGuardrailFunctionOutput`` records the
+    decision on ``behavior``, whose ``type`` is ``allow`` unless the guardrail
+    rejected the content or raised.
+    """
+    if getattr(output, "tripwire_triggered", False):
+        return True
+    behavior = _field(output, "behavior")
+    kind = _field(behavior, "type")
+    return kind is not None and kind != "allow"
+
+
+def _guardrail_name(guardrail: Any, fallback: str) -> str:
+    name = getattr(guardrail, "name", None)
+    if not name:
+        # SDK guardrails leave `name` unset unless configured and derive the
+        # display name from the guardrail function.
+        get_name = getattr(guardrail, "get_name", None)
+        if callable(get_name):
+            try:
+                name = get_name()
+            except Exception:  # noqa: BLE001 - never fail a render over a label
+                name = None
+    return str(name) if name else fallback
 
 
 def _guardrails_triggered(run: Any) -> list[str]:
     triggered = []
     for attribute in _GUARDRAIL_RESULT_ATTRIBUTES:
         for result in getattr(run, attribute, None) or []:
-            output = getattr(result, "output", None)
-            if getattr(output, "tripwire_triggered", False):
+            if _guardrail_intervened(getattr(result, "output", None)):
                 guardrail = getattr(result, "guardrail", None)
-                name = getattr(guardrail, "name", None) or attribute
-                triggered.append(str(name))
+                triggered.append(_guardrail_name(guardrail, attribute))
     return triggered
 
 

@@ -130,12 +130,15 @@ with `target`, `context`, and `metadata`:
 
 - **target** opens with the final output (structured outputs are rendered as
   sorted compact JSON), then a numbered chronological trace of messages, tool
-  calls with arguments, tool results, handoffs, and reasoning summaries.
+  calls with arguments, tool results, handoffs, and reasoning (the summary
+  when the model emitted one, otherwise the reasoning text).
   Putting the final output first keeps it inside the inspected window when a
   long trace follows; check `coverage.status` before treating an uncited
   trace line as absent.
 - **context** carries the task input, each participating agent with its
   instructions, a run summary, guardrail tripwires, and `extra_context`.
+  Tripwires cover input and output guardrails plus tool guardrails that
+  rejected content or raised.
 - **metadata** records the final agent, agents in order, item and model
   response counts, tool-call and handoff counts, guardrail tripwires, and
   token usage when the SDK reports it. Transport it beside `result.to_dict()`;

@@ -181,6 +181,93 @@ def test_render_run_renders_input_item_lists():
     assert "- user: First question\n- user: Second question\n- function_call_output: " in evidence.context
 
 
+def test_render_run_reports_tool_guardrail_interventions():
+    """Tool guardrails record a `behavior`, not a `tripwire_triggered` flag."""
+    run = _fake_run()
+    run.tool_input_guardrail_results = [
+        SimpleNamespace(
+            guardrail=SimpleNamespace(name="secrets_screen"),
+            output=SimpleNamespace(behavior={"type": "reject_content", "message": "blocked"}),
+        ),
+        SimpleNamespace(
+            guardrail=SimpleNamespace(name="length_screen"),
+            output=SimpleNamespace(behavior={"type": "allow"}),
+        ),
+    ]
+    run.tool_output_guardrail_results = [
+        SimpleNamespace(
+            guardrail=SimpleNamespace(name="leak_screen"),
+            output=SimpleNamespace(behavior={"type": "raise_exception"}),
+        )
+    ]
+
+    evidence = integration.render_run(run)
+
+    assert evidence.metadata["guardrails_triggered"] == [
+        "pii_screen",
+        "secrets_screen",
+        "leak_screen",
+    ]
+    assert "Guardrail tripwires: pii_screen, secrets_screen, leak_screen" in evidence.context
+
+
+def test_render_run_names_an_unnamed_guardrail_from_its_accessor():
+    run = _fake_run()
+    run.input_guardrail_results = [
+        SimpleNamespace(
+            guardrail=SimpleNamespace(name=None, get_name=lambda: "screen_for_pii"),
+            output=SimpleNamespace(tripwire_triggered=True),
+        )
+    ]
+
+    assert integration.render_run(run).metadata["guardrails_triggered"] == ["screen_for_pii"]
+
+
+def test_render_run_uses_the_resolved_tool_name_and_call_id_for_hosted_calls():
+    """Hosted calls carry no `name` and may key their output off `id`."""
+    agent = _agent("Operator", "Drive the computer.")
+    call = SimpleNamespace(
+        type="tool_call_item",
+        agent=agent,
+        tool_name="run_shell",
+        call_id="shell_1",
+        raw_item={"type": "shell_call", "id": "shell_1", "action": {"command": ["ls"]}},
+    )
+    output = SimpleNamespace(
+        type="tool_call_output_item",
+        agent=agent,
+        call_id="shell_1",
+        output="README.md",
+        raw_item={"type": "shell_call_output", "id": "shell_1", "output": "README.md"},
+    )
+    run = _fake_run()
+    run.new_items = [call, output]
+
+    evidence = integration.render_run(run)
+
+    assert '[1] Operator tool call run_shell({"action":{"command":["ls"]}})' in evidence.target
+    assert "[2] Operator tool result run_shell: README.md" in evidence.target
+
+
+def test_render_run_falls_back_to_reasoning_content_when_no_summary():
+    run = _fake_run()
+    run.new_items = [
+        SimpleNamespace(
+            type="reasoning_item",
+            agent=_agent("Specialist", "Answer."),
+            raw_item={
+                "type": "reasoning",
+                "summary": [],
+                "content": [{"type": "reasoning_text", "text": "Check the tool first."}],
+            },
+        )
+    ]
+
+    evidence = integration.render_run(run)
+
+    assert "[1] Specialist reasoning: Check the tool first." in evidence.target
+
+
 def test_render_run_rejects_objects_that_are_not_runs():
     with pytest.raises(TypeError, match="RunResult"):
         integration.render_run({"final_output": "text"})
@@ -404,3 +491,83 @@ def test_sdk_run_grades_end_to_end_with_local_backend(sdk):
     assert all("Lisbon: 21C, clear" in prompt for prompt in grader.prompts[:3])
     payload = json.loads(result.to_json())
     assert payload["aggregate"] == 8.0
+
+
+def test_sdk_tool_guardrail_rejection_is_reported(sdk):
+    """A real `ToolGuardrailFunctionOutput` exposes no `tripwire_triggered`."""
+    agents, testing = sdk
+    from agents.tool_guardrails import (
+        ToolGuardrailFunctionOutput,
+        ToolInputGuardrailResult,
+        tool_input_guardrail,
+    )
+
+    @tool_input_guardrail(name="secrets_screen")
+    def secrets_screen(data):  # pragma: no cover - inspected, never invoked
+        return ToolGuardrailFunctionOutput.allow()
+
+    run = asyncio.run(
+        agents.Runner.run(
+            _build_agents(agents),
+            "What is the weather in Lisbon?",
+            run_config=_run_config(agents, _scripted_model(testing)),
+        )
+    )
+    rejection = ToolGuardrailFunctionOutput.reject_content("blocked: secret in arguments")
+    assert not hasattr(rejection, "tripwire_triggered")
+    run.tool_input_guardrail_results = [
+        ToolInputGuardrailResult(guardrail=secrets_screen, output=rejection)
+    ]
+
+    evidence = integration.render_run(run)
+
+    assert evidence.metadata["guardrails_triggered"] == ["secrets_screen"]
+    assert "Guardrail tripwires: secrets_screen" in evidence.context
+
+
+def test_sdk_hosted_tool_call_and_reasoning_content_render(sdk):
+    """Hosted calls carry no `name`; reasoning may arrive without a summary."""
+    agents, _testing = sdk
+    from openai.types.responses import ResponseComputerToolCall
+    from openai.types.responses.response_reasoning_item import ResponseReasoningItem
+
+    agent = agents.Agent(name="Operator", instructions="Drive the computer.")
+    reasoning = agents.items.ReasoningItem(
+        agent=agent,
+        raw_item=ResponseReasoningItem(
+            id="rs_1",
+            type="reasoning",
+            summary=[],
+            content=[{"type": "reasoning_text", "text": "Take a screenshot first."}],
+        ),
+    )
+    call = agents.items.ToolCallItem(
+        agent=agent,
+        raw_item=ResponseComputerToolCall(
+            id="cu_1",
+            call_id="call_cu_1",
+            type="computer_call",
+            status="completed",
+            action={"type": "screenshot"},
+            pending_safety_checks=[],
+        ),
+        _resolved_tool_name="computer_use",
+    )
+    output = agents.items.ToolCallOutputItem(
+        agent=agent,
+        raw_item={"type": "computer_call_output", "call_id": "call_cu_1", "output": {}},
+        output="screenshot captured",
+    )
+    run = SimpleNamespace(
+        input="Show me the screen.",
+        new_items=[reasoning, call, output],
+        raw_responses=[],
+        final_output="Done.",
+        last_agent=agent,
+    )
+
+    evidence = integration.render_run(run)
+
+    assert "[1] Operator reasoning: Take a screenshot first." in evidence.target
+    assert "[2] Operator tool call computer_use(" in evidence.target
+    assert "[3] Operator tool result computer_use: screenshot captured" in evidence.target
