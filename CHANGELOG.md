@@ -1,5 +1,13 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- Add a native OpenAI Agents SDK adapter (`hermes-rubric[openai-agents]`) that
+  renders a completed `RunResult` into cited Hermes evidence and grades it
+  without re-running the agent or calling a model itself.
+
 ## [1.2.1] — 2026-09-02
 
 ### Added

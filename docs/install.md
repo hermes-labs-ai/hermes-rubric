@@ -35,6 +35,21 @@ hermes-rubric --backend ollama-local ...
 
 The local backend chooses from its configured fallback list. Pin a backend/model in controlled workflows rather than relying on environmental auto-detection.
 
+## Optional extras
+
+| Extra | Installs | Use |
+|---|---|---|
+| `openai` | `openai` | `openai-sdk` grading backend |
+| `google` | `google-generativeai` | `google-genai` grading backend |
+| `inspect` | `inspect-ai` | Inspect AI scorer (`hermes_rubric.integrations.inspect_ai`) |
+| `openai-agents` | `openai-agents` | OpenAI Agents SDK run assessor (`hermes_rubric.integrations.openai_agents`) |
+
+```bash
+pip install "hermes-rubric[openai-agents]"
+```
+
+The core package imports without any extra installed; see [Adapters](ADAPTERS.md).
+
 ## Install from source
 
 ```bash
