@@ -73,5 +73,5 @@ jobs:
           tmp="$(mktemp -d)"
           tar -xzf dist/hermes_rubric-*.tar.gz -C "$tmp"
           cd "$tmp"/hermes_rubric-*
-          python -m pip install -e ".[inspect,openai-agents]" pytest pytest-mock
-          PYTHONPATH=src python -m pytest tests/ -v
+          python -m pip install ".[inspect,openai-agents]" pytest pytest-mock
+          python -m pytest tests/ -v
