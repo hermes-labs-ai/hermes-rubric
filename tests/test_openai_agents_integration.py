@@ -31,13 +31,14 @@ RUBRIC = {
             "name": name,
             "description": description,
             "evidence_instructions": "Quote the trace line that supports the answer.",
+            # Source: calibration/META-RUBRIC.md:112-115 (weight-1 convention).
             "weight": 1,
             "hedge": False,
         }
         for dim_id, name, description in (
-            ("grounding", "Tool grounding", "The final answer matches the tool results."),
-            ("routing", "Routing", "The run reached the agent equipped for the task."),
-            ("directness", "Directness", "The final answer addresses the user's question."),
+            ("grounding", "Tool grounding", "The final answer matches the tool results (FM-01 Numeric retrofit; FM-08 Source anchoring)."),
+            ("routing", "Routing", "The run reached the agent equipped for the task (FM-19 Dimension boilerplate; FM-23 Anchor drift)."),
+            ("directness", "Directness", "The final answer addresses the user's question (FM-08 Source anchoring; FM-22 Evidence scope creep)."),
         )
     ],
 }
@@ -296,6 +297,18 @@ def test_assess_run_maps_rendered_run_into_assess(monkeypatch):
     assert captured["target_window_bytes"] == 4000
     assert captured["target_name"] == "openai-agents:run"
     assert captured["context_name"] == "openai-agents:task"
+
+
+@pytest.mark.parametrize("name", ["context", "target", "target_name", "context_name"])
+def test_assess_run_rejects_adapter_owned_kwargs(name):
+    with pytest.raises(TypeError, match="adapter-owned"):
+        integration.assess_run(_fake_run(), intent="Check grounding.", **{name: "override"})
+
+
+@pytest.mark.parametrize("name", ["context", "target", "target_name", "context_name"])
+def test_assess_run_async_rejects_adapter_owned_kwargs(name):
+    with pytest.raises(TypeError, match="adapter-owned"):
+        asyncio.run(integration.assess_run_async(_fake_run(), intent="Check grounding.", **{name: "override"}))
 
 
 def test_assess_run_async_uses_assess_async_and_propagates_stage_errors(monkeypatch):

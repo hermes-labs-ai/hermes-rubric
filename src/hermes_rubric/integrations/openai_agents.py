@@ -116,9 +116,11 @@ def assess_run(
     with :func:`hermes_rubric.assess`. The rendered run (see
     :func:`render_run`) becomes the target and context; remaining keyword
     arguments such as ``target_window_bytes`` or ``batch`` pass through to
-    :func:`hermes_rubric.assess`. Assessment errors propagate unchanged so the
-    caller keeps the normalized stage.
+    :func:`hermes_rubric.assess`. The adapter-owned ``context``, ``target``,
+    ``target_name``, and ``context_name`` arguments are rejected. Assessment
+    errors propagate unchanged so the caller keeps the normalized stage.
     """
+    _reject_adapter_owned_kwargs(assess_kwargs)
     evidence = render_run(run, include_trace=include_trace, extra_context=extra_context)
     return assess(
         evidence.target,
@@ -146,7 +148,12 @@ async def assess_run_async(
     extra_context: str | None = None,
     **assess_kwargs: Any,
 ) -> AssessmentResult:
-    """Run :func:`assess_run` without blocking the caller's event loop."""
+    """Run :func:`assess_run` without blocking the caller's event loop.
+
+    Pass-through options match :func:`assess_run`; adapter-owned ``context``,
+    ``target``, ``target_name``, and ``context_name`` are rejected.
+    """
+    _reject_adapter_owned_kwargs(assess_kwargs)
     evidence = render_run(run, include_trace=include_trace, extra_context=extra_context)
     return await assess_async(
         evidence.target,
@@ -163,6 +170,14 @@ async def assess_run_async(
 
 
 # --- rendering helpers -----------------------------------------------------
+
+
+def _reject_adapter_owned_kwargs(assess_kwargs: Mapping[str, Any]) -> None:
+    forbidden = {"context", "target", "target_name", "context_name"}
+    conflicts = sorted(forbidden.intersection(assess_kwargs))
+    if conflicts:
+        names = ", ".join(conflicts)
+        raise TypeError(f"adapter-owned assessment arguments cannot be passed through: {names}")
 
 
 def _require_run(run: Any) -> None:

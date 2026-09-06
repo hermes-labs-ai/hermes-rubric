@@ -16,5 +16,5 @@ python3 -m venv "$package_tmp/wheel-venv"
 tar -xzf "$package_tmp"/dist/hermes_rubric-*.tar.gz -C "$package_tmp"
 python3 -m venv "$package_tmp/sdist-venv"
 cd "$package_tmp"/hermes_rubric-*
-"$package_tmp/sdist-venv/bin/python" -m pip install -e '.[inspect,openai-agents]' pytest pytest-mock
+"$package_tmp/sdist-venv/bin/python" -m pip install '.[inspect,openai-agents]' pytest pytest-mock
 "$package_tmp/sdist-venv/bin/python" -m pytest tests/ -q

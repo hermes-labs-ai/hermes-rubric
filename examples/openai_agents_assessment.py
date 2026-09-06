@@ -19,8 +19,8 @@ from hermes_rubric.integrations.openai_agents import assess_run_async, render_ru
 
 @function_tool
 def lookup_weather(city: str) -> str:
-    """Return the current weather for a city."""
-    return f"{city}: 21C, clear"
+    """Return fixture weather data for a city (not a live weather lookup)."""
+    return f"{city}: 21C, clear (fixture data; source: examples/openai_agents_assessment.py::lookup_weather)"
 
 
 agent = Agent(
