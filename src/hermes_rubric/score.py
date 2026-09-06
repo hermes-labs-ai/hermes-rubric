@@ -83,17 +83,6 @@ Each element format:
 """
 
 
-def _missing_dim_fallback(ev: dict[str, Any], dim: dict[str, Any]) -> dict[str, Any]:
-    return {
-        "dim_id": ev["dim_id"],
-        "dim_name": dim.get("name", ev.get("dim_name", ev["dim_id"])),
-        "score": 3,
-        "score_rationale": "Scoring failed: dim missing from batched response. Defaulted to 3.",
-        "evidence_drove_score": "(missing from batched response)",
-        "hedge_applied": True,
-    }
-
-
 def _pin_dimension_identity(
     score: dict[str, Any],
     ev: dict[str, Any],
@@ -190,23 +179,24 @@ def _score_batched(
     expected_ids = {ev["dim_id"] for ev in evidence_list}
     parsed = _extract_json_array(raw, expected_ids)
     by_id = {item["dim_id"]: item for item in parsed if isinstance(item, dict) and "dim_id" in item}
+    missing_ids = expected_ids - by_id.keys()
+    if missing_ids:
+        raise BatchParseError(
+            f"batched score response missing dim_ids {sorted(missing_ids)}"
+        )
 
     scores = []
     for ev in evidence_list:
         dim = dims_by_id.get(ev["dim_id"], {})
-        s = by_id.get(ev["dim_id"])
-        if s is None:
-            s = _missing_dim_fallback(ev, dim)
-        else:
-            # Fill non-identity contract fields from defaults.
-            s.setdefault("score_rationale", "")
-            s.setdefault("evidence_drove_score", "")
-            s.setdefault("hedge_applied", False)
-            try:
-                s["score"] = int(s.get("score", 3))
-            except (TypeError, ValueError):
-                s["score"] = 3
-                s["hedge_applied"] = True
+        s = by_id[ev["dim_id"]]
+        # Fill non-identity contract fields from defaults.
+        s.setdefault("score_rationale", "")
+        s.setdefault("evidence_drove_score", "")
+        s.setdefault("hedge_applied", False)
+        try:
+            s["score"] = _coerce_score(s, ev["dim_id"])
+        except ValueError as exc:
+            raise BatchParseError(str(exc)) from exc
         s = _pin_dimension_identity(s, ev, dim)
         scores.append(_apply_clamps(s, ev))
     return scores
@@ -333,21 +323,20 @@ def _score_one(
     )
 
     raw = backends.call(prompt, backend=backend)
-    try:
-        result = _extract_json(raw)
-    except ValueError:
-        result = {
-            "dim_id": ev["dim_id"],
-            "dim_name": dim.get("name", ev["dim_id"]),
-            "score": 3,
-            "score_rationale": f"Scoring failed (JSON parse error). Defaulting to 3. Raw: {raw[:200]}",
-            "evidence_drove_score": "(parse error)",
-            "hedge_applied": True,
-        }
+    result = _extract_json(raw)
 
     # Clamp score to valid range
-    result["score"] = max(0, min(10, int(result.get("score", 3))))
+    result["score"] = max(0, min(10, _coerce_score(result, ev["dim_id"])))
     return result
+
+
+def _coerce_score(result: Any, dim_id: str) -> int:
+    try:
+        return int(result["score"])
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValueError(
+            f"Invalid or missing score in response for dimension {dim_id!r}"
+        ) from exc
 
 
 def _extract_json(text: str) -> dict[str, Any]:

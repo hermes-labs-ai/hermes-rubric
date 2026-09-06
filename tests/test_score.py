@@ -97,9 +97,8 @@ def test_no_evidence_caps_score():
     [
         (json.dumps({"score": 8}), 8),
         (json.dumps({"dim_id": "wrong", "dim_name": "Drifted", "score": 8}), 8),
-        ("not json", 3),
     ],
-    ids=["identity-omitted", "identity-drifted", "parse-fallback"],
+    ids=["identity-omitted", "identity-drifted"],
 )
 def test_per_dimension_scores_pin_canonical_dimension_identity(raw, expected_score):
     """The synthesized rubric, not Stage 3 output, owns dimension identity."""
@@ -121,6 +120,28 @@ def test_per_dimension_scores_pin_canonical_dimension_identity(raw, expected_sco
     assert "score_rationale" in scores[0]
     assert "evidence_drove_score" in scores[0]
     assert "hedge_applied" in scores[0]
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        "not json",
+        json.dumps({"score_rationale": "score omitted"}),
+        json.dumps({"score": "not numeric"}),
+    ],
+    ids=["malformed-json", "missing-score", "invalid-score"],
+)
+def test_per_dimension_invalid_response_does_not_become_score_three(raw):
+    """A Stage-3 response failure must not look like an ordinary score."""
+    from hermes_rubric import score as score_mod
+
+    with patch.object(score_mod.backends, "call", return_value=raw):
+        with pytest.raises(ValueError):
+            score_mod.score_dimensions(
+                rubric=_make_rubric(),
+                evidence_list=[_make_evidence("dim_1")],
+                backend="stub",
+            )
 
 
 def test_per_dimension_omitted_fields_still_apply_hedge_clamp():

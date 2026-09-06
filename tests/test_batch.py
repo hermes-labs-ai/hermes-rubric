@@ -65,27 +65,36 @@ def test_batched_score_dim_id_keyed_reassembly():
     assert [s["score"] for s in scores] == [9, 6, 7, 5]
 
 
-def test_batched_score_missing_dim_falls_back():
-    """LLM returns 3 of 4 dims; the missing dim gets score=3, hedge_applied=true."""
+def test_batched_score_missing_dim_retries_per_dimension():
+    """A partial batch is retried rather than synthesizing an ordinary score."""
     from hermes_rubric import score as score_mod
 
     rubric = _load_rubric()
     evidence_list = [_ev(d["id"]) for d in rubric["dimensions"]]
-    raw = json.dumps([
+    partial_batch = json.dumps([
         _score_obj("fr_a", 8),
         _score_obj("fr_b", 6),
         _score_obj("fr_d", 5, hedge_applied=True),
         # fr_c missing
     ])
+    per_dim = [
+        json.dumps(_score_obj(dim["id"], score))
+        for dim, score in zip(rubric["dimensions"], [8, 6, 9, 5])
+    ]
 
-    with patch.object(score_mod.backends, "call", return_value=raw):
+    with patch.object(
+        score_mod.backends,
+        "call",
+        side_effect=[partial_batch, *per_dim],
+    ) as call:
         scores = score_mod.score_dimensions(
             rubric=rubric, evidence_list=evidence_list, backend="stub", batch=True
         )
 
     by_id = {s["dim_id"]: s for s in scores}
-    assert by_id["fr_c"]["score"] == 3
-    assert by_id["fr_c"]["hedge_applied"] is True
+    assert call.call_count == 5
+    assert by_id["fr_c"]["score"] == 9
+    assert by_id["fr_c"]["hedge_applied"] is False
     assert by_id["fr_a"]["score"] == 8
 
 

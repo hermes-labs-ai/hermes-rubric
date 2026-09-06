@@ -214,3 +214,35 @@ def test_stage_failures_are_normalized_and_chained(
         assess("answer", rubric=RUBRIC, backend="controlled")
     assert exc_info.value.stage == stage
     assert exc_info.value.__cause__ is cause
+
+
+def test_malformed_provider_score_is_a_public_stage_failure(monkeypatch):
+    """Malformed Stage-3 output cannot produce an AssessmentResult aggregate."""
+    monkeypatch.setattr(
+        assessment_mod,
+        "collect_evidence",
+        lambda **kwargs: [
+            {
+                "dim_id": dim["id"],
+                "dim_name": dim["name"],
+                "evidence_found": True,
+                "confidence": "high",
+                "hedge": False,
+                "citations": [{"quote": "answer", "location": "<memory>"}],
+                "evidence_summary": "answer inspected",
+            }
+            for dim in kwargs["rubric"]["dimensions"]
+        ],
+    )
+    monkeypatch.setattr(
+        assessment_mod.backends,
+        "call",
+        lambda prompt, backend=None: "not json",
+    )
+
+    with pytest.raises(AssessmentError) as exc_info:
+        assess("answer", rubric=RUBRIC, backend="controlled")
+
+    assert exc_info.value.stage == "score"
+    assert isinstance(exc_info.value.__cause__, ValueError)
+    assert "Cannot extract JSON" in str(exc_info.value)
