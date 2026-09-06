@@ -55,6 +55,11 @@ Hermes keeps the measuring process separate from runtime policy:
 2. Collect and validate citations for each dimension.
 3. Score only against accepted evidence, applying the existing hedge, no-evidence, and source-authority clamps.
 
+Provider failures and malformed scoring responses do not become fallback scores
+or enter an aggregate. Batch mode retries a malformed or incomplete score
+response per dimension; if a retry still fails, `assess` raises
+`AssessmentError` with `stage == "score"`.
+
 The returned `AssessmentResult` has attribute access plus `to_dict()` and `to_json()`. Its JSON preserves the established CLI keys and adds a versioned schema and coverage report.
 
 ```python

@@ -10,6 +10,12 @@
   rejections, SDK-resolved names for hosted tool calls, and reasoning text
   emitted without a summary all reach the rendered run.
 
+### Fixed
+
+- Prevent malformed or incomplete scoring responses from being converted into
+  fallback scores that could enter an aggregate. Batch mode retains its
+  per-dimension retry before surfacing a score-stage failure.
+
 ## [1.2.1] — 2026-09-02
 
 ### Added
