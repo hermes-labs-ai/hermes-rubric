@@ -31,6 +31,8 @@ dev = ["pytest>=7", "ruff>=0.6"]
 openai = ["openai>=1.50"]
 google = ["google-generativeai>=0.8"]
 inspect = ["inspect-ai>=0.3.245"]
+# Source: https://openai.github.io/openai-agents-python/ (SDK compatibility; >=0.22)
+openai-agents = ["openai-agents>=0.22"]
 
 [project.scripts]
 hermes-rubric = "hermes_rubric.cli:main"

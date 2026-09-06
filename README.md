@@ -43,6 +43,8 @@ For the example above, install the OpenAI extra and set `OPENAI_API_KEY`:
 pip install "hermes-rubric[openai]"
 ```
 
+Framework adapters are optional extras too: `hermes-rubric[inspect]` bundles an Inspect AI scorer and `hermes-rubric[openai-agents]` grades completed OpenAI Agents SDK runs. See [Adapters](docs/ADAPTERS.md).
+
 You can instead use local Ollama, Claude Code, another built-in backend, or a backend plugin. Automatic selection checks authenticated Claude Code first, then local Ollama; cloud providers are always explicit opt-ins. See [Backends](docs/BACKENDS.md).
 
 ## One transaction, three evidence-first stages

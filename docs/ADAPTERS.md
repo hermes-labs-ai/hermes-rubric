@@ -53,8 +53,9 @@ This function deliberately does not retry or mutate an agent. A runtime-specific
 - Do not promise cancellation of a synchronous provider already running in `assess_async()`.
 
 Framework integrations remain optional extras over this stable contract. The
-Inspect AI scorer below is the first bundled adapter; Hermes does not claim
-bundled LangChain, OpenAI Agents, Semantic Kernel, or PydanticAI adapters.
+Inspect AI scorer and the OpenAI Agents SDK adapter below are the bundled
+adapters; Hermes does not claim bundled LangChain, Semantic Kernel, or
+PydanticAI adapters.
 
 ## Inspect AI scorer
 
@@ -90,3 +91,63 @@ assessment—including citations, coverage facts, and receipt—is stored under
 `Score.metadata["hermes_rubric"]`. The adapter does not define a pass
 threshold or retry the evaluated agent. Assessment errors fail scoring by
 default; `fail_on_error=False` records a visible unscored sample instead.
+
+## OpenAI Agents SDK adapter
+
+Install the optional adapter:
+
+```bash
+pip install "hermes-rubric[openai-agents]"
+```
+
+The adapter grades a completed `RunResult` (or a finished
+`RunResultStreaming`) from `Runner.run`, `Runner.run_sync`, or
+`Runner.run_streamed`. It reads the run only: it never re-runs the agent,
+never calls a model itself, and the module imports without the SDK, so
+recorded runs and test stand-ins that expose the same attributes grade
+through the same path.
+
+```python
+from agents import Agent, Runner
+from hermes_rubric.integrations.openai_agents import assess_run_async
+
+run = await Runner.run(agent, "What is the weather in Lisbon?")
+result = await assess_run_async(
+    run,
+    intent="Answer accurately and ground every claim in the tool results.",
+    backend="ollama-local",
+)
+print(result.aggregate, result.coverage.status)
+```
+
+`assess_run(run, ...)` is the synchronous form. Both accept exactly one of
+`intent`, `rubric`, or `artifact_class`, plus `backend`, `target_type`
+(default `agent-output`), `include_trace`, `extra_context`, and any further
+`assess()` keyword such as `target_window_bytes` or `batch`.
+
+`render_run(run)` returns the exact text Hermes will see, as a `RunEvidence`
+with `target`, `context`, and `metadata`:
+
+- **target** opens with the final output (structured outputs are rendered as
+  sorted compact JSON), then a numbered chronological trace of messages, tool
+  calls with arguments, tool results, handoffs, and reasoning (the summary
+  when the model emitted one, otherwise the reasoning text).
+  Putting the final output first keeps it inside the inspected window when a
+  long trace follows; check `coverage.status` before treating an uncited
+  trace line as absent.
+- **context** carries the task input, each participating agent with its
+  instructions, a run summary, guardrail tripwires, and `extra_context`.
+  Tripwires cover input and output guardrails plus tool guardrails that
+  rejected content or raised.
+- **metadata** records the final agent, agents in order, item and model
+  response counts, tool-call and handoff counts, guardrail tripwires, and
+  token usage when the SDK reports it. Transport it beside `result.to_dict()`;
+  it is not part of the Hermes receipt.
+
+The receipt names the target `openai-agents:run` and the context
+`openai-agents:task`. The adapter defines no pass threshold and does not
+retry or mutate the agent; assessment errors propagate with their stage.
+
+The bundled tests drive a real `Runner.run` through the SDK's
+`agents.testing.ScriptedModel`, so the adapter is exercised against genuine
+run items without a model or API key.
