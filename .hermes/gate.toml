@@ -1,0 +1,77 @@
+version = 1
+# Gate tooling requires Python >=3.11; use Python 3.12 as in hermes-quality.yml.
+# Package runtime compatibility (>=3.10) remains covered by the existing CI matrix.
+
+[gate]
+fast_budget_seconds = 8.0
+full_required_local = true
+adapter_status = "NATIVE_DEFAULT"
+exclusions = [".git/**", ".hermes/hermes_gate_runner.py", ".pytest_cache/**", ".ruff_cache/**", "**/__pycache__/**", "vendor/**", "node_modules/**", "dist/**", "build/**"]
+
+[adapter]
+enabled = false
+name = "native"
+argv = []
+minimum_version = ""
+
+[lintlang]
+enabled = true
+argv = ["lintlang", "scan", "--format", "json", "--fail-on", "review", "{files}"]
+trigger_globs = ["**/AGENTS.md", "**/CLAUDE.md", "**/prompts/**", "**/*.prompt", ".codex/**", ".claude/**"]
+timeout_seconds = 4.0
+blocking_threshold = "MEDIUM"
+
+[review]
+provider = "coderabbit"
+argv = ["coderabbit", "review", "--agent"]
+timeout_seconds = 180.0
+material_severities = ["critical", "major"]
+material_categories = ["correctness", "security", "data-loss", "concurrency", "api-contract"]
+fallback_argv = []
+
+[[fast]]
+name = "ruff"
+# Preserve the pre-0.16 default rules used by the existing local CI contract.
+argv = ["ruff", "check", "--select", "E4,E7,E9,F", "{files}"]
+timeout_seconds = 6.0
+globs = ["src/**/*.py", "tests/**/*.py"]
+
+[[fast]]
+name = "python-parse"
+argv = ["python3", "-c", "import ast,pathlib,sys; [ast.parse(pathlib.Path(p).read_bytes(), filename=p) for p in sys.argv[1:]]", "{files}"]
+timeout_seconds = 6.0
+globs = ["**/*.py"]
+
+[[fast]]
+name = "selected-file-whitespace"
+# Check the complete selected files, including staged, untracked and committed paths.
+# No-index exits 1 for an ordinary content difference; whitespace errors set bit 2.
+argv = ["python3", "-c", "import pathlib,subprocess,sys; results = [subprocess.run(['git', 'diff', '--no-index', '--check', '--', '/dev/null', p], check=False).returncode for p in sys.argv[1:] if pathlib.Path(p).is_file()]; raise SystemExit(any(code not in (0, 1) for code in results))", "{files}"]
+timeout_seconds = 4.0
+globs = ["**/*"]
+
+[[full]]
+name = "ruff"
+# Match scripts/local-ci.sh's scope and its pre-0.16 default rule set.
+argv = ["ruff", "check", "--select", "E4,E7,E9,F", "src/", "tests/"]
+timeout_seconds = 60.0
+globs = ["**/*"]
+
+[[full]]
+name = "pytest-without-api-keys"
+# Fail on missing extras without preloading SDK modules that tests unload.
+argv = ["env", "-u", "ANTHROPIC_API_KEY", "-u", "OPENAI_API_KEY", "-u", "DASHSCOPE_API_KEY", "-u", "GOOGLE_GEMINI_API_KEY", "-u", "GOOGLE_API_KEY", "python3", "-c", "from importlib.metadata import version; [version(name) for name in ('openai-agents', 'inspect-ai', 'pytest-mock')]; import pytest; raise SystemExit(pytest.main(['tests/', '-q']))"]
+timeout_seconds = 180.0
+globs = ["**/*"]
+
+[[full]]
+name = "package-contract"
+argv = ["bash", ".hermes/check-package.sh"]
+timeout_seconds = 300.0
+globs = ["**/*"]
+
+[[repair]]
+name = "ruff-fix"
+argv = ["ruff", "check", "--select", "E4,E7,E9,F", "--fix", "{files}"]
+timeout_seconds = 8.0
+globs = ["src/**/*.py", "tests/**/*.py"]
