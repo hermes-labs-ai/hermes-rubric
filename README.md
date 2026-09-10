@@ -179,6 +179,10 @@ Use a deterministic validator instead when the rule can be expressed exactly. Do
 For directly comparable re-grades, pass `--pin-rubric prior-result.json` to
 reuse the prior result's rubric without changing its hash.
 
+## Evaluation and deployment engineering
+
+For evaluation or deployment engineering around a specific application, contact [roli@hermes-labs.ai](mailto:roli@hermes-labs.ai).
+
 ## Documentation
 
 - [Quickstart](docs/quickstart.md)
