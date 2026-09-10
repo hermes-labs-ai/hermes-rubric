@@ -8,7 +8,8 @@ hermes-rubric --version
 ```
 
 The pin is the release this page was verified against; drop it to take the
-latest. `--version` prints `hermes-rubric 1.2.1` and proves the install. It
+latest. `--version` prints `hermes-rubric 1.2.1` — the string is built from
+`__version__` in `src/hermes_rubric/__init__.py` — and proves the install. It
 does not exercise an assessment: every score on this page comes from a backend
 call.
 
@@ -61,11 +62,21 @@ synthesizing one — its nine dimensions are defined in
 `src/hermes_rubric/classes/social-post.yaml` — so Stage 1 is skipped and the
 dimension set and `stage_1_rubric_hash_sha256` are identical across runs. That
 makes *rubric selection* deterministic. The scores themselves are model output
-and are not: two runs of this exact command on the same file can differ.
+and are not: two runs of this exact command on the same file can differ. The
+`reproducibility_note` emitted by `src/hermes_rubric/receipt.py` does not
+demonstrate that. It records the inputs, backend and rubric hash, notes that
+Stage-1 rubric synthesis — bypassed here — is not deterministic, and warns that
+a changed `rubric_hash` means the measuring stick itself moved, so scores from
+runs with different hashes are not directly comparable.
 
-The command exits `0` and writes `/tmp/result.json`. A nonzero exit is a
-staged failure, not a low score: `src/hermes_rubric/cli.py` exits `1` for a
-backend or input error, `2` for Stage 1, `3` for Stage 2 and `4` for Stage 3.
+The command exits `0` and writes `/tmp/result.json`. Exit `0` means the
+pipeline completed and produced that output — it says nothing about the scores,
+and a low aggregate still exits `0`. A nonzero exit is a failure to assess, not
+a verdict: `src/hermes_rubric/cli.py` exits `1` for a backend or input error,
+`2` for Stage 1, `3` for Stage 2 and `4` for Stage 3. Exit `2` is shared —
+argparse also uses it for a CLI usage error, such as a missing `--target` or
+`--pin-rubric` together with `--artifact-class`. A usage error fails before any
+stage runs and prints `usage:`; a Stage-1 failure prints `ERROR in Stage 1`.
 
 ## Read the result
 
