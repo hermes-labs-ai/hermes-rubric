@@ -11,6 +11,15 @@ An evidence-first scoring tool. Three stages before any number is produced: rubr
 - `calibration/` — calibration dataset + META-RUBRIC (do not modify without evidence)
 - `applied/` — example scoring runs (read-only reference)
 
+## Minimal commands
+
+```bash
+pip install -e ".[dev]"
+PYTHONPATH=src python3 -m pytest tests/ -v
+ruff check src/ tests/
+python -m build
+```
+
 ## Rules
 
 1. The default auto-detected paths must not require an API key; cloud backends
@@ -54,3 +63,10 @@ means no match or only a low-severity advisory `RISK`; exit 1 means at least
 one medium- or high-severity match; exit 2 means invalid input. If it flags a
 claim, add direct evidence, hedge the claim, or remove the unverifiable
 wording.
+
+## Definition of done
+
+- `PYTHONPATH=src python3 -m pytest tests/ -v` and `ruff check src/ tests/` pass
+- both adversarial tests in `tests/test_adversarial.py` still pass
+- no default auto-detected backend requires an API key
+- every new numeric claim in the repo has a source pointer
