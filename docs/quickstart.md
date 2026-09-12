@@ -37,7 +37,10 @@ Everything below is self-contained — no repository checkout, no file you have
 to supply, no undefined variable.
 
 ```bash
-cat > /tmp/post.md <<'EOF'
+workdir="$(mktemp -d)"
+trap 'rm -rf -- "$workdir"' EXIT
+
+cat > "$workdir/post.md" <<'EOF'
 We rebuilt our ingest pipeline and it is now 40% faster.
 
 The old path re-parsed every record twice. We removed the second
@@ -51,25 +54,37 @@ EOF
 
 hermes-rubric \
   --artifact-class social-post \
-  --target /tmp/post.md \
+  --target "$workdir/post.md" \
   --backend ollama-local \
-  --out /tmp/result.json \
+  --out "$workdir/result.json" \
   --verbose
 ```
+
+`mktemp -d` gives this run a private directory instead of a guessable name in
+shared `/tmp`, so another user on the same machine cannot pre-create or swap the
+files you are about to write and read; the `trap` deletes it when the shell
+exits. Every path is quoted, because `mktemp -d` may return a name containing
+spaces. Run the read-back block below in the same shell, before that shell
+exits.
 
 `--artifact-class social-post` loads a bundled rubric instead of
 synthesizing one — its nine dimensions are defined in
 `src/hermes_rubric/classes/social-post.yaml` — so Stage 1 is skipped and the
 dimension set and `stage_1_rubric_hash_sha256` are identical across runs. That
-makes *rubric selection* deterministic. The scores themselves are model output
-and are not: two runs of this exact command on the same file can differ. The
-`reproducibility_note` emitted by `src/hermes_rubric/receipt.py` does not
-demonstrate that. It records the inputs, backend and rubric hash, notes that
-Stage-1 rubric synthesis — bypassed here — is not deterministic, and warns that
-a changed `rubric_hash` means the measuring stick itself moved, so scores from
-runs with different hashes are not directly comparable.
+makes *rubric selection* deterministic. It does not make the scores
+deterministic. They are model output, and this recipe pins no decoding
+parameters: `_call_ollama()` in `src/hermes_rubric/backends.py` sends only
+`num_predict`, no `temperature` and no `seed`, so sampling follows whatever your
+Ollama server defaults to. Nothing on this page measures how far repeated runs
+move, so treat repeated scores as unpinned: this page does not show them to be
+identical, and does not show them to differ. The `reproducibility_note` emitted
+by `src/hermes_rubric/receipt.py` does not settle it either: it records the inputs,
+backend and rubric hash, notes that Stage-1 rubric synthesis — bypassed here —
+is not deterministic, and warns that a changed `rubric_hash` means the measuring
+stick itself moved, so scores from runs with different hashes are not directly
+comparable.
 
-The command exits `0` and writes `/tmp/result.json`. Exit `0` means the
+The command exits `0` and writes `"$workdir/result.json"`. Exit `0` means the
 pipeline completed and produced that output — it says nothing about the scores,
 and a low aggregate still exits `0`. A nonzero exit is a failure to assess, not
 a verdict: `src/hermes_rubric/cli.py` exits `1` for a backend or input error,
@@ -81,10 +96,12 @@ stage runs and prints `usage:`; a Stage-1 failure prints `ERROR in Stage 1`.
 ## Read the result
 
 ```bash
-python3 - <<'EOF'
+WORKDIR="$workdir" python3 - <<'EOF'
 import json
+import os
 
-result = json.load(open("/tmp/result.json"))
+with open(os.path.join(os.environ["WORKDIR"], "result.json")) as fh:
+    result = json.load(fh)
 
 print("schema_version:", result["schema_version"])
 print("aggregate:", result["aggregate"], "/", result["max_possible"])
@@ -115,9 +132,12 @@ What to assert in your own harness — these hold for any backend:
 - `receipt` records `tool_version`, `backend`, the input hashes, and
   `stage_1_rubric_hash_sha256`.
 
-Do not assert a particular aggregate or per-dimension score. The same target
-and the same rubric hash can score differently across backends and runs, and a
-score is not a truth claim about the target.
+Do not assert a particular aggregate or per-dimension score. A score is model
+output measured against the rubric, not a truth claim about the target, and
+nothing pins it for you: backends do not share decoding settings —
+`_call_openai()` sends `temperature: 0` and `seed: 42` while `_call_ollama()`
+sends neither, both in `src/hermes_rubric/backends.py` — so a score is not a
+stable value to assert against.
 
 ## Assess in memory
 

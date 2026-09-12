@@ -9,6 +9,10 @@ This module is the gate on that promise:
 * the documented CLI invocation still names a real class template and passes an
   explicit ``--backend``, because automatic backend selection must never be
   inherited by a pasted recipe;
+* the recipe writes and reads only inside a private `mktemp -d` workdir that a
+  trap removes, never a predictable path in shared `/tmp`;
+* the published claims about run-to-run behaviour stay inside what the repo can
+  actually show;
 * the structural invariants the doc licenses — schema version, one score per
   rubric dimension, one evidence entry per score, the no-evidence and hedge
   clamps, coverage, receipt — hold end to end.
@@ -21,8 +25,11 @@ live receipt is a separate artifact.
 from __future__ import annotations
 
 import json
+import os
 import re
 import shlex
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -55,6 +62,33 @@ def _quickstart_command() -> str:
     match = re.search(r"^hermes-rubric \\\n(?:.*\\\n)*.*$", _doc_text(), re.MULTILINE)
     assert match, "docs/quickstart.md must publish a hermes-rubric invocation"
     return match.group(0)
+
+
+def _bash_blocks() -> list[str]:
+    blocks = re.findall(r"```bash\n(.*?)```", _doc_text(), re.DOTALL)
+    assert blocks, "docs/quickstart.md must publish runnable bash blocks"
+    return blocks
+
+
+def _recipe_block() -> str:
+    """The block that creates the workdir and runs the assessment."""
+    matching = [b for b in _bash_blocks() if "hermes-rubric \\\n" in b]
+    assert len(matching) == 1, "exactly one bash block must run the assessment"
+    return matching[0]
+
+
+def _reader_block() -> str:
+    """The block that reads the result back."""
+    matching = [b for b in _bash_blocks() if "python3 - <<'EOF'" in b]
+    assert len(matching) == 1, "exactly one bash block must read the result back"
+    return matching[0]
+
+
+def _reader_script() -> str:
+    """The Python heredoc body inside the reader block."""
+    match = re.search(r"<<'EOF'\n(.*?)\nEOF\n", _reader_block(), re.DOTALL)
+    assert match, "the reader block must publish a python heredoc"
+    return match.group(1)
 
 
 def test_quickstart_command_pins_a_class_template_and_an_explicit_backend():
@@ -151,17 +185,22 @@ def stub_backend(monkeypatch):
     }
 
 
-def _documented_argv(target: Path, out: Path) -> list[str]:
-    """The published command, tokenised, with its /tmp paths redirected.
+def _documented_argv(workdir: Path) -> list[str]:
+    """The published command, tokenised, with `$workdir` bound to a real path.
 
     Built from the doc rather than hand-written, so the argv under test is the
-    one a reader copies.
+    one a reader copies. Only the shell variable is expanded — every other
+    token, including the file names under it, is whatever the doc publishes.
     """
     command = _quickstart_command().replace("\\\n", " ")
     argv = shlex.split(command)
     assert argv[0] == "hermes-rubric"
-    substitutions = {"/tmp/post.md": str(target), "/tmp/result.json": str(out)}
-    return [substitutions.get(token, token) for token in argv[1:]]
+    expanded = [token.replace("$workdir", str(workdir)) for token in argv[1:]]
+    assert not any("$" in token for token in expanded), (
+        "the published command must not depend on any shell variable other "
+        "than $workdir"
+    )
+    return expanded
 
 
 def _assess(target: Path):
@@ -181,7 +220,130 @@ def test_quickstart_command_omits_intent_and_context():
     assert f"--backend {DOCUMENTED_BACKEND}" in command
     assert "--intent" not in command
     assert "--context" not in command
-    assert "--target /tmp/post.md" in command
+    assert '--target "$workdir/post.md"' in command
+    assert '--out "$workdir/result.json"' in command
+
+
+def test_quickstart_recipe_uses_a_private_temporary_workdir():
+    """The recipe must not write or read predictable names in shared `/tmp`.
+
+    A published command that writes `/tmp/post.md` and `/tmp/result.json` is a
+    symlink/pre-creation target for any other user on a multi-user host
+    (CWE-377), and the reader copies it verbatim. The contract is: one
+    `mktemp -d` directory, removed by a trap, every path quoted and rooted in
+    it, and nothing in any shell block naming a fixed `/tmp` file.
+    """
+    recipe = _recipe_block()
+
+    assert 'workdir="$(mktemp -d)"' in recipe, (
+        "the recipe must allocate its own private directory with mktemp -d"
+    )
+    assert "trap 'rm -rf -- \"$workdir\"' EXIT" in recipe, (
+        "the recipe must remove its workdir on shell exit"
+    )
+
+    # Every expansion is double-quoted, so a workdir containing a space or a
+    # glob character cannot word-split into a different path.
+    for block in _bash_blocks():
+        for index in (m.start() for m in re.finditer(r"\$workdir", block)):
+            assert index > 0 and block[index - 1] == '"', (
+                f"unquoted $workdir expansion in: {block[max(0, index - 40):index + 20]!r}"
+            )
+
+    # Both files the recipe touches live under the workdir...
+    assert 'cat > "$workdir/post.md" <<' in recipe
+    assert '--target "$workdir/post.md"' in recipe
+    assert '--out "$workdir/result.json"' in recipe
+
+    # ...and no shell block falls back to a fixed path in shared /tmp.
+    for block in _bash_blocks():
+        assert "/tmp/" not in block, f"fixed /tmp path in a runnable block: {block!r}"
+
+
+@pytest.mark.skipif(shutil.which("bash") is None, reason="bash not available")
+def test_quickstart_recipe_block_executes_and_cleans_up(tmp_path):
+    """Run the published shell block for real, with `mktemp` and the CLI shimmed.
+
+    Static assertions can only say the recipe *looks* quoted. This runs it. The
+    `mktemp` shim hands back a directory whose name contains a space and a
+    glob character — legal on any real machine, and fatal to an unquoted
+    expansion, which would word-split into the wrong path and fail the block.
+    It then checks the three things a reader depends on: the target heredoc
+    lands in the private directory, the CLI receives paths inside it, and the
+    trap removes it when the shell exits.
+
+    (`mktemp` is shimmed rather than steered with `TMPDIR` because BSD
+    `mktemp -d` ignores `TMPDIR` and uses the Darwin per-user temp directory,
+    so the environment variable is not a portable lever.)
+    """
+    shim = tmp_path / "bin"
+    shim.mkdir()
+    workdir = tmp_path / "work dir [1]"
+    record = tmp_path / "argv.json"
+
+    # Honours the contract the recipe relies on: `-d` creates a fresh
+    # owner-only directory and prints its path.
+    mktemp = shim / "mktemp"
+    mktemp.write_text(
+        "#!/usr/bin/env python3\n"
+        "import os, sys\n"
+        "assert sys.argv[1:] == ['-d'], sys.argv\n"
+        f"os.makedirs({str(workdir)!r}, mode=0o700, exist_ok=True)\n"
+        f"print({str(workdir)!r})\n",
+        encoding="utf-8",
+    )
+    mktemp.chmod(0o755)
+
+    # Records what the recipe actually passed, then writes the --out file so
+    # the block behaves like a successful run.
+    cli = shim / "hermes-rubric"
+    cli.write_text(
+        "#!/usr/bin/env python3\n"
+        "import json, sys\n"
+        f"open({str(record)!r}, 'w').write(json.dumps(sys.argv[1:]))\n"
+        "out = sys.argv[sys.argv.index('--out') + 1]\n"
+        "open(out, 'w').write('{}')\n"
+        "target = sys.argv[sys.argv.index('--target') + 1]\n"
+        "open(target).read()\n",
+        encoding="utf-8",
+    )
+    cli.chmod(0o755)
+
+    env = {**os.environ, "PATH": f"{shim}{os.pathsep}{os.environ['PATH']}"}
+    proc = subprocess.run(
+        ["bash", "-s"],
+        input=_recipe_block(),
+        env=env,
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode == 0, f"published recipe failed: {proc.stderr}"
+
+    argv = json.loads(record.read_text(encoding="utf-8"))
+    target = Path(argv[argv.index("--target") + 1])
+    out = Path(argv[argv.index("--out") + 1])
+    # The space and the bracket survived: no word-splitting, no globbing.
+    assert target.parent == workdir, f"--target escaped the workdir: {target}"
+    assert out.parent == workdir, f"--out escaped the workdir: {out}"
+    assert argv[argv.index("--backend") + 1] == DOCUMENTED_BACKEND
+
+    # The trap fired on shell exit and took the whole directory with it, so the
+    # heredoc target and the result JSON do not outlive the recipe.
+    assert not workdir.exists(), "the recipe must remove its workdir on exit"
+
+
+def test_quickstart_reader_block_takes_the_workdir_from_the_environment():
+    """The reader must be handed the workdir, not re-derive a guessable path."""
+    reader = _reader_block()
+    assert reader.startswith('WORKDIR="$workdir" python3 - <<'), (
+        "the reader block must run with WORKDIR bound to the recipe's workdir"
+    )
+
+    script = _reader_script()
+    assert 'os.environ["WORKDIR"]' in script
+    assert "/tmp" not in script
+    assert "import os" in script
+    compile(script, "docs/quickstart.md:reader", "exec")
 
 
 def test_rubric_hash_is_stable_across_two_runs(stub_backend, tmp_path):
@@ -211,16 +373,23 @@ def test_rubric_hash_is_stable_across_two_runs(stub_backend, tmp_path):
 def test_quickstart_recipe_holds_its_published_invariants(
     stub_backend, tmp_path, monkeypatch
 ):
-    target = tmp_path / "post.md"
+    # Stand in for `mktemp -d`: a private directory the recipe owns. The file
+    # names come from the doc, not from this test, so a renamed file in the
+    # published recipe fails here rather than drifting silently.
+    workdir = tmp_path / "workdir"
+    workdir.mkdir(mode=0o700)
+    target = workdir / "post.md"
     target.write_text(_quickstart_target() + "\n", encoding="utf-8")
 
     # Drive the published command through the real CLI entry point: argv is
     # parsed from the doc, the backend is the documented one (answered by the
     # stub), and the assertions read the JSON the CLI actually wrote.
-    out = tmp_path / "result.json"
-    argv = _documented_argv(target, out)
+    out = workdir / "result.json"
+    argv = _documented_argv(workdir)
     assert "--intent" not in argv and "--context" not in argv
     assert argv[argv.index("--backend") + 1] == DOCUMENTED_BACKEND
+    assert argv[argv.index("--target") + 1] == str(target)
+    assert argv[argv.index("--out") + 1] == str(out)
 
     monkeypatch.setattr(sys, "argv", ["hermes-rubric", *argv])
     cli_mod.main()
@@ -284,6 +453,13 @@ def test_quickstart_recipe_holds_its_published_invariants(
     assert receipt["inputs"]["context_path"] == receipt["inputs"]["target_path"]
     assert receipt["inputs"]["context_hash_sha256"] == receipt["inputs"]["target_hash_sha256"]
 
+    # The published reader block, run verbatim against what the CLI just wrote:
+    # it must locate the result through WORKDIR and touch only fields that
+    # exist. Anything it prints is incidental; that it runs at all is the point.
+    script = _reader_script()
+    monkeypatch.setenv("WORKDIR", str(workdir))
+    exec(compile(script, "docs/quickstart.md:reader", "exec"), {"__name__": "__main__"})
+
 
 def test_quickstart_pins_the_packaged_release():
     """The published install must stay pinned to the version it documents.
@@ -309,8 +485,11 @@ def test_quickstart_cites_a_source_for_its_operational_numbers():
         "src/hermes_rubric/classes/social-post.yaml",
         # the documented --version output
         "src/hermes_rubric/__init__.py",
-        # the two-run nondeterminism statement
+        # the description of what the reproducibility note does and does not say
         "src/hermes_rubric/receipt.py",
+        # the decoding settings behind the "scores are not pinned" statement
+        "_call_ollama()",
+        "_call_openai()",
     ):
         assert pointer in text, f"missing source pointer: {pointer}"
 
@@ -353,12 +532,15 @@ def test_quickstart_labels_the_backend_prerequisites():
 def test_nondeterminism_claim_does_not_overstate_the_receipt(stub_backend, tmp_path):
     """The note warns about rubric hashes and Stage 1; it is not a scores proof.
 
-    Earlier wording ("Each result says so itself") implied the receipt
-    demonstrates that scores vary between runs. It does not — the class
-    template bypasses Stage 1 and the hash is identical across runs.
+    Earlier wording ("Each result says so itself", then "two runs of this exact
+    command on the same file can differ") implied the receipt demonstrates that
+    scores vary between runs. It does not — the class template bypasses Stage 1
+    and the hash is identical across runs, and nothing in this repo measures
+    run-to-run score movement. The doc may say the scores are *unpinned*, which
+    the backend code shows; it may not say they *do* differ.
     """
     text = _doc_text()
-    assert "does not\ndemonstrate that" in text
+    assert "does not settle it either" in text
     assert "Each result says so itself" not in text
 
     target = tmp_path / "post.md"
@@ -372,6 +554,67 @@ def test_nondeterminism_claim_does_not_overstate_the_receipt(stub_backend, tmp_p
     # It never claims run-to-run score variance for an unchanged rubric hash.
     assert "two runs" not in note
     assert "can differ" not in note
+
+
+def test_doc_does_not_assert_unmeasured_run_to_run_score_variance():
+    """Ban the formulation the receipt was cited for but does not support.
+
+    "two runs of this exact command on the same file can differ" is an
+    empirical claim about model behaviour. No fixture, receipt or test in this
+    repo measures it, so the doc must not state it as fact — in that wording or
+    the looser "across backends and runs" variant that replaced it.
+    """
+    text = " ".join(_doc_text().split())
+    for banned in (
+        "two runs of this exact command",
+        "can score differently across backends and runs",
+    ):
+        assert banned not in text, (
+            f"unsupported run-to-run variance claim restored: {banned!r}"
+        )
+    assert "two runs" not in text
+
+
+def test_score_stability_claim_cites_the_decoding_settings_it_rests_on():
+    """What replaces it must be code-checkable, and the code must still match.
+
+    The doc says the recipe pins no decoding parameters. That is a statement
+    about `_call_ollama()`, so it fails here the moment that function starts
+    sending a temperature or a seed — rather than quietly becoming false in
+    published documentation.
+    """
+    text = " ".join(_doc_text().split())
+    assert "It does not make the scores deterministic." in text
+    assert (
+        "`_call_ollama()` in `src/hermes_rubric/backends.py` sends only "
+        "`num_predict`, no `temperature` and no `seed`" in text
+    )
+    # The guidance the finding asked us to keep.
+    assert "Do not assert a particular aggregate or per-dimension score." in text
+
+    source = (
+        Path(__file__).resolve().parent.parent
+        / "src" / "hermes_rubric" / "backends.py"
+    ).read_text(encoding="utf-8")
+
+    def _body(name: str) -> str:
+        start = source.index(f"def {name}(")
+        end = source.index("\ndef ", start + 1)
+        return source[start:end]
+
+    ollama = _body("_call_ollama")
+    assert "num_predict" in ollama
+    assert "temperature" not in ollama, (
+        "_call_ollama now sets a temperature; the quickstart claim that it "
+        "sends none is stale"
+    )
+    assert "seed" not in ollama
+
+    openai = _body("_call_openai")
+    assert '"temperature": 0' in openai and '"seed": 42' in openai, (
+        "the quickstart contrasts _call_openai's pinned decoding with "
+        "_call_ollama's; that contrast must still hold"
+    )
 
 
 def test_exit_guidance_separates_success_from_failures_and_usage_errors():
