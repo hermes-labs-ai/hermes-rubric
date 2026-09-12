@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.2.2] — 2026-09-12
+
 ### Added
 
 - Add a native OpenAI Agents SDK adapter (`hermes-rubric[openai-agents]`) that
