@@ -37,7 +37,7 @@ Everything below is self-contained — no repository checkout, no file you have
 to supply, no undefined variable.
 
 ```bash
-workdir="$(mktemp -d)"
+workdir="$(mktemp -d)" || exit 1
 trap 'rm -rf -- "$workdir"' EXIT
 
 cat > "$workdir/post.md" <<'EOF'
@@ -63,9 +63,10 @@ hermes-rubric \
 `mktemp -d` gives this run a private directory instead of a guessable name in
 shared `/tmp`, so another user on the same machine cannot pre-create or swap the
 files you are about to write and read; the `trap` deletes it when the shell
-exits. Every path is quoted, because `mktemp -d` may return a name containing
-spaces. Run the read-back block below in the same shell, before that shell
-exits.
+exits. The `|| exit 1` matters: without it a failed `mktemp` would leave
+`$workdir` empty, and every path below would collapse to the filesystem root.
+Every path is quoted, because `mktemp -d` may return a name containing spaces.
+Run the read-back block below in the same shell, before that shell exits.
 
 `--artifact-class social-post` loads a bundled rubric instead of
 synthesizing one — its nine dimensions are defined in

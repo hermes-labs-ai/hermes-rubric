@@ -195,12 +195,14 @@ def _documented_argv(workdir: Path) -> list[str]:
     command = _quickstart_command().replace("\\\n", " ")
     argv = shlex.split(command)
     assert argv[0] == "hermes-rubric"
-    expanded = [token.replace("$workdir", str(workdir)) for token in argv[1:]]
-    assert not any("$" in token for token in expanded), (
+    # Checked before expansion: the substituted path is a real directory name
+    # and may legitimately contain `$` (pytest honours `--basetemp`), so only
+    # the published tokens are screened for shell variables.
+    assert not any("$" in token.replace("$workdir", "") for token in argv[1:]), (
         "the published command must not depend on any shell variable other "
         "than $workdir"
     )
-    return expanded
+    return [token.replace("$workdir", str(workdir)) for token in argv[1:]]
 
 
 def _assess(target: Path):
@@ -235,8 +237,10 @@ def test_quickstart_recipe_uses_a_private_temporary_workdir():
     """
     recipe = _recipe_block()
 
-    assert 'workdir="$(mktemp -d)"' in recipe, (
-        "the recipe must allocate its own private directory with mktemp -d"
+    assert 'workdir="$(mktemp -d)" || exit 1' in recipe, (
+        "the recipe must allocate its own private directory with mktemp -d and "
+        "stop if that fails — an empty $workdir collapses every path below to "
+        "the filesystem root"
     )
     assert "trap 'rm -rf -- \"$workdir\"' EXIT" in recipe, (
         "the recipe must remove its workdir on shell exit"
@@ -260,6 +264,83 @@ def test_quickstart_recipe_uses_a_private_temporary_workdir():
         assert "/tmp/" not in block, f"fixed /tmp path in a runnable block: {block!r}"
 
 
+def _run_published_recipe(
+    tmp_path: Path, *, workdir: Path, record: Path, mktemp_fails: bool = False
+) -> subprocess.CompletedProcess[str]:
+    """Run the doc's shell block with `mktemp` and the CLI shimmed.
+
+    The `mktemp` shim honours the contract the recipe relies on — `-d` creates
+    a fresh owner-only directory and prints its path — or, with
+    ``mktemp_fails``, fails the way a full or read-only temp filesystem would.
+    The CLI shim records the argv it was handed.
+    """
+    shim = tmp_path / "bin"
+    shim.mkdir()
+
+    mktemp = shim / "mktemp"
+    body = (
+        "import sys; sys.exit(1)\n"
+        if mktemp_fails
+        else (
+            "import os\n"
+            f"os.makedirs({str(workdir)!r}, mode=0o700, exist_ok=True)\n"
+            f"print({str(workdir)!r})\n"
+        )
+    )
+    mktemp.write_text(
+        "#!/usr/bin/env python3\n"
+        "import sys\n"
+        "assert sys.argv[1:] == ['-d'], sys.argv\n" + body,
+        encoding="utf-8",
+    )
+    mktemp.chmod(0o755)
+
+    cli = shim / "hermes-rubric"
+    cli.write_text(
+        "#!/usr/bin/env python3\n"
+        "import json, sys\n"
+        f"open({str(record)!r}, 'w').write(json.dumps(sys.argv[1:]))\n"
+        "out = sys.argv[sys.argv.index('--out') + 1]\n"
+        "open(out, 'w').write('{}')\n"
+        "target = sys.argv[sys.argv.index('--target') + 1]\n"
+        "open(target).read()\n",
+        encoding="utf-8",
+    )
+    cli.chmod(0o755)
+
+    return subprocess.run(
+        ["bash", "-s"],
+        input=_recipe_block(),
+        env={**os.environ, "PATH": f"{shim}{os.pathsep}{os.environ['PATH']}"},
+        capture_output=True,
+        text=True,
+    )
+
+
+@pytest.mark.skipif(shutil.which("bash") is None, reason="bash not available")
+def test_quickstart_recipe_stops_when_mktemp_fails(tmp_path):
+    """A failed `mktemp -d` must abort, not fall through to the filesystem root.
+
+    Without the guard, `workdir` is empty and every quoted path in the block
+    expands to `/post.md` and `/result.json` — the exact predictable-shared-path
+    failure the workdir was introduced to remove, and writable for a root user.
+    """
+    record = tmp_path / "argv.json"
+    proc = _run_published_recipe(
+        tmp_path,
+        workdir=tmp_path / "unused",
+        record=record,
+        mktemp_fails=True,
+    )
+
+    assert proc.returncode != 0, "the recipe must fail when mktemp -d fails"
+    assert not record.exists(), (
+        "the recipe reached hermes-rubric with an empty $workdir; every path "
+        "would have collapsed to the filesystem root"
+    )
+    assert "/post.md" not in proc.stdout + proc.stderr
+
+
 @pytest.mark.skipif(shutil.which("bash") is None, reason="bash not available")
 def test_quickstart_recipe_block_executes_and_cleans_up(tmp_path):
     """Run the published shell block for real, with `mktemp` and the CLI shimmed.
@@ -276,47 +357,9 @@ def test_quickstart_recipe_block_executes_and_cleans_up(tmp_path):
     `mktemp -d` ignores `TMPDIR` and uses the Darwin per-user temp directory,
     so the environment variable is not a portable lever.)
     """
-    shim = tmp_path / "bin"
-    shim.mkdir()
     workdir = tmp_path / "work dir [1]"
     record = tmp_path / "argv.json"
-
-    # Honours the contract the recipe relies on: `-d` creates a fresh
-    # owner-only directory and prints its path.
-    mktemp = shim / "mktemp"
-    mktemp.write_text(
-        "#!/usr/bin/env python3\n"
-        "import os, sys\n"
-        "assert sys.argv[1:] == ['-d'], sys.argv\n"
-        f"os.makedirs({str(workdir)!r}, mode=0o700, exist_ok=True)\n"
-        f"print({str(workdir)!r})\n",
-        encoding="utf-8",
-    )
-    mktemp.chmod(0o755)
-
-    # Records what the recipe actually passed, then writes the --out file so
-    # the block behaves like a successful run.
-    cli = shim / "hermes-rubric"
-    cli.write_text(
-        "#!/usr/bin/env python3\n"
-        "import json, sys\n"
-        f"open({str(record)!r}, 'w').write(json.dumps(sys.argv[1:]))\n"
-        "out = sys.argv[sys.argv.index('--out') + 1]\n"
-        "open(out, 'w').write('{}')\n"
-        "target = sys.argv[sys.argv.index('--target') + 1]\n"
-        "open(target).read()\n",
-        encoding="utf-8",
-    )
-    cli.chmod(0o755)
-
-    env = {**os.environ, "PATH": f"{shim}{os.pathsep}{os.environ['PATH']}"}
-    proc = subprocess.run(
-        ["bash", "-s"],
-        input=_recipe_block(),
-        env=env,
-        capture_output=True,
-        text=True,
-    )
+    proc = _run_published_recipe(tmp_path, workdir=workdir, record=record)
     assert proc.returncode == 0, f"published recipe failed: {proc.stderr}"
 
     argv = json.loads(record.read_text(encoding="utf-8"))
