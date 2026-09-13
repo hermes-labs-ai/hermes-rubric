@@ -45,6 +45,7 @@ result = assess(
 
 print(result.aggregate)
 print(result.coverage.status)
+# `7` is a caller-selected example threshold, not a Hermes default.
 print(result.feedback(FeedbackPolicy(minimum_score=7)).to_prompt())
 ```
 
