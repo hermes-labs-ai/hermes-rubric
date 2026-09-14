@@ -7,8 +7,9 @@ abstract: >-
   rubric, collect validated citations, score only against accepted evidence,
   and return coverage, feedback, and a receipt.
 authors:
-  - family-names: "Bosch"
+  - family-names: "Bosch Rodriguez"
     given-names: "Rolando"
+    orcid: "https://orcid.org/0009-0005-4896-1112"
     email: "roli@hermes-labs.ai"
     affiliation: "Hermes Labs"
 version: "1.2.2"
@@ -30,8 +31,9 @@ preferred-citation:
   type: software
   title: "hermes-rubric: Evidence-first assessment for agent outputs and applications"
   authors:
-    - family-names: "Bosch"
+    - family-names: "Bosch Rodriguez"
       given-names: "Rolando"
+      orcid: "https://orcid.org/0009-0005-4896-1112"
       email: "roli@hermes-labs.ai"
       affiliation: "Hermes Labs"
   version: "1.2.2"
