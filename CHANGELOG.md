@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [1.2.3] — release-prep, not yet tagged or published
+
+### Fixed
+
+- Stop the published quickstart recipe when `mktemp -d` fails, instead of
+  continuing with an empty `$workdir` that made every quoted path expand to
+  `/post.md` and `/result.json` (#32). `_documented_argv()` also now screens
+  the published shell tokens for leftover variables before substitution, so
+  a `--basetemp` containing `$` is not misread as undocumented.
+
 ## [1.2.2] — 2026-09-12
 
 ### Added
