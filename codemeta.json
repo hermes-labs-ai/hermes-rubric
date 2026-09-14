@@ -1,0 +1,14 @@
+{
+  "@context": "https://w3id.org/codemeta/3.1",
+  "@type": "SoftwareSourceCode",
+  "name": "hermes-rubric",
+  "description": "Evidence-first LLM-as-judge scoring for AI artifacts — papers, PRs, prompts, cold emails: synthesizes a rubric, collects quoted-evidence citations, scores only against that evidence, and hedges on thin evidence. Every dimension ties to a file:line or quote, with reproducibility receipts. 7 backends.",
+  "codeRepository": "https://github.com/hermes-labs-ai/hermes-rubric",
+  "version": "1.2.2",
+  "license": "https://spdx.org/licenses/Apache-2.0",
+  "programmingLanguage": "Python",
+  "runtimePlatform": "Python >=3.10",
+  "author": [{"@type": "Person", "givenName": "Rolando", "familyName": "Bosch", "identifier": "https://orcid.org/0009-0005-4896-1112"}],
+  "url": "https://hermes-labs.ai/hermes-rubric",
+  "keywords": ["ai-agents", "ai-audit", "ai-reliability", "ai-safety", "citations", "evals", "evidence-first", "hermes-labs", "llm", "llm-evaluation", "llm-judge", "prompt-engineering", "python", "reproducibility", "structured-scoring"]
+}
