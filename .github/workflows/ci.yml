@@ -95,6 +95,18 @@ jobs:
             echo "It does not validate experiment conclusions."
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Require exact ordered manifest header
+        run: >-
+          python3 scripts/check_manifest_header.py
+          experiments/batch-equiv-2026-04-25/RUNS-MANIFEST.csv
+          .github/csv-quality-gate-manifest.toml
+          batch_runs_manifest
+
       - name: Check committed batch-run manifest
         uses: hermes-labs-ai/csv-quality-gate@e70192a24da6c293dd72e17169c17b844fb84bbf
         with:
