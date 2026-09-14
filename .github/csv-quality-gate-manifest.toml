@@ -1,6 +1,8 @@
 # CSV structure and required-field check only. The runner writes this schema in
 # experiments/batch-equiv-2026-04-25/runner.py (_append_manifest); this profile
 # does not validate experiment conclusions or reproduce their calculations.
+# required_columns is also the exact, ordered header enforced by
+# scripts/check_manifest_header.py (no reordered, extra, or padded columns).
 [profiles.batch_runs_manifest]
 required_columns = [
   "target_id",
