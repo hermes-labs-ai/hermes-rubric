@@ -36,6 +36,8 @@ Use the Python API when the target is already in an application:
 ```python
 from hermes_rubric import FeedbackPolicy, assess
 
+# Your application supplies agent_output, task_context, and caller_threshold.
+
 result = assess(
     target=agent_output,
     intent="Answer accurately and support material claims with checkable evidence.",
@@ -45,8 +47,9 @@ result = assess(
 
 print(result.aggregate)
 print(result.coverage.status)
-# `7` is a caller-selected example threshold, not a Hermes default.
-print(result.feedback(FeedbackPolicy(minimum_score=7)).to_prompt())
+# Hermes defines no default threshold; `minimum_score` is caller policy
+# (source: `FeedbackPolicy` in src/hermes_rubric/models.py).
+print(result.feedback(FeedbackPolicy(minimum_score=caller_threshold)).to_prompt())
 ```
 
 Use `assess_path()` for a file or directory, and `assess_async()` when the surrounding application is asynchronous. Framework adapters are optional extras; the core package does not run an agent loop.
@@ -75,6 +78,6 @@ hermes-rubric \
   --out result.json
 ```
 
-For directly comparable completed runs, reuse the prior rubric with `--pin-rubric prior-result.json`. Use `hermes-rubric kappa --run1 result_a.json --run2 result_b.json` to compute Cohen's κ between two completed runs.
+For directly comparable completed runs, reuse the prior rubric with `--pin-rubric prior-result.json`. Use `hermes-rubric kappa --run1 result_a.json --run2 result_b.json` to compute Cohen's κ between two completed runs (source: the `hermes-rubric kappa` parser in src/hermes_rubric/agreement.py requires exactly `--run1` and `--run2`).
 
 Read the installed package's CLI help and the Hermes Rubric documentation when a workflow needs flags or an optional adapter beyond these examples.
