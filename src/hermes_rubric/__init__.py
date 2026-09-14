@@ -1,6 +1,6 @@
 """hermes-rubric — evidence-first structured scoring."""
 
-__version__ = "1.2.2"
+__version__ = "1.2.3"
 
 from .assessment import assess, assess_async, assess_path, assess_path_async
 from .errors import AssessmentError
