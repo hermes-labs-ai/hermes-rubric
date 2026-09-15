@@ -4,7 +4,7 @@
   "name": "hermes-rubric",
   "description": "Evidence-first LLM-as-judge scoring for AI artifacts — papers, PRs, prompts, cold emails: synthesizes a rubric, collects quoted-evidence citations, scores only against that evidence, and hedges on thin evidence. Every dimension ties to a file:line or quote, with reproducibility receipts. 7 backends.",
   "codeRepository": "https://github.com/hermes-labs-ai/hermes-rubric",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "license": "https://spdx.org/licenses/Apache-2.0",
   "programmingLanguage": "Python",
   "runtimePlatform": "Python >=3.10",
