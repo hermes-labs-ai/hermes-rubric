@@ -3,12 +3,12 @@
 ## Install
 
 ```bash
-pip install hermes-rubric==1.2.2
+pip install hermes-rubric==1.2.3
 hermes-rubric --version
 ```
 
 The pin is the release this page was verified against; drop it to take the
-latest. `--version` prints `hermes-rubric 1.2.2` — the string is built from
+latest. `--version` prints `hermes-rubric 1.2.3` — the string is built from
 `__version__` in `src/hermes_rubric/__init__.py` — and proves the install. It
 does not exercise an assessment: every score on this page comes from a backend
 call.

@@ -12,7 +12,7 @@ authors:
     orcid: "https://orcid.org/0009-0005-4896-1112"
     email: "roli@hermes-labs.ai"
     affiliation: "Hermes Labs"
-version: "1.2.2"
+version: "1.2.3"
 license: "Apache-2.0"
 repository-code: "https://github.com/hermes-labs-ai/hermes-rubric"
 url: "https://hermes-labs.ai"
@@ -36,6 +36,6 @@ preferred-citation:
       orcid: "https://orcid.org/0009-0005-4896-1112"
       email: "roli@hermes-labs.ai"
       affiliation: "Hermes Labs"
-  version: "1.2.2"
+  version: "1.2.3"
   year: 2026
   url: "https://github.com/hermes-labs-ai/hermes-rubric"
