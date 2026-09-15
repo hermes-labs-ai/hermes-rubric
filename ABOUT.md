@@ -6,7 +6,7 @@ The thesis: language sets capability. The model is the ceiling, not the source. 
 
 ## Public receipts
 
-- **[fidelis](https://github.com/hermes-labs-ai/fidelis)** zero-LLM agent memory.7%, 77.0%]), $0/query, fully local.
+- **[fidelis](https://github.com/hermes-labs-ai/fidelis)** zero-LLM agent memory, $0/query, fully local.
 - **[hermes-rubric](https://github.com/hermes-labs-ai/hermes-rubric)** evidence-first structured scoring. Cross-model Cohen's κ = 0.629 across 96 paired runs.
 - Companion open-source: lintlang, hermes-blind, langquant, hermes-prime, hermes-ctl.
 
