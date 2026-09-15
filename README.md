@@ -199,6 +199,7 @@ For evaluation or deployment engineering around a specific application, contact 
 - [Backends](docs/BACKENDS.md)
 - [CLI](docs/CLI.md)
 - [Benchmarks and evidence limits](docs/BENCHMARKS.md)
+- [v1.2.3 release notes](RELEASE-NOTES-v1.2.3.md)
 - [v1.2.2 release notes](RELEASE-NOTES-v1.2.2.md)
 - [v1.2.1 release notes](RELEASE-NOTES-v1.2.1.md)
 - [v1.1.1 release notes](RELEASE-NOTES-v1.1.1.md)
