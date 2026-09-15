@@ -1,0 +1,36 @@
+# CSV structure and required-field check only. The runner writes this schema in
+# experiments/batch-equiv-2026-04-25/runner.py (_append_manifest); this profile
+# does not validate experiment conclusions or reproduce their calculations.
+# required_columns is also the exact, ordered header enforced by
+# scripts/check_manifest_header.py (no reordered, extra, or padded columns).
+[profiles.batch_runs_manifest]
+required_columns = [
+  "target_id",
+  "mode",
+  "sub_exp",
+  "rep",
+  "aggregate",
+  "fallback_used",
+  "n_backend_calls",
+  "latency_seconds",
+  "tool_version",
+  "backend_label",
+  "started_at",
+  "path",
+]
+critical_columns = [
+  "target_id",
+  "mode",
+  "sub_exp",
+  "rep",
+  "aggregate",
+  "fallback_used",
+  "n_backend_calls",
+  "latency_seconds",
+  "tool_version",
+  "backend_label",
+  "started_at",
+  "path",
+]
+empty_warning_rate = 0.0
+empty_fail_rate = 0.0

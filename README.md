@@ -47,6 +47,13 @@ Framework adapters are optional extras too: `hermes-rubric[inspect]` bundles an 
 
 You can instead use local Ollama, Claude Code, another built-in backend, or a backend plugin. Automatic selection checks authenticated Claude Code first, then local Ollama; cloud providers are always explicit opt-ins. See [Backends](docs/BACKENDS.md).
 
+## Listed in
+
+[Inspect AI's extensions gallery](https://github.com/UKGovernmentBEIS/inspect_ai/blob/main/docs/extensions/extensions.yml)
+lists the [Inspect AI scorer adapter](docs/ADAPTERS.md#inspect-ai-scorer)
+(merged [UKGovernmentBEIS/inspect_ai#5265](https://github.com/UKGovernmentBEIS/inspect_ai/pull/5265),
+2026-09-09) — a listing, not an endorsement.
+
 ## One transaction, three evidence-first stages
 
 Hermes keeps the measuring process separate from runtime policy:
