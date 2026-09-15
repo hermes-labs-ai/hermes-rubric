@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [1.2.3] — release-prep, not yet tagged or published
+## [1.2.3] — 2026-09-15
 
 ### Fixed
 
