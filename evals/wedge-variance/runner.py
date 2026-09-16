@@ -24,7 +24,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-REPO = Path("/Users/rbr_lpci/Documents/projects/hermes-rubric")
+REPO = Path(__file__).resolve().parents[2]  # repo root (evals/wedge-variance/runner.py -> repo root)
 OUT_DIR = REPO / "evals" / "wedge-variance"
 TMP = Path("/tmp/var-test")
 TMP.mkdir(parents=True, exist_ok=True)
