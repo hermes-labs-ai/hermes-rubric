@@ -1,6 +1,6 @@
 # About Hermes Labs
 
-Hermes Labs builds reliability infrastructure for autonomous AI agents. Memory, evaluation, drift recovery, audit. Solo founder, AI-amplified. Bay Area.
+Hermes Labs builds reliability infrastructure for autonomous AI agents. Memory, evaluation, drift recovery, audit. Solo founder, AI-amplified. Miami, FL.
 
 The thesis: language sets capability. The model is the ceiling, not the source. Reliability is a question of linguistic infrastructure, formalized as LPCI (Linguistically Persistent Cognitive Interface).
 
