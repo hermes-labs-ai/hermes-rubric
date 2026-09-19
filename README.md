@@ -19,7 +19,7 @@ The base package requires Python 3.10 or newer and PyYAML:
 pip install hermes-rubric
 ```
 
-For the example above, install the OpenAI extra and set `OPENAI_API_KEY`:
+For the example below, install the OpenAI extra and set `OPENAI_API_KEY`:
 
 ```bash
 pip install "hermes-rubric[openai]"
