@@ -11,6 +11,24 @@ Evidence-first assessment for agent outputs and applications.
 
 Hermes turns an artifact into cited evidence, dimension scores, honest coverage facts, and caller-controlled feedback. It measures and explains; your application decides what to do next.
 
+## Install
+
+The base package requires Python 3.10 or newer and PyYAML:
+
+```bash
+pip install hermes-rubric
+```
+
+For the example below, install the OpenAI extra and set `OPENAI_API_KEY`:
+
+```bash
+pip install "hermes-rubric[openai]"
+```
+
+Framework adapters are optional extras too: `hermes-rubric[inspect]` bundles an Inspect AI scorer and `hermes-rubric[openai-agents]` grades completed OpenAI Agents SDK runs. See [Adapters](docs/ADAPTERS.md).
+
+You can instead use local Ollama, Claude Code, another built-in backend, or a backend plugin. Automatic selection checks authenticated Claude Code first, then local Ollama; cloud providers are always explicit opt-ins. See [Backends](docs/BACKENDS.md).
+
 ```python
 from hermes_rubric import FeedbackPolicy, assess
 
@@ -28,24 +46,6 @@ print(result.feedback(FeedbackPolicy(minimum_score=7)).to_prompt())
 ```
 
 The same call can sit inside LangChain, the OpenAI Agents SDK, Semantic Kernel, PydanticAI, a bespoke loop, a notebook, CI, or a plain Python service. Those frameworks are not core dependencies, and Hermes does not run an agent loop for you.
-
-## Install
-
-The base package requires Python 3.10 or newer and PyYAML:
-
-```bash
-pip install hermes-rubric
-```
-
-For the example above, install the OpenAI extra and set `OPENAI_API_KEY`:
-
-```bash
-pip install "hermes-rubric[openai]"
-```
-
-Framework adapters are optional extras too: `hermes-rubric[inspect]` bundles an Inspect AI scorer and `hermes-rubric[openai-agents]` grades completed OpenAI Agents SDK runs. See [Adapters](docs/ADAPTERS.md).
-
-You can instead use local Ollama, Claude Code, another built-in backend, or a backend plugin. Automatic selection checks authenticated Claude Code first, then local Ollama; cloud providers are always explicit opt-ins. See [Backends](docs/BACKENDS.md).
 
 ## Listed in
 
