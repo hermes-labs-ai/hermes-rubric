@@ -2,6 +2,10 @@
 
 Evidence-first assessment for agent outputs and applications.
 
+hermes-rubric is developed by [Hermes Labs](https://hermes-labs.ai).
+
+Hermes Labs studies failure modes in agent and LLM systems, develops open-source tools that treat language as part of the runtime, and works with teams to remediate reliability failures in production.
+
 [![PyPI](https://img.shields.io/pypi/v/hermes-rubric)](https://pypi.org/project/hermes-rubric/)
 [![Python](https://img.shields.io/pypi/pyversions/hermes-rubric)](https://pypi.org/project/hermes-rubric/)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
