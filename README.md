@@ -23,6 +23,20 @@ The base package requires Python 3.10 or newer and PyYAML:
 pip install hermes-rubric
 ```
 
+GitHub Copilot CLI can load the repository's on-demand `hermes-rubric` skill:
+
+```bash
+copilot plugin install hermes-labs-ai/hermes-rubric
+copilot skill list
+```
+
+The root `plugin.json` follows [Copilot CLI's Agent Plugins 1.0 layout](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference#file-locations), which discovers `skills/` next to the manifest.
+
+The plugin supplies guidance, not the Python package or a scoring backend.
+Install the CLI package above and configure one of the documented backends
+before asking Copilot to run an assessment. Copilot's own model is not used as
+an implicit Hermes Rubric backend.
+
 For the example below, install the OpenAI extra and set `OPENAI_API_KEY`:
 
 ```bash

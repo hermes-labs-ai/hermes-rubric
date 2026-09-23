@@ -1,0 +1,14 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "hermes-rubric",
+  "version": "1.2.3",
+  "description": "Assess named artifacts with evidence-cited Hermes Rubric results and explicit coverage limits.",
+  "author": {
+    "name": "Hermes Labs",
+    "url": "https://hermes-labs.ai"
+  },
+  "homepage": "https://hermes-labs.ai/hermes-rubric",
+  "repository": "https://github.com/hermes-labs-ai/hermes-rubric",
+  "license": "Apache-2.0",
+  "keywords": ["evaluation", "agent-skills", "evidence", "coverage", "rubric"]
+}
