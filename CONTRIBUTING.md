@@ -1,11 +1,14 @@
 # Contributing
 
+Bugs and feature requests: https://github.com/hermes-labs-ai/hermes-rubric/issues
+
 ## Before submitting a PR
 
-1. Run the test suite: `PYTHONPATH=src python3 -m pytest tests/ -v`
-2. Both adversarial tests must pass: `test_adversarial.py`
-3. No API key can be required for the tests to pass
-4. Any new dimension in the rubric synthesizer must cite a failure mode from `calibration/failure-mode-taxonomy.md`
+1. Set up a virtual environment with the dev dependencies (the tests need them, e.g. `yaml`): `python3 -m venv .venv && . .venv/bin/activate && pip install -e ".[dev]"`
+2. Run the test suite: `PYTHONPATH=src python3 -m pytest tests/ -v`
+3. Both adversarial tests must pass: `test_adversarial.py`
+4. No API key can be required for the tests to pass
+5. Any new dimension in the rubric synthesizer must cite a failure mode from `calibration/failure-mode-taxonomy.md`
 
 ## Adding calibration cases
 
