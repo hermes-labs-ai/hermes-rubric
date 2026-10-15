@@ -23,6 +23,20 @@ If `--backend` is not specified, hermes-rubric auto-detects in priority order:
 
 Force one with `--backend claude-cli` (or any other name from the matrix above).
 
+## Independent review and native Codex
+
+Evaluator independence is a workflow property: the evaluator must not have
+produced the assessed work. It does not require a particular provider. A fresh
+Codex agent can perform an independent rubric-structured assessment using
+explicit criteria, cited evidence, and scores, as described in the
+[Hermes Rubric skill](../skills/hermes-rubric/SKILL.md#independent-evaluator-selection).
+
+Native Codex is not a built-in backend or a `--backend codex` option. A manual
+assessment does not emit a package result or receipt. For package-generated
+results, use a supported backend or register an adapter through the protocol
+below. Always report the actual evaluator/backend identity; external ceremony
+attestations keep their own verification requirements.
+
 ## Plugin protocol
 
 Backends conform to a single `BackendProtocol`:
