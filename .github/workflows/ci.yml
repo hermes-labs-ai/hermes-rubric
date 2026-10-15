@@ -108,7 +108,7 @@ jobs:
           batch_runs_manifest
 
       - name: Check committed batch-run manifest
-        uses: hermes-labs-ai/csv-quality-gate@24ed1cbe45f6d2b1c2b9a154e147fbb32f393e1d
+        uses: hermes-labs-ai/csv-quality-gate@2394db2216314b8d79d696e2eada3764ff4f4d41
         with:
           csv-path: experiments/batch-equiv-2026-04-25/RUNS-MANIFEST.csv
           profile: batch_runs_manifest
