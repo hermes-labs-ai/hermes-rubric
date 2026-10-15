@@ -2,7 +2,7 @@
 name: hermes-rubric
 description: Use when you need evidence-first LLM-as-judge scoring for an AI artifact — papers, PRs, prompts, cold emails — that synthesizes a rubric, collects quoted-evidence citations, scores only against that evidence, and hedges dimensions where evidence is thin. Every dimension ties to a file:line or quote, with reproducibility receipts. 7 backends.
 license: MIT
-compatibility: Requires Python 3.10+; installs via `pip install hermes-rubric` or runs standalone via `uvx hermes-rubric`. Needs a working LLM backend (`claude-cli`, `ollama-local`, `dashscope-qwen`, `google-gemini`, `openai`, `openai-sdk`, `google-genai`) — scoring itself is not zero-LLM.
+compatibility: Package commands require Python 3.10+; install via `pip install hermes-rubric` or run standalone via `uvx hermes-rubric`. Package scoring needs a working LLM backend (`claude-cli`, `ollama-local`, `dashscope-qwen`, `google-gemini`, `openai`, `openai-sdk`, `google-genai`) — scoring itself is not zero-LLM.
 ---
 
 # hermes-rubric
@@ -13,6 +13,13 @@ deterministic class template), collects quoted-evidence citations, scores
 only against that collected evidence, and hedges dimensions where evidence
 is thin. Every dimension ties to a `file:line` or quote, with reproducibility
 receipts, across 7 pluggable backends.
+
+## Independent native review
+
+For an independent native Codex assessment, read and follow the canonical
+[independent evaluator guidance](../../../skills/hermes-rubric/SKILL.md#independent-evaluator-selection).
+That manual route does not require a configured Rubric backend or emit package
+receipts. The commands below describe package scoring.
 
 ## Use it for
 
@@ -27,7 +34,7 @@ receipts, across 7 pluggable backends.
 
 ## Do not use it for
 
-- A zero-LLM check — scoring always calls an LLM backend; use lintlang or
+- A zero-LLM check — package scoring always calls an LLM backend; use lintlang or
   hermeneutic instead for deterministic, LLM-free gates
 - Ground-truth fact verification — it scores whether evidence was cited and
   quoted correctly, not whether the underlying claim is objectively true
@@ -84,7 +91,7 @@ hermes-rubric --target <path> --pin-rubric <path>        [--backend <backend>]
 
 - `--context` is required unless `--artifact-class` or `--pin-rubric` is set
   — the CLI fails closed rather than guessing a rubric with no grounding.
-- Scoring requires a working backend; `claude-cli` needs the Claude CLI
+- Package scoring requires a working backend; `claude-cli` needs the Claude CLI
   authenticated in the environment, `ollama-local` needs a local Ollama
   server with a pulled model — an unconfigured backend will hang or fail
   rather than silently degrade.
