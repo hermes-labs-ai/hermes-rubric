@@ -1,6 +1,6 @@
 # Philosophy: why hermes-rubric is shaped the way it is
 
-The thesis behind the design. Skip if you just want to install and use it - see the [README](https://github.com/hermes-labs-ai/hermes-rubric#readme). Read if you want to understand why the three-stage scaffold exists, why fluency outscores substance in raw LLM scoring, and why the receipts matter more than the score.
+The thesis behind the design. Skip if you just want to install and use it - see the [README](https://github.com/hermes-labs-ai/hermes-rubric/blob/main/README.md). Read if you want to understand why the three-stage scaffold exists, why fluency outscores substance in raw LLM scoring, and why the receipts matter more than the score.
 
 ## The problem: fluency wins in raw LLM scoring
 
