@@ -1,5 +1,19 @@
 # Changelog
 
+## [copilot-plugin-v1] — 2026-10-20
+
+### Agent plugin
+
+- Release the merged Copilot CLI plugin manifest and on-demand `hermes-rubric`
+  skill (#47), including the independent evaluator and coverage guidance (#56).
+- The plugin supplies guidance; Python installation and a supported assessment
+  backend remain separate. Python package version 1.2.3, scoring, public APIs
+  and runtime dependencies are unchanged.
+- Refresh the existing SBOM to identify package 1.2.3 and its declared PyYAML
+  runtime dependency without asserting a resolved environment.
+- Skip PyPI publication for plugin-only release tags. Package releases continue
+  to use `v<package-version>` and the existing trusted-publishing workflow.
+
 ## [1.2.3] — 2026-09-15
 
 ### Fixed

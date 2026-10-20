@@ -52,3 +52,11 @@ def test_publish_workflow_keeps_build_and_oidc_publication_separate():
     uses_lines = [line for line in WORKFLOW_PATH.read_text(encoding="utf-8").splitlines() if "uses:" in line]
     assert uses_lines
     assert all(re.search(r"@[0-9a-f]{40}\s+# v", line) for line in uses_lines)
+
+
+def test_plugin_only_release_skips_python_package_publication():
+    jobs = _workflow()["jobs"]
+    assert jobs["build"]["if"] == "startsWith(github.event.release.tag_name, 'v')"
+    assert jobs["publish"]["needs"] == "build"
+    # No always() override may run publishing after a skipped build.
+    assert "if" not in jobs["publish"]
