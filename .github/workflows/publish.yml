@@ -6,6 +6,8 @@ on:
 
 jobs:
   build:
+    # Plugin-only releases do not publish a new Python distribution.
+    if: startsWith(github.event.release.tag_name, 'v')
     runs-on: ubuntu-latest
     permissions:
       contents: read
