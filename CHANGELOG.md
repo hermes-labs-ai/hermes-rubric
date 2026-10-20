@@ -9,6 +9,8 @@
 - The plugin supplies guidance; Python installation and a supported assessment
   backend remain separate. Python package version 1.2.3, scoring, public APIs
   and runtime dependencies are unchanged.
+- Refresh the existing SBOM to identify package 1.2.3 and its declared PyYAML
+  runtime dependency without asserting a resolved environment.
 - Skip PyPI publication for plugin-only release tags. Package releases continue
   to use `v<package-version>` and the existing trusted-publishing workflow.
 
