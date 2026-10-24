@@ -102,6 +102,19 @@ print(payload["receipt"])
 
 The aggregate is a signal, not a verdict.
 
+Render a saved result for human review without calling a backend or rescoring:
+
+```bash
+hermes-rubric render assessment.json --out assessment.md
+# Or read JSON from stdin:
+cat assessment.json | hermes-rubric render -
+```
+
+The Markdown report preserves coverage limitations, scores, hedges, evidence
+citations and the original receipt. Missing legacy coverage is labeled unknown.
+Python callers can use `from hermes_rubric.report import render_markdown` with an
+`AssessmentResult` or its dictionary. JSON remains the machine-readable source.
+
 ## Choose the measuring stick
 
 Synthesize from intent and context when the criteria should be task-specific:

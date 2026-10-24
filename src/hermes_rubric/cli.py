@@ -13,7 +13,10 @@ from .synthesize import load_pinned
 
 def main() -> None:
     # Subcommand routing. The default ("score" — no subcommand) preserves
-    # the v0.1.x argv shape exactly. Today only `kappa` is dispatched out.
+    # the v0.1.x argv shape exactly.
+    if len(sys.argv) > 1 and sys.argv[1] == "render":
+        from . import report
+        sys.exit(report.main(sys.argv[2:]))
     if len(sys.argv) > 1 and sys.argv[1] == "kappa":
         from . import agreement
         sys.exit(agreement.main(sys.argv[2:]))
@@ -21,6 +24,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         prog="hermes-rubric",
         description="Evidence-first structured scoring. Synthesizes rubric, collects evidence, then scores.",
+        epilog="Other commands: render RESULT [--out REPORT.md] (offline Markdown); kappa (agreement).",
     )
     parser.add_argument(
         "--version",

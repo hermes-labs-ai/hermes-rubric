@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "rubric": {"rubric_intent": "Review a frozen answer", "dimensions": []},
+  "aggregate": 5.33,
+  "max_possible": 10.0,
+  "per_dim_scores": [
+    {"dim_id": "correctness", "dim_name": "Correctness", "score": 8, "score_rationale": "The cited log matches the answer.", "evidence_drove_score": "all rows verified", "hedge_applied": false},
+    {"dim_id": "coverage", "dim_name": "Coverage", "score": 5, "score_rationale": "Only staging evidence is available.", "evidence_drove_score": "staging log", "hedge_applied": true},
+    {"dim_id": "production", "dim_name": "Production evidence", "score": 3, "score_rationale": "No production evidence found.", "evidence_drove_score": "", "hedge_applied": false}
+  ],
+  "evidence_citations": [
+    {"dim_id": "correctness", "evidence_found": true, "hedge": false, "evidence_summary": "The staging result was checked.", "citations": [{"location": "logs/staging.txt:12", "quote": "all rows verified", "source_class": "test"}]},
+    {"dim_id": "coverage", "evidence_found": true, "hedge": true, "evidence_summary": "Staging only.", "citations": [{"location": "scope.md:4", "quote": "staging log"}]},
+    {"dim_id": "production", "evidence_found": false, "hedge": false, "evidence_summary": "No production record in the inspected bundle.", "citations": []}
+  ],
+  "hedge_dims": ["coverage"],
+  "hedge_note": "Coverage has low-confidence evidence.",
+  "dim_summaries": [],
+  "coverage": {"status": "complete", "strategy": "utf8-prefix", "visible_bytes": 100, "total_bytes": 100, "considered_sources": 2, "total_sources": 2, "limitations": []},
+  "receipt": {"backend": "frozen-test-backend", "timestamp_utc": "2026-10-24T00:00:00Z", "tool_version": "hermes-rubric fixture", "inputs": {"target_path": "answer.md"}, "pipeline": {"stage_1_rubric_hash_sha256": "frozen-rubric"}}
+}
