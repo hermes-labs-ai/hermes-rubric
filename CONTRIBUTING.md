@@ -4,11 +4,12 @@ Bugs and feature requests: https://github.com/hermes-labs-ai/hermes-rubric/issue
 
 ## Before submitting a PR
 
-1. Set up a virtual environment with the dev dependencies (the tests need them, e.g. `yaml`): `python3 -m venv .venv && . .venv/bin/activate && pip install -e ".[dev]"`
-2. Run the test suite: `PYTHONPATH=src python3 -m pytest tests/ -v`
-3. Both adversarial tests must pass: `test_adversarial.py`
-4. No API key can be required for the tests to pass
-5. Any new dimension in the rubric synthesizer must cite a failure mode from `calibration/failure-mode-taxonomy.md`
+1. Set up a Python 3.12 virtual environment: `python3.12 -m venv .venv && . .venv/bin/activate`.
+2. Install the test and packaging dependencies: `python3 -m pip install -e ".[dev,inspect,openai-agents]" pytest-mock build twine`.
+3. Run `bash scripts/local-ci.sh` for dependency resolution, required SDK imports, Ruff, and the full suite with provider keys unset. Missing tools or integration extras are failures. This is the same native test contract used by the CI Python matrix.
+4. Run `hermes-gate fast`, `hermes-gate full`, and `hermes-gate review` before submitting. Full includes the native test contract and checks fresh wheel/source distributions in isolated environments; see [.hermes/README.md](.hermes/README.md).
+5. Both adversarial tests in `test_adversarial.py` must pass, and no API key can be required for the suite.
+6. Any new dimension in the rubric synthesizer must cite a failure mode from `calibration/failure-mode-taxonomy.md`.
 
 ## Adding calibration cases
 
