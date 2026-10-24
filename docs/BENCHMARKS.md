@@ -26,6 +26,36 @@ The committed report is bounded evidence about **batch-vs-per-dim behavior** on 
 
 [`evals/wedge-variance/`](https://github.com/hermes-labs-ai/hermes-rubric/tree/main/evals/wedge-variance) contains a runner and historical outputs comparing Hermes aggregate scores with raw 0–10 LLM ratings on the same target and backend. Interpret only the observations and limitations recorded with that run.
 
+The current runner uses the committed Claude T1, T2 and T4 frozen targets
+(evidence-rich code, a thin product blurb and a research report) and the existing
+native Claude subscription configuration. It does not select a new model, use
+provider keys or reset historical results. From a checkout with the package
+installed, run:
+
+```bash
+python evals/wedge-variance/runner.py --out /tmp/wedge-variance-new-run
+```
+
+The output directory must be new. The default is ten repetitions per arm per
+target, interleaved by repetition, with a whole-attempt deadline; `--repetitions`
+and `--timeout` record explicit bounded alternatives. Both arms inspect the same
+complete target and use the same native transport. `manifest.json` records the
+frozen hashes, configured model and prerequisites; `raw-data.jsonl` retains every
+planned slot, failures, observed model identities and latency. Native call
+envelopes and completed assessment JSON are retained alongside `summary.json`
+and generated `RESULTS.md`.
+
+Only matching, explicitly observed actual-model identities are compared;
+configured aliases alone are insufficient. Failed and unattempted runs have
+explicit denominators. There are no automatic retries: a failed attempt stops
+further calls and marks remaining slots unattempted. Missing login or capacity
+produces a blocked receipt and exit 2, not synthetic observations. A missing or
+zero raw variance yields no ratio. The report separates per-target population
+standard deviations from the actual variance ratio and gives a descriptive
+summary without pooling unrelated target scores. Native contextual CLI settings
+can influence both arms. A repaired runner or blocked receipt is not new
+empirical evidence of variance reduction.
+
 ## Worked examples
 
 [`applied/papers-20260423.md`](https://github.com/hermes-labs-ai/hermes-rubric/blob/main/applied/papers-20260423.md) - two publicly published Zenodo papers scored on publication-readiness:
