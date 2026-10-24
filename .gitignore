@@ -5,6 +5,7 @@ __pycache__/
 dist/
 build/
 .pytest_cache/
+.venv/
 *.json.bak
 # mkdocs build output
 site/

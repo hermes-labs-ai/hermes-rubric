@@ -17,8 +17,12 @@ hermes-gate review
 
 Keep that environment's `bin` directory on `PATH` when running `hermes-gate`.
 CI uses `python3 .hermes/hermes_gate_runner.py full` directly. The full contract
-requires both integration extras, runs tests without provider API keys, and
-checks fresh wheel and source distributions in isolated install environments.
+uses `scripts/local-ci.sh` for dependency resolution with both integration extras,
+required SDK imports, Ruff, and one full suite without provider API keys. The CI
+Python matrix uses that same script. Full also runs `.hermes/check-package.sh`
+to check fresh wheel and source distributions in isolated install environments;
+the CI package job uses that same checker. Run `bash scripts/local-ci.sh` alone
+for the test contract when package validation is not needed.
 
 Fast whitespace validation checks complete selected files, including staged,
 untracked, and committed paths. Its Ruff rule set explicitly preserves the
